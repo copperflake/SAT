@@ -1,4 +1,4 @@
-package copperflake.sat.crypto;
+package sat.crypto;
 
 import java.math.BigInteger;
 
@@ -17,5 +17,9 @@ public class RSAKey {
 
 	public BigInteger getModulus() {
 		return modulus;
+	}
+	
+	public String toString() {
+		return "(e:"+exponent+";m:"+modulus+")";
 	}
 }
