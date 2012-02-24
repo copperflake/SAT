@@ -26,9 +26,12 @@ public final class RSAKeyPair {
 		this.publicKey = publicKey;
 		this.privateKey = null; // Half keyPair
 	}
-
-	public RSAKeyPair(RSAKey publicKey, RSAKey privateKey) {
-		// TODO: check key validity
+	
+	public RSAKeyPair(RSAKey publicKey, RSAKey privateKey) throws RSAInvalidKeyPairException {
+		// TODO: check key validity (better)
+		if(!publicKey.getModulus().equals(privateKey.getModulus()))
+			throw new RSAInvalidKeyPairException();
+		
 		this.publicKey = publicKey;
 		this.privateKey = privateKey;
 	}
@@ -85,7 +88,6 @@ public final class RSAKeyPair {
 	}
 
 	public BigInteger encrypt(BigInteger m) {
-		// TODO: padding
 		return m.modPow(publicKey.getExponent(), publicKey.getModulus());
 	}
 
