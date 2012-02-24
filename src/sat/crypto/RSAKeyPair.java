@@ -42,10 +42,12 @@ public final class RSAKeyPair {
 
 		Random rand = new SecureRandom();
 
-		BigInteger e = new BigInteger("65537"); // d est premier
-		BigInteger p, q, n, phi, lambda, d;
+		BigInteger e = new BigInteger("65537"); // e est premier
+		BigInteger n, phi, lambda, d;
 
 		do {
+			BigInteger p, q;
+			
 			do {
 				// TODO: Les nombres devraient différer de quelques digits afin
 				// d'éviter un certain type d'attaque.
@@ -63,13 +65,13 @@ public final class RSAKeyPair {
 			// Using λ(n) instead of φ(n):
 			// - The original version of RSA defined φ(n) = (p-1)(q-1).
 			// - In fact you can use the smaller Charmichael function instead:
-			//   λ(n) = (p-1)(q-1)/gcd(p-1, q-1).
+			//   λ(n) = [(p-1)(q-1)]/gcd(p-1, q-1).
 			// - Later refinements of the RSA algorithm like PKCS#1 use 
 			//   this definition.
 			lambda = phi.divide(pMin1.gcd(qMin1));
-		} while(lambda.compareTo(e) != 1); // e < φ / λ
+		} while(lambda.compareTo(e) != 1 || !e.gcd(lambda).equals(BigInteger.ONE)); // e < [φ/λ] & e premier à λ
 		
-		// e est premier à phi, donc d existe
+		// e est premier à λ, donc d existe
 		d = e.modInverse(lambda);
 
 		this.publicKey = new RSAKey(e, n);
