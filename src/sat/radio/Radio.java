@@ -1,11 +1,13 @@
-package sat.com;
+package sat.radio;
 
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-public class Radio {
+import sat.radio.message.Message;
+
+public abstract class Radio {
 	public void send(Message msg, String dest) throws IOException {
 		try {
 			PrintWriter outStream = new PrintWriter(new FileWriter(dest, true));
