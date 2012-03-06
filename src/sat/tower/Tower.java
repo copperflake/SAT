@@ -1,7 +1,7 @@
 package sat.tower;
 
-import sat.com.Radio;
-import sat.crypto.RSAKeyPair;
+/*import sat.com.Radio;
+import sat.crypto.RSAKeyPair;*/
 
 public class Tower {
 	/**
@@ -16,8 +16,12 @@ public class Tower {
 		return instance;
 	}
 	
+	public static void main(String[] args) {
+		System.out.println("I'm a tower !");
+	}
+	
 	/**
 	 * Class
 	 */
-	private Radio radio;
+	//private Radio radio;
 }
