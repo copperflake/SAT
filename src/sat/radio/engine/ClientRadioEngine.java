@@ -1,5 +1,5 @@
 package sat.radio.engine;
 
-public abstract class ClientRadioEngine {
+public abstract class ClientRadioEngine extends RadioEngine {
 
 }
