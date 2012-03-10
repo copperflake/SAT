@@ -1,9 +1,9 @@
-package sat.com;
+package sat.radio;
 
 public class RadioID {
 	private String name;
 	
 	public String getName() {
-		return this.getName();
+		return this.name;
 	}
 }

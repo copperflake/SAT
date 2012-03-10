@@ -1,4 +1,4 @@
-package sat.com;
+package sat.radio.message;
 
 import sat.crypto.RSAKey;
 

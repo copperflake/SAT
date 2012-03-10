@@ -1,4 +1,4 @@
-package sat.com;
+package sat.radio.message;
 
 public class MessageFile extends Message {
 	private int fileSize;

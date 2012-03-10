@@ -1,4 +1,4 @@
-package sat.com;
+package sat.radio.message;
 
 public enum MessageType {
 	HELLO, DATA, MAYDAY, SENDRSA, CHOKE, UNCHOKE,

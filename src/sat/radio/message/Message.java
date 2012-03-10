@@ -1,6 +1,8 @@
-package sat.com;
+package sat.radio.message;
 
 import java.util.Date;
+
+import sat.radio.RadioID;
 
 public abstract class Message implements Comparable<Message> {
 	private RadioID id;
