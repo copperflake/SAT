@@ -2,6 +2,7 @@ package sat.repl;
 
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -134,6 +135,10 @@ public abstract class REPL implements Runnable {
 		
 		try {
 			method.invoke(this, (Object[]) args);
+		} catch(InvocationTargetException e) {
+			// The call-stack for InvocationTargetException is always the
+			// same. So, ignore it and print TargetException.
+			e.getTargetException().printStackTrace(out);
 		} catch(Exception e) {
 			e.printStackTrace(out);
 		}
@@ -149,6 +154,10 @@ public abstract class REPL implements Runnable {
 	
 	public void restorePrompt(String newPrompt) {
 		prompt = prompt_default;
+	}
+	
+	public void println(String x) {
+		out.println(x);
 	}
 	
 	public void exit() {
