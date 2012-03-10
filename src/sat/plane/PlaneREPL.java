@@ -6,11 +6,14 @@ import java.io.PrintStream;
 import sat.repl.REPL;
 
 public class PlaneREPL extends REPL {
-	public PlaneREPL(InputStream in, PrintStream out) {
+	private Plane plane;
+	
+	public PlaneREPL(Plane plane, InputStream in, PrintStream out) {
 		super(in, out, "Plane> ");
+		this.plane = plane;
 	}
 	
-	public void boum() {
-		System.exit(0);
+	public void exit() {
+		super.exit();
 	}
 }

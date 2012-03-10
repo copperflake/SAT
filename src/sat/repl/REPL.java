@@ -16,6 +16,8 @@ public abstract class REPL implements Runnable {
 	
 	private HashMap<String, Method> api = new HashMap<String, Method>();
 	
+	private boolean exit = false;
+	
 	public REPL(InputStream in, PrintStream out, String prompt) {
 		this.in = new Scanner(in);
 		this.out = out;
@@ -34,7 +36,7 @@ public abstract class REPL implements Runnable {
 	}
 
 	public void run() {
-		while(true) {
+		while(!exit) {
 			out.print(prompt);
 			
 			if(!in.hasNextLine()) break;
@@ -147,5 +149,9 @@ public abstract class REPL implements Runnable {
 	
 	public void restorePrompt(String newPrompt) {
 		prompt = prompt_default;
+	}
+	
+	public void exit() {
+		exit = true;
 	}
 }

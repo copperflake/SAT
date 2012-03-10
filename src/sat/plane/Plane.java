@@ -4,7 +4,9 @@ public class Plane {
 	public static void main(String[] args) {
 		System.out.println("I'm a plane !");
 		
-		PlaneREPL repl = new PlaneREPL(System.in, System.out);
+		Plane plane = new Plane();
+		
+		PlaneREPL repl = new PlaneREPL(plane, System.in, System.out);
 		Thread replThread = repl.runInNewThread();
 	}
 }

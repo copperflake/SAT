@@ -18,6 +18,9 @@ public class Tower {
 	
 	public static void main(String[] args) {
 		System.out.println("I'm a tower !");
+		Tower tower = getInstance();
+		TowerREPL repl = new TowerREPL(tower, System.in, System.out);
+		Thread replThread = repl.runInNewThread();
 	}
 	
 	/**
