@@ -25,8 +25,8 @@ public class SAT {
 	public static void usage() {
 		System.out.println("Usage: java -jar sat.jar COMMAND <ARGS...>");
 		System.out.println("Available commands:");
-		System.out.println("    plane <towerIP>  |  Start a plane connected with towerIP");
-		System.out.println("    tower            |  Start a tower");
+		System.out.println("    plane  |  Start a plane connected with towerIP");
+		System.out.println("    tower  |  Start a tower");
 	}
 	
 	public static void lab() {
