@@ -1,5 +1,9 @@
 package sat.radio;
 
-public class ServerRadio extends Radio {
+import sat.radio.engine.ServerRadioEngine;
 
+public class ServerRadio extends Radio {
+	public void listen(ServerRadioEngine engine) {
+		
+	}
 }
