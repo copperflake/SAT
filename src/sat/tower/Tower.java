@@ -1,27 +1,40 @@
 package sat.tower;
 
-/*import sat.com.Radio;
-import sat.crypto.RSAKeyPair;*/
+import sat.radio.ServerRadio;
+import sat.radio.engine.ServerRadioEngine;
 
 public class Tower {
 	/**
 	 * Singleton Constructor
 	 */
-	private static final Tower instance = new Tower();
-	// Private constructor prevents instantiation from other classes
-	private Tower() {
-		
-	}
+	
+	private static Tower instance = null;
+	
 	public static Tower getInstance() {
+		if(instance == null)
+			instance = new Tower();
+		
 		return instance;
+	}
+
+	/**
+	 * Class
+	 */
+	
+	private ServerRadio radio = new ServerRadio();
+	
+	private Tower() {}
+	
+	public void listen(ServerRadioEngine engine) {
+		radio.listen(engine);
 	}
 	
 	public static void main(String[] args) {
 		System.out.println("I'm a tower !");
+		
+		Tower tower = getInstance();
+		
+		TowerREPL repl = new TowerREPL(tower, System.in, System.out);
+		Thread replThread = repl.runInNewThread();
 	}
-	
-	/**
-	 * Class
-	 */
-	//private Radio radio;
 }
