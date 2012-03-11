@@ -1,7 +1,7 @@
 package sat.tower;
 
-import sat.radio.ServerRadio;
-import sat.radio.engine.ServerRadioEngine;
+import sat.radio.RadioServer;
+import sat.radio.engine.RadioServerEngine;
 
 public class Tower {
 	/**
@@ -21,11 +21,11 @@ public class Tower {
 	 * Class
 	 */
 	
-	private ServerRadio radio = new ServerRadio();
+	private RadioServer radio = new RadioServer();
 	
 	private Tower() {}
 	
-	public void listen(ServerRadioEngine engine) {
+	public void listen(RadioServerEngine engine) {
 		radio.listen(engine);
 	}
 	

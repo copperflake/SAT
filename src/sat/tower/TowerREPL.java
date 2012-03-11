@@ -4,10 +4,10 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.InetAddress;
 
-import sat.radio.engine.ServerRadioEngine;
-import sat.radio.engine.ServerRadioFileEngine;
-import sat.radio.engine.ServerRadioTCPEngine;
-import sat.radio.engine.ServerRadioUDPEngine;
+import sat.radio.engine.RadioServerEngine;
+import sat.radio.engine.RadioServerFileEngine;
+import sat.radio.engine.RadioServerTCPEngine;
+import sat.radio.engine.RadioServerUDPEngine;
 import sat.repl.REPL;
 
 public class TowerREPL extends REPL {
@@ -19,16 +19,16 @@ public class TowerREPL extends REPL {
 	}
 	
 	public void listen(String engineType, String arg) {
-		ServerRadioEngine engine;
+		RadioServerEngine engine;
 		
 		if(engineType.equals("file")) {
-			engine = new ServerRadioFileEngine(arg);
+			engine = new RadioServerFileEngine(arg);
 		} else if(engineType.equals("tcp")) {
 			int port = Integer.parseInt(arg);
-			engine = new ServerRadioTCPEngine(port);
+			engine = new RadioServerTCPEngine(port);
 		} else if(engineType.equals("udp")) {
 			int port = Integer.parseInt(arg);
-			engine = new ServerRadioUDPEngine(port);
+			engine = new RadioServerUDPEngine(port);
 		} else {
 			out.println("Error: unknown radio engine type");
 			return;

@@ -1,17 +1,11 @@
 package sat.radio;
 
-import java.net.InetAddress;
-
+import sat.plane.Route;
 import sat.radio.message.MessageLanding;
 import sat.radio.message.MessageMayDay;
 import sat.radio.message.MessageRouting;
-import sat.plane.Route;
 
-public class RadioClient extends Radio {
-	public RadioClient() {
-		super();
-	}
-	
+public class RadioClient extends Radio {	
 	public void mayDay(String cause, String dest) {
 		this.send(new MessageMayDay(cause), dest);
 	}
@@ -24,7 +18,7 @@ public class RadioClient extends Radio {
 		this.send(new MessageRouting(route), dest);
 	}
 	
-	public void connect(InetAddress IP) {
+	/*public void connect(InetAddress IP) {
 		
-	}
+	}*/
 }

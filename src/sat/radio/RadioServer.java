@@ -1,15 +1,13 @@
 package sat.radio;
 
-import java.net.InetAddress;
-
-import sat.radio.engine.ServerRadioEngine;
+import sat.radio.engine.RadioServerEngine;
 
 public class RadioServer extends Radio {
 	public RadioServer() {
 		super();
 	}
 	
-	public void listen(ServerRadioEngine engine) {
-		engine.init();
+	public void listen(RadioServerEngine engine) {
+		//engine.init();
 	}
 }

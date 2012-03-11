@@ -1,7 +1,7 @@
 package sat.radio.engine;
 
-public class ServerRadioUDPEngine extends ServerRadioEngine {
-	public ServerRadioUDPEngine(int port) {
+public class RadioServerUDPEngine extends RadioServerEngine {
+	public RadioServerUDPEngine(int port) {
 		throw new RuntimeException("ServerRadioUDPEngine not yet implemented!");
 	}
 	
