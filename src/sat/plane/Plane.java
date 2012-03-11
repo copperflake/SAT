@@ -6,7 +6,7 @@ public class Plane {
 		
 		Plane plane = new Plane();
 		
-		PlaneREPL repl = new PlaneREPL(plane, System.in, System.out);
+		PlaneCLI repl = new PlaneCLI(plane, System.in, System.out);
 		Thread replThread = repl.runInNewThread();
 	}
 }

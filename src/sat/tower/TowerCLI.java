@@ -3,16 +3,16 @@ package sat.tower;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import sat.GlobalREPL;
+import sat.GlobalCLI;
 import sat.radio.engine.RadioServerEngine;
 import sat.radio.engine.RadioServerFileEngine;
 import sat.radio.engine.RadioServerTCPEngine;
 import sat.radio.engine.RadioServerUDPEngine;
 
-public class TowerREPL extends GlobalREPL {
+public class TowerCLI extends GlobalCLI {
 	private Tower tower;
 	
-	public TowerREPL(Tower tower, InputStream in, PrintStream out) {
+	public TowerCLI(Tower tower, InputStream in, PrintStream out) {
 		super(in, out, "Tower> ");
 		this.tower = tower;
 	}

@@ -1,4 +1,4 @@
-package sat.repl;
+package sat.cli;
 
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -8,7 +8,10 @@ import java.util.HashMap;
 import java.util.Scanner;
 import java.util.Vector;
 
-public abstract class REPL implements Runnable {
+/**
+ * The SAT command line framework
+ */
+public abstract class CLI implements Runnable {
 	protected Scanner in;
 	protected PrintStream out;
 	
@@ -19,7 +22,7 @@ public abstract class REPL implements Runnable {
 	
 	private boolean exit = false;
 	
-	public REPL(InputStream in, PrintStream out, String prompt) {
+	public CLI(InputStream in, PrintStream out, String prompt) {
 		this.in = new Scanner(in);
 		this.out = out;
 		
@@ -28,7 +31,7 @@ public abstract class REPL implements Runnable {
 		buildAPI(this.getClass());
 	}
 	
-	public REPL(InputStream in, PrintStream out) {
+	public CLI(InputStream in, PrintStream out) {
 		this(in, out, "> ");
 	}
 	
@@ -42,7 +45,7 @@ public abstract class REPL implements Runnable {
 		
 		Class<?> superclass = root.getSuperclass();
 		
-		if(superclass != null && superclass != REPL.class && superclass != Object.class)
+		if(superclass != null && superclass != CLI.class && superclass != Object.class)
 			buildAPI(superclass);
 	}
 

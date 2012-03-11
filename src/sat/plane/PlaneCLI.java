@@ -3,12 +3,12 @@ package sat.plane;
 import java.io.InputStream;
 import java.io.PrintStream;
 
-import sat.repl.REPL;
+import sat.cli.CLI;
 
-public class PlaneREPL extends REPL {
+public class PlaneCLI extends CLI {
 	private Plane plane;
 	
-	public PlaneREPL(Plane plane, InputStream in, PrintStream out) {
+	public PlaneCLI(Plane plane, InputStream in, PrintStream out) {
 		super(in, out, "Plane> ");
 		this.plane = plane;
 	}

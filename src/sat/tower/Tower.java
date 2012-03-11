@@ -36,7 +36,7 @@ public class Tower {
 		
 		Tower tower = getInstance();
 		
-		TowerREPL repl = new TowerREPL(tower, System.in, System.out);
+		TowerCLI repl = new TowerCLI(tower, System.in, System.out);
 		Thread replThread = repl.runInNewThread();
 	}
 }
