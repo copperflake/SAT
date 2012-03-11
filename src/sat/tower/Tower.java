@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import sat.radio.RadioServer;
 import sat.radio.engine.RadioServerEngine;
+import sat.radio.RadioServerDelegate;
 
 public class Tower {
 	/**
@@ -23,12 +24,22 @@ public class Tower {
 	 * Class
 	 */
 	
-	private RadioServer radio = new RadioServer();
+	private RadioServer radio = null;
 	
 	private Tower() {}
 	
-	public void listen(RadioServerEngine engine) throws IOException {
+	public boolean listen(RadioServerEngine engine) throws IOException {
+		if(radio != null) return false;
+		
+		radio = new RadioServer(new RadioServerDelegate() {
+			public void foo() {
+				
+			}
+		});
+		
 		radio.listen(engine);
+		
+		return true;
 	}
 	
 	public static void main(String[] args) {
