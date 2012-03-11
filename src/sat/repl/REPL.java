@@ -25,15 +25,25 @@ public abstract class REPL implements Runnable {
 		
 		this.prompt = this.prompt_default = prompt;
 		
-		Method[] methods = this.getClass().getDeclaredMethods();
-		
-		for(Method method : methods) {
-			api.put(method.getName(), method);
-		}
+		buildAPI(this.getClass());
 	}
 	
 	public REPL(InputStream in, PrintStream out) {
 		this(in, out, "> ");
+	}
+	
+	private void buildAPI(Class<?> root) {
+		Method[] methods = root.getDeclaredMethods();
+		
+		for(Method method : methods) {
+			if(!api.containsKey(method.getName()))
+				api.put(method.getName(), method);
+		}
+		
+		Class<?> superclass = root.getSuperclass();
+		
+		if(superclass != null && superclass != REPL.class && superclass != Object.class)
+			buildAPI(superclass);
 	}
 
 	public void run() {

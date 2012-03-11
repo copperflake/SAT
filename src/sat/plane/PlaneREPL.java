@@ -12,8 +12,4 @@ public class PlaneREPL extends REPL {
 		super(in, out, "Plane> ");
 		this.plane = plane;
 	}
-	
-	public void exit() {
-		super.exit();
-	}
 }

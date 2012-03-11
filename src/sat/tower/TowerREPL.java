@@ -4,13 +4,14 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.InetAddress;
 
+import sat.GlobalREPL;
 import sat.radio.engine.RadioServerEngine;
 import sat.radio.engine.RadioServerFileEngine;
 import sat.radio.engine.RadioServerTCPEngine;
 import sat.radio.engine.RadioServerUDPEngine;
 import sat.repl.REPL;
 
-public class TowerREPL extends REPL {
+public class TowerREPL extends GlobalREPL {
 	private Tower tower;
 	
 	public TowerREPL(Tower tower, InputStream in, PrintStream out) {
@@ -35,9 +36,5 @@ public class TowerREPL extends REPL {
 		}
 		
 		tower.listen(engine);
-	}
-	
-	public void exit() {
-		super.exit();
 	}
 }
