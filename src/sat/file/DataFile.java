@@ -2,6 +2,7 @@ package sat.file;
 
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -11,23 +12,33 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Formatter;
 import java.util.Scanner;
 
+import sat.radio.message.MessageFile;
+
 public class DataFile extends File {
 	private byte[] hash;
-	private byte[] receivedData;
-	private int packetSize;
+	private byte[] payload;
+	private static int packetSize;
 	private int lastPacketSize;
 	private int numberOfPackets;
 	
 	public DataFile(String path) {
 		super(path);
-		BufferedInputStream stream = new BufferedInputStream(in)
-		this.packetSize = stream.read(this.receivedData);
-		this.hash = this.computeHash();
+		this.packetSize = 1024;
 	}
 	
-	public void save(String name) throws IOException {
-		RandomAccessFile file = new RandomAccessFile(name, "rw");
-		file.write(receivedData);
+	public byte[] getBlock(int offset) throws IOException, NoSuchAlgorithmException {
+		byte[] data = null;
+		BufferedInputStream stream = new BufferedInputStream(new FileInputStream(this));
+		
+		stream.read(data, offset, packetSize);
+		this.hash = this.computeHash(data);
+		
+		return data;
+	}
+	
+	public void save(MessageFile msgFile) throws IOException {
+		RandomAccessFile file = new RandomAccessFile(this.getCanonicalFile(), "rw");
+		file.writeBytes(msgFile.getPayload());
 	}
 	
 	public boolean isComplete() {
@@ -44,9 +55,5 @@ public class DataFile extends File {
 		}
 		
 		return formatter.toString().getBytes();
-	}
-	
-	public byte[] getBlock(int position) throws FileNotFoundException {
-		Scanner scan = new Scanner(this);
 	}
 }

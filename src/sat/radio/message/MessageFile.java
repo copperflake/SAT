@@ -12,4 +12,8 @@ public class MessageFile extends Message {
 	public MessageFile() {
 		super();
 	}
+	
+	public getPayload() {
+		return this.payload;
+	}
 }
