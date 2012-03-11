@@ -10,11 +10,8 @@ public abstract class Message implements Comparable<Message> {
 	private int posx, posy;
 	private int length;
 	private Date time;
-	private MessageType type;
 	
-	public Message(MessageType mtype) {
-		this.type = mtype;
-		// this.type = MessageType.values()[mtype];
+	public Message() {
 	}
 	
 	public int getPriority() {
