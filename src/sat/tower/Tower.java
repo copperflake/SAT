@@ -1,5 +1,7 @@
 package sat.tower;
 
+import java.io.IOException;
+
 import sat.radio.RadioServer;
 import sat.radio.engine.RadioServerEngine;
 
@@ -25,7 +27,7 @@ public class Tower {
 	
 	private Tower() {}
 	
-	public void listen(RadioServerEngine engine) {
+	public void listen(RadioServerEngine engine) throws IOException {
 		radio.listen(engine);
 	}
 	

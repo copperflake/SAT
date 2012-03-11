@@ -1,15 +1,13 @@
 package sat.tower;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.net.InetAddress;
-
 import sat.GlobalREPL;
 import sat.radio.engine.RadioServerEngine;
 import sat.radio.engine.RadioServerFileEngine;
 import sat.radio.engine.RadioServerTCPEngine;
 import sat.radio.engine.RadioServerUDPEngine;
-import sat.repl.REPL;
 
 public class TowerREPL extends GlobalREPL {
 	private Tower tower;
@@ -19,10 +17,11 @@ public class TowerREPL extends GlobalREPL {
 		this.tower = tower;
 	}
 	
-	public void listen(String engineType, String arg) {
+	public void listen(String engineType, String arg) throws IOException {
 		RadioServerEngine engine;
 		
 		if(engineType.equals("file")) {
+			out.println("[Warning] `listen file` requires a *nix system and is depreciated!");
 			engine = new RadioServerFileEngine(arg);
 		} else if(engineType.equals("tcp")) {
 			int port = Integer.parseInt(arg);

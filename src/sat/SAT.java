@@ -1,5 +1,7 @@
 package sat;
 
+import java.io.FileOutputStream;
+
 import sat.plane.Plane;
 import sat.tower.Tower;
 
@@ -30,6 +32,13 @@ public class SAT {
 	}
 	
 	public static void lab() {
-		
+		try {
+			FileOutputStream fos = new FileOutputStream("socket", true);
+			byte[] buffer = {(byte)'H', (byte)'E', (byte)'L', (byte)'L', (byte)'O'};
+			fos.write(buffer);
+			fos.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

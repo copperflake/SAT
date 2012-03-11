@@ -1,5 +1,7 @@
 package sat.radio;
 
+import java.io.IOException;
+
 import sat.radio.engine.RadioServerEngine;
 
 public class RadioServer extends Radio {
@@ -7,7 +9,7 @@ public class RadioServer extends Radio {
 		super();
 	}
 	
-	public void listen(RadioServerEngine engine) {
-		//engine.init();
+	public void listen(RadioServerEngine engine) throws IOException {
+		engine.init(this);
 	}
 }
