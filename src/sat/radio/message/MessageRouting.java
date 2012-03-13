@@ -8,4 +8,8 @@ public class MessageRouting extends Message {
 		super();
 		this.route = route;
 	}
+	
+	public String toString() {
+		return "I'm a routing!";
+	}
 }

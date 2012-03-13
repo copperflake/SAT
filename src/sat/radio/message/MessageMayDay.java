@@ -7,4 +7,8 @@ public class MessageMayDay extends Message {
 		super();
 		this.cause = cause;
 	}
+	
+	public String toString() {
+		return "I'm a May Day!";
+	}
 }

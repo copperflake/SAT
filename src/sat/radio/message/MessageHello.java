@@ -5,4 +5,8 @@ public class MessageHello extends Message {
 	public MessageHello() {
 		super();
 	}
+	
+	public String toString() {
+		return "I'm a Teapot!";
+	}
 }

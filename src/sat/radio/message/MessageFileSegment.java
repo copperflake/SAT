@@ -18,6 +18,6 @@ public class MessageFileSegment extends Message {
 	}
 
 	public String toString() {
-		return "I'm a FileSegment";
+		return "I'm a FileSegment!";
 	}
 }
