@@ -11,6 +11,8 @@ public class RadioID implements Serializable {
 	private long time;
 	private long id;
 	
+	private boolean UFO = false;
+	
 	static private final int TIME_DIGIT = 4;
 	static private final int RAND_DIGIT = 4;
 
@@ -18,6 +20,9 @@ public class RadioID implements Serializable {
 	static private final long RAND_POW = (long) Math.pow(10L, RAND_DIGIT);
 	static private final long GLOB_POW = (long) Math.pow(10L, TIME_DIGIT+RAND_DIGIT);
 	
+	public RadioID() {
+		UFO = true;
+	}
 	
 	public RadioID(String label) {
 		this.label = label;
@@ -28,7 +33,13 @@ public class RadioID implements Serializable {
 		id = (int) (Math.round(Math.random()*RAND_POW)%RAND_POW);
 	}
 	
+	public boolean isUFO() {
+		return UFO;
+	}
+	
 	public String toString() {
+		if(isUFO()) return "UFO";
+		
 		String asString = new Long(GLOB_POW + time*RAND_POW + id).toString();
 		
 		String timeString = asString.substring(1, TIME_DIGIT+1);
