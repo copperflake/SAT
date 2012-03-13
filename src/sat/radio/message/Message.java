@@ -11,6 +11,7 @@ public abstract class Message implements Comparable<Message> {
 	private Date time;
 	
 	public Message() {
+		this.time = new Date();
 	}
 	
 	public int getPriority() {
