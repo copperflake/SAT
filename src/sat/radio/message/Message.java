@@ -20,6 +20,8 @@ public abstract class Message implements Comparable<Message> {
 	public Date getDate() {
 		return this.time;
 	}
+
+	public abstract String toString();
 	
 	public int compareTo(Message msg) {
 		if(this.priority < msg.getPriority())

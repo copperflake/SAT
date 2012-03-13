@@ -29,6 +29,7 @@ public class SegmentableFile implements Iterable<FileSegment> {
 					return getSegment(currentSegment++);
 				} catch (IOException e) {
 					e.printStackTrace();
+					// TODO blah
 					return null;
 				}
 			}
