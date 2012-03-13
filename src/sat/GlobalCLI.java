@@ -16,5 +16,6 @@ public class GlobalCLI extends CLI {
 	
 	public void exit() {
 		super.exit();
+		Runtime.getRuntime().exit(0);
 	}
 }
