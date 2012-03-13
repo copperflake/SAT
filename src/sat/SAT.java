@@ -1,6 +1,12 @@
 package sat;
 
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+
 import sat.plane.Plane;
+import sat.radio.RadioID;
+import sat.radio.engine.file.FileEngineMessage;
 import sat.tower.Tower;
 
 public class SAT {
@@ -30,6 +36,17 @@ public class SAT {
 	}
 	
 	public static void lab() {
-		
+		try {
+			BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream("socket.in", true), 65535);
+			ObjectOutputStream oos = new ObjectOutputStream(bos);
+			
+
+			oos.writeObject(new FileEngineMessage(new RadioID("HELLO TOWER!"), new byte[50]));
+			bos.flush();
+			
+			oos.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
