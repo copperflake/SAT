@@ -1,4 +1,4 @@
-package sat.radio.engine;
+package sat.radio.engine.server;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -43,8 +43,8 @@ public class RadioServerFileEngine extends RadioServerEngine {
 		lockFile.deleteOnExit();
 	}
 	
-	public void init(RadioServer radioServer) throws IOException {
-		super.init(radioServer);
+	public void init(RadioServerEngineDelegate delegate) throws IOException {
+		setDelegate(delegate);
 		
 		// Crée le fichier de verrou
 		new FileOutputStream(lockFile).close();

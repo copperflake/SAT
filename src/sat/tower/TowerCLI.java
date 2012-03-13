@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import sat.GlobalCLI;
-import sat.radio.engine.RadioServerEngine;
-import sat.radio.engine.RadioServerFileEngine;
-import sat.radio.engine.RadioServerTCPEngine;
+import sat.radio.engine.server.RadioServerEngine;
+import sat.radio.engine.server.RadioServerFileEngine;
+import sat.radio.engine.server.RadioServerTCPEngine;
 
 public class TowerCLI extends GlobalCLI {
 	private Tower tower;

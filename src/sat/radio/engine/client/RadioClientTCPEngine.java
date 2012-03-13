@@ -1,4 +1,4 @@
-package sat.radio.engine;
+package sat.radio.engine.client;
 
 public class RadioClientTCPEngine extends RadioClientEngine {
 	public void init() {

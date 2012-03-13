@@ -3,7 +3,7 @@ package sat.tower;
 import java.io.IOException;
 
 import sat.radio.RadioServer;
-import sat.radio.engine.RadioServerEngine;
+import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.RadioServerDelegate;
 
 public class Tower {
@@ -32,9 +32,7 @@ public class Tower {
 		if(radio != null) return false;
 		
 		radio = new RadioServer(new RadioServerDelegate() {
-			public void foo() {
-				
-			}
+			
 		});
 		
 		radio.listen(engine);
