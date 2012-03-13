@@ -13,6 +13,8 @@ public class RadioID implements Serializable {
 	
 	private boolean UFO = false;
 	
+	// RadioID config
+	
 	static private final int TIME_DIGIT = 4;
 	static private final int RAND_DIGIT = 4;
 
