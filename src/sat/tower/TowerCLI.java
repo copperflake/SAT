@@ -7,7 +7,6 @@ import sat.GlobalCLI;
 import sat.radio.engine.RadioServerEngine;
 import sat.radio.engine.RadioServerFileEngine;
 import sat.radio.engine.RadioServerTCPEngine;
-import sat.radio.engine.RadioServerUDPEngine;
 
 public class TowerCLI extends GlobalCLI {
 	private Tower tower;
@@ -26,9 +25,6 @@ public class TowerCLI extends GlobalCLI {
 		} else if(engineType.equals("tcp")) {
 			int port = Integer.parseInt(arg);
 			engine = new RadioServerTCPEngine(port);
-		} else if(engineType.equals("udp")) {
-			int port = Integer.parseInt(arg);
-			engine = new RadioServerUDPEngine(port);
 		} else {
 			out.println("Error: unknown radio engine type");
 			return;
