@@ -13,7 +13,7 @@ public class MessageFile extends Message {
 		super();
 	}
 	
-	public byte[]  getPayload() {
+	public byte[] getPayload() {
 		return this.payload;
 	}
 }

@@ -5,7 +5,6 @@ import java.util.Date;
 import sat.radio.RadioID;
 
 public abstract class Message implements Comparable<Message> {
-	private RadioID id;
 	private int priority;
 	private int posx, posy;
 	private int length;
