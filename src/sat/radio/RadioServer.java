@@ -1,6 +1,7 @@
 package sat.radio;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.HashMap;
 import java.util.PriorityQueue;
 
@@ -22,6 +23,9 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 	public RadioServer(RadioServerDelegate delegate) {
 		setDelegate(delegate);
 		this.sockets = new HashMap<RadioID, RadioSocket>();
+		
+		incomingMessages = new PriorityQueue<Message>();
+		outgoingMessages = new PriorityQueue<Message>();
 		
 		incomingThread = new Thread() {
 			public void run() {
@@ -69,11 +73,25 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 		
 		public void run() {
 			try {
+				ObjectInputStream ois = new ObjectInputStream(socket.in);
 				System.out.println("Client Connected");
-				socket.close();
-			} catch(IOException e) {
-				// TODO Auto-generated catch block
+				
+				Message message;
+				while((message = (Message) ois.readObject()) != null) {
+					synchronized(incomingMessages) {
+						incomingMessages.add(message);
+						incomingMessages.notify();
+					}
+				}
+			} catch(Exception e) {
+				// Close bad client
 				e.printStackTrace();
+				try {
+					socket.close();
+				} catch(IOException e1) {
+					// TODO handle
+					e1.printStackTrace();
+				}
 			}
 		}
 	}

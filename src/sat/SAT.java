@@ -3,10 +3,13 @@ package sat;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
+import java.net.Socket;
 
 import sat.plane.Plane;
 import sat.radio.RadioID;
 import sat.radio.engine.file.FileEngineMessage;
+import sat.radio.message.MessageKeepalive;
+import sat.radio.message.MessageMayDay;
 import sat.tower.Tower;
 
 public class SAT {
@@ -37,14 +40,23 @@ public class SAT {
 	
 	public static void lab() {
 		try {
-			BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream("socket.in", true), 65535);
-			ObjectOutputStream oos = new ObjectOutputStream(bos);
+			Socket sock = new Socket("localhost", 4242);
 			
+			ObjectOutputStream oos = new ObjectOutputStream(sock.getOutputStream());
 
-			oos.writeObject(new FileEngineMessage(new RadioID("HELLO TOWER!"), new byte[50]));
-			bos.flush();
-			
-			oos.close();
+			oos.writeObject(new MessageKeepalive());
+			oos.writeObject(new MessageKeepalive());
+			oos.writeObject(new MessageKeepalive());
+			oos.writeObject(new MessageKeepalive());
+			oos.writeObject(new MessageKeepalive());
+			oos.writeObject(new MessageKeepalive());
+			oos.writeObject(new MessageKeepalive());
+			oos.writeObject(new MessageKeepalive());
+			oos.writeObject(new MessageKeepalive());
+			oos.writeObject(new MessageMayDay("ALL MY BASE ARE BELONG TO THEM"));
+			oos.writeObject(null);
+	
+			oos.flush();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

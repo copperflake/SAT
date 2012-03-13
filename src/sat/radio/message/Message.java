@@ -1,10 +1,13 @@
 package sat.radio.message;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import sat.radio.RadioID;
 
-public abstract class Message implements Comparable<Message> {
+public abstract class Message implements Comparable<Message>, Serializable {
+	private RadioID id;
+	
 	private int priority;
 	private int posx, posy;
 	private int length;
