@@ -13,4 +13,8 @@ public class PlaneCLI extends GlobalCLI {
 		super(in, out, "Plane> ");
 		this.plane = plane;
 	}
+	
+	public void connect() {
+		
+	}
 }
