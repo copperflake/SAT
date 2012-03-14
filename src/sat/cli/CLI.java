@@ -58,8 +58,6 @@ public abstract class CLI implements Runnable {
 			String line = in.nextLine();
 			eval(line);
 		}
-		
-		out.println("");
 	}
 	
 	public Thread runInNewThread() {
