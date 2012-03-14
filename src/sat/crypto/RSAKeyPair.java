@@ -59,13 +59,15 @@ public final class RSAKeyPair {
 			BigInteger p, q;
 			
 			do {
-				// TODO: Les nombres devraient différer de quelques digits afin
-				// d'éviter un certain type d'attaque.
-				p = BigInteger.probablePrime(keyLength / 2, rand);
-				q = BigInteger.probablePrime(keyLength / 2, rand);
-			} while(p.equals(q)); // p != q
-
-			n = p.multiply(q); // RSA: n = pq
+				do {
+					// TODO: Les nombres devraient différer de quelques digits afin
+					// d'éviter un certain type d'attaque.
+					p = BigInteger.probablePrime(keyLength / 2, rand);
+					q = BigInteger.probablePrime(keyLength / 2, rand);
+				} while(p.equals(q)); // p != q
+	
+				n = p.multiply(q); // RSA: n = pq
+			} while(n.bitLength() != keyLength);
 			
 			BigInteger pMin1 = p.subtract(BigInteger.ONE); // (p-1)
 			BigInteger qMin1 = q.subtract(BigInteger.ONE); // (q-1)
