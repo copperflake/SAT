@@ -1,0 +1,8 @@
+#!/bin/bash
+if [ -f "sat.jar" ];
+then
+	java -jar sat.jar $@
+else
+	cd bin
+	java sat.SAT $@
+fi
