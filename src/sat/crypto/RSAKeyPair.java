@@ -9,10 +9,12 @@ import sat.EndOfWorldException;
 public final class RSAKeyPair {
 	private RSAKey publicKey;
 	private RSAKey privateKey;
+	private int keyLength;
 
 	public RSAKeyPair() {
 		try {
 			generateKeyPair(1024);
+			this.keyLength = 1024;
 		} catch(RSAKeyTooShortException e) {
 			throw new EndOfWorldException("keyLength of 1024 is not too small!");
 		}
@@ -20,11 +22,14 @@ public final class RSAKeyPair {
 
 	public RSAKeyPair(int keyLength) throws RSAKeyTooShortException {
 		generateKeyPair(keyLength);
+		this.keyLength = keyLength;
 	}
 
 	public RSAKeyPair(RSAKey publicKey) {
 		this.publicKey = publicKey;
 		this.privateKey = null; // Half keyPair
+		
+		this.keyLength = publicKey.length();
 	}
 	
 	public RSAKeyPair(RSAKey publicKey, RSAKey privateKey) throws RSAInvalidKeyPairException {
@@ -32,8 +37,13 @@ public final class RSAKeyPair {
 		if(!publicKey.getModulus().equals(privateKey.getModulus()))
 			throw new RSAInvalidKeyPairException();
 		
+		if(publicKey.length() != privateKey.length())
+			throw new RSAInvalidKeyPairException();
+		
 		this.publicKey = publicKey;
 		this.privateKey = privateKey;
+		
+		this.keyLength = publicKey.length();
 	}
 
 	private void generateKeyPair(int keyLength) throws RSAKeyTooShortException {
@@ -85,8 +95,16 @@ public final class RSAKeyPair {
 		return privateKey;
 	}
 
-	public RSAKey getPublicKey() throws RSAMissingPrivateKeyException {
+	public RSAKey getPublicKey() {
 		return publicKey;
+	}
+	
+	public int keyLength() {
+		return keyLength;
+	}
+	
+	public RSAKeyPair makePublic() {
+		return new RSAKeyPair(getPublicKey());
 	}
 
 	public BigInteger encrypt(BigInteger m) {
