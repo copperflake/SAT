@@ -17,7 +17,7 @@ public class RSAOutputStream extends OutputStream {
 		this.out = out;
 		this.keys = keys;
 		
-		blockSize = (keys.keyLength() - 1) / 8;
+		blockSize = keys.keyLength() / 8;
 		bufferSize = blockSize - 2;
 		buffer = new byte[bufferSize];
 	}
@@ -31,30 +31,34 @@ public class RSAOutputStream extends OutputStream {
 	public void flush() throws IOException {
 		if(bufferLength == 0) return;
 		
-		byte[] block = new byte[blockSize+1];
+		byte[] block = new byte[blockSize];
 		
-		int padding = blockSize-1-bufferLength;
-		for(int i = 0; i < padding; i++) {
-			block[i+1] = 1;
+		//block[0] = 0;
+		
+		int padding = bufferSize-bufferLength;
+		for(int i = 1; i <= padding; i++) {
+			block[i] = 123;
 		}
 		
+		//block[padding+1] = 0;
+				
 		for(int i = 0; i < bufferLength; i++) {
 			block[i+padding+2] = buffer[i];
 		}
 		
 		BigInteger block_bigint = new BigInteger(block);
+		BigInteger block_bigint_encrypted = keys.encrypt(block_bigint);
 		
-		//System.out.println(">" + block_bigint);
+		byte[] block_encrypted = block_bigint_encrypted.toByteArray();
 		
-		block_bigint = keys.encrypt(block_bigint);
+		int drop = (block_encrypted.length > 128) ? 1 : 0;
+		int packet_padding = block.length-(block_encrypted.length);
 		
-		byte[] block_encrypted = block_bigint.toByteArray();
-		padding = block.length-block_encrypted.length;
 		for(int i = 0; i < block.length; i++) {
-			if(i < padding) {
+			if(i < packet_padding) {
 				block[i] = 0;
 			} else {
-				block[i] = block_encrypted[i-padding];
+				block[i] = block_encrypted[(i-padding)+drop];
 			}
 		}
 		

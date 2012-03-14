@@ -40,6 +40,9 @@ public final class RSAKeyPair {
 		if(publicKey.length() != privateKey.length())
 			throw new RSAInvalidKeyPairException();
 		
+		if(publicKey.length() % 8 != 0)
+			throw new RSAInvalidKeyPairException();
+		
 		this.publicKey = publicKey;
 		this.privateKey = privateKey;
 		
@@ -49,6 +52,9 @@ public final class RSAKeyPair {
 	private void generateKeyPair(int keyLength) throws RSAKeyTooShortException {
 		if(keyLength < 128)
 			throw new RSAKeyTooShortException();
+		
+		if(keyLength % 8 != 0)
+			keyLength += (keyLength % 8);
 
 		Random rand = new SecureRandom();
 
