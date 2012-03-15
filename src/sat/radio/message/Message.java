@@ -6,33 +6,37 @@ import java.util.Date;
 import sat.radio.RadioID;
 
 public abstract class Message implements Comparable<Message>, Serializable {
-	private RadioID id;
+	protected RadioID id;
+
+	protected Date time;
 	
-	private int priority;
-	private int posx, posy;
-	private int length;
-	private Date time;
+	protected MessageType type = MessageType.INVALID;
+	protected int priority = 0;
 	
 	public Message() {
 		this.time = new Date();
 	}
 	
+	public MessageType getType() {
+		return type;
+	}
+	
 	public int getPriority() {
-		return this.priority;
+		return priority;
 	}
 	
 	public Date getDate() {
-		return this.time;
+		return time;
 	}
 
 	public abstract String toString();
 	
 	public int compareTo(Message msg) {
-		if(this.priority < msg.getPriority())
+		if(this.priority < msg.getPriority()) {
 			return 1;
-		else if(this.priority > msg.getPriority())
+		} else if(this.priority > msg.getPriority()) {
 			return -1;
-		else {
+		} else {
 			if(this.getDate().compareTo(msg.getDate()) > 0)
 				return 1;
 			else if(this.getDate().compareTo(msg.getDate()) < 0)
@@ -41,4 +45,6 @@ public abstract class Message implements Comparable<Message>, Serializable {
 				return 0;
 		}
 	}
+	
+	private static final long serialVersionUID = 145275102115030728L;
 }

@@ -3,6 +3,9 @@ package sat.radio.message;
 import sat.file.FileFormat;
 
 public class MessageFileSegment extends Message {
+	protected MessageType type = MessageType.DATA;
+	protected int priority = 0;
+	
 	private int fileSize;
 	private FileFormat format;
 	private byte[] hash;
