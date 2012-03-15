@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 
+import sat.EndOfWorldException;
+
 public class RSAInputStream extends InputStream {
     protected InputStream in;
     protected RSAKeyPair keys;
