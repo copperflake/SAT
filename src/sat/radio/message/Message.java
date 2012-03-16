@@ -11,7 +11,7 @@ public abstract class Message implements Comparable<Message>, Serializable {
 	protected Date time;
 	
 	protected MessageType type = MessageType.INVALID;
-	protected int priority = 0;
+	protected int priority = 5;
 	
 	public Message() {
 		this.time = new Date();

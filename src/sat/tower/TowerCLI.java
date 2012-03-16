@@ -25,6 +25,7 @@ public class TowerCLI extends GlobalCLI {
 			out.println("[Warning] `listen file` requires a *nix system and is depreciated!");
 			engine = new RadioServerFileEngine(arg1);
 		} else if(engineType.equals("tcp")) {
+			if(arg1.isEmpty()) arg1 = "6969"; // Default port
 			int port = Integer.parseInt(arg1);
 			if(!arg2.isEmpty()) {
 				InetAddress iface = InetAddress.getByName(arg2);

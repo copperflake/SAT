@@ -1,8 +1,7 @@
 package sat.radio.message;
 
 public enum MessageType {
-	INVALID,
-	
+	// ITP Defined
 	HELLO,
 	DATA,
 	MAYDAY,
@@ -10,7 +9,10 @@ public enum MessageType {
 	CHOKE,
 	UNCHOKE,
 	BYE,
-	ROUTING,
+	ROUTING, 
 	KEEPALIVE,
-	LANDINGREQUEST
+	LANDINGREQUEST,
+	
+	// ITP Extensions
+	INVALID
 }

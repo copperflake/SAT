@@ -24,11 +24,11 @@ public class RSAOutputStream extends OutputStream {
         this.keys = keys;
         
         blockSize = keys.keyLength() / 8;
-        bufferSize = blockSize - 2;
+        bufferSize = blockSize - 2; // Front byte + Padding boundary
         
         buffer = new byte[bufferSize];
         
-        // Only one allocation (no zero-ing on flush)
+        // Only one block allocation (no zero-ing memory on each flush)
         block = new byte[blockSize];
     }
     
@@ -39,12 +39,14 @@ public class RSAOutputStream extends OutputStream {
     }
     
     public void flush() throws IOException {
+    	// Nothing to send, so we don't send anything.
         if(bufferLength == 0) return;
         
         // Front zero
+        // BigInt(block) < (key-modulo - 1)
         block[0] = 0;
         
-        // Padding with random bytes
+        // If buffer isn't full: padding with random bytes
         int padding = (blockSize-2)-bufferLength;
         if(padding > 0) {
         	// Lazy allocation for SecureRandom
@@ -75,6 +77,8 @@ public class RSAOutputStream extends OutputStream {
         
         int drop = 0;
         if(block_encrypted.length > block.length) {
+        	// If the first bit of the first byte of block_encrypted is 1
+        	// BigInteger adds a null-byte before it for signing reasons.
         	drop = 1;
         	padding = 0;
         } else {
@@ -94,7 +98,7 @@ public class RSAOutputStream extends OutputStream {
     }
     
     public void close() throws IOException {
-        flush();
+        flush(); // If buffer isn't empty, flush it
         out.close();
     }
 }

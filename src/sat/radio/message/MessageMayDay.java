@@ -14,4 +14,6 @@ public class MessageMayDay extends Message {
 	public String toString() {
 		return "I'm a May Day!";
 	}
+	
+	private static final long serialVersionUID = -1838109809346574324L;
 }

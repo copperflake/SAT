@@ -2,7 +2,7 @@ package sat.radio.message;
 
 public class MessageUnchoke extends Message {
 	protected MessageType type = MessageType.UNCHOKE;
-	protected int priority = 0;
+	protected int priority = 4;
 	
 	public MessageUnchoke() {
 		super();

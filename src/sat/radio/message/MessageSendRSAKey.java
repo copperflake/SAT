@@ -4,7 +4,7 @@ import sat.crypto.RSAKey;
 
 public class MessageSendRSAKey extends Message {
 	protected MessageType type = MessageType.SENDRSA;
-	protected int priority = 0;
+	protected int priority = 2;
 	
 	private RSAKey publicKey;
 	
