@@ -1,5 +1,9 @@
 package sat.radio;
 
+import sat.EndOfWorldException;
+
 public class RadioSocketPiped extends RadioSocket {
-	// Not Yet Implemented
+	public RadioSocketPiped() {
+		throw new EndOfWorldException("Not Yet Implemented!");
+	}
 }
