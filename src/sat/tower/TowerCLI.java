@@ -51,6 +51,7 @@ public class TowerCLI extends GlobalCLI {
 	 * @param arg2			Paramètre spécifique au moteur (optionel)
 	 * 
 	 * @throws IOException	La création d'un moteur peut générer une exception.
+	 * 						Cette exception est passée au code appelant.
 	 */
 	public void listen(String engineType, String arg1, String arg2) throws IOException {
 		RadioServerEngine engine;

@@ -9,6 +9,9 @@ import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerEngineDelegate;
 import sat.radio.message.Message;
 
+/**
+ * Un serveur radio.
+ */
 public class RadioServer extends Radio implements RadioServerEngineDelegate {
 	private RadioServerDelegate delegate;
 	private RadioServerEngine engine;
