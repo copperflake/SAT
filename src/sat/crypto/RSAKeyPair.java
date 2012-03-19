@@ -29,7 +29,7 @@ public final class RSAKeyPair {
 		this.publicKey = publicKey;
 		this.privateKey = null; // Half keyPair
 		
-		this.keyLength = publicKey.length();
+		this.keyLength = publicKey.getLength();
 	}
 	
 	public RSAKeyPair(RSAKey publicKey, RSAKey privateKey) throws RSAInvalidKeyPairException {
@@ -37,16 +37,16 @@ public final class RSAKeyPair {
 		if(!publicKey.getModulus().equals(privateKey.getModulus()))
 			throw new RSAInvalidKeyPairException();
 		
-		if(publicKey.length() != privateKey.length())
+		if(publicKey.getLength() != privateKey.getLength())
 			throw new RSAInvalidKeyPairException();
 		
-		if(publicKey.length() % 8 != 0)
+		if(publicKey.getLength() % 8 != 0)
 			throw new RSAInvalidKeyPairException();
 		
 		this.publicKey = publicKey;
 		this.privateKey = privateKey;
 		
-		this.keyLength = publicKey.length();
+		this.keyLength = publicKey.getLength();
 	}
 
 	private void generateKeyPair(int keyLength) throws RSAKeyTooShortException {
