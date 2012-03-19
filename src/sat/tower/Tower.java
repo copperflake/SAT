@@ -6,7 +6,7 @@ import sat.radio.RadioServer;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.RadioServerDelegate;
 
-public class Tower {
+public class Tower implements RadioServerDelegate {
 	/**
 	 * Singleton Constructor
 	 */
@@ -28,16 +28,9 @@ public class Tower {
 	
 	private Tower() {}
 	
-	public boolean listen(RadioServerEngine engine) throws IOException {
-		if(radio != null) return false;
-		
-		radio = new RadioServer(new RadioServerDelegate() {
-			
-		});
-		
+	public void listen(RadioServerEngine engine) throws IOException {
+		if(radio == null) radio = new RadioServer(this);
 		radio.listen(engine);
-		
-		return true;
 	}
 	
 	public static void main(String[] args) {

@@ -21,6 +21,10 @@ public class TowerCLI extends GlobalCLI {
 	public void listen(String engineType, String arg1, String arg2) throws IOException {
 		RadioServerEngine engine;
 		
+		if(engineType.isEmpty()) {
+			engineType = "tcp";
+		}
+		
 		if(engineType.equals("file")) {
 			out.println("[Warning] `listen file` requires a *nix system and is depreciated!");
 			engine = new RadioServerFileEngine(arg1);

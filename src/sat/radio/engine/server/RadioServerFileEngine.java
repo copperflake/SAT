@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 
 import sat.EndOfWorldException;
-import sat.radio.RadioServer;
 import sat.radio.engine.file.FileEngineMessage;
 
 /**
