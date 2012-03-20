@@ -9,6 +9,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerEngineDelegate;
 import sat.radio.message.Message;
+import sat.radio.socket.RadioSocket;
 
 /**
  * Un serveur radio.
@@ -126,9 +127,9 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 	}
 
 	/**
-	 * Gestionnaire de socket.
+	 * Un gestionnaire de socket.
 	 */
-	private class SocketManager extends Thread {
+	private class SocketManager {
 		/**
 		 * Le socket géré par ce gestionnaire.
 		 */
@@ -154,9 +155,11 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			this.socket = socket;
 
 			listener = new SocketListener();
-			listener.start();
-
 			writer = new SocketWriter();
+		}
+		
+		public void start() {
+			listener.start();
 			writer.start();
 		}
 
@@ -209,6 +212,7 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 					e.printStackTrace();
 					try {
 						socket.close();
+						SocketManager.this.quit();
 					} catch(IOException e1) {
 						// TODO handle
 						e1.printStackTrace();
@@ -218,6 +222,7 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 
 			public void quit() {
 				running = false;
+				this.interrupt();
 			}
 		}
 
@@ -230,13 +235,13 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			/**
 			 * La file d'attente de messages à envoyer.
 			 */
-			private PriorityBlockingQueue<Message> queue;
+			private PriorityBlockingQueue<Message> queue = new PriorityBlockingQueue<Message>();
 
 			/**
 			 * État du thread.
 			 */
 			private boolean running = true;
-
+			
 			public void run() {
 				Message message;
 
@@ -251,6 +256,7 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 
 			public void quit() {
 				running = false;
+				this.interrupt();
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-package sat.radio;
+package sat.radio.socket;
 
 import sat.EndOfWorldException;
 
