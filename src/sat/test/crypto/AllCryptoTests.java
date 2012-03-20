@@ -6,4 +6,5 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({ RSAKeyPairTest.class, RSAKeyTest.class })
-public class AllCryptoTests {}
+public class AllCryptoTests {
+}

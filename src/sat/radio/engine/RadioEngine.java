@@ -1,3 +1,4 @@
 package sat.radio.engine;
 
-public abstract class RadioEngine {}
+public abstract class RadioEngine {
+}

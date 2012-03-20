@@ -10,7 +10,7 @@ public class RSAKeyTest {
 	@Test
 	public void test() {
 		sat.crypto.RSAKey key = new sat.crypto.RSAKey(BigInteger.ONE, BigInteger.TEN);
-		
+
 		assertEquals(BigInteger.ONE, key.getExponent());
 		assertEquals(BigInteger.TEN, key.getModulus());
 	}

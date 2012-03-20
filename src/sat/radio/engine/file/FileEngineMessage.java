@@ -7,7 +7,7 @@ import sat.radio.RadioID;
 public class FileEngineMessage implements Serializable {
 	public RadioID sender;
 	public byte[] payload;
-	
+
 	public FileEngineMessage(RadioID sender, byte[] payload) {
 		this.sender = sender;
 		this.payload = payload;

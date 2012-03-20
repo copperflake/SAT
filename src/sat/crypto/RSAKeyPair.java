@@ -28,31 +28,31 @@ public final class RSAKeyPair {
 	public RSAKeyPair(RSAKey publicKey) {
 		this.publicKey = publicKey;
 		this.privateKey = null; // Half keyPair
-		
+
 		this.keyLength = publicKey.getLength();
 	}
-	
+
 	public RSAKeyPair(RSAKey publicKey, RSAKey privateKey) throws RSAInvalidKeyPairException {
 		// TODO: check key validity (better)
 		if(!publicKey.getModulus().equals(privateKey.getModulus()))
 			throw new RSAInvalidKeyPairException();
-		
+
 		if(publicKey.getLength() != privateKey.getLength())
 			throw new RSAInvalidKeyPairException();
-		
+
 		if(publicKey.getLength() % 8 != 0)
 			throw new RSAInvalidKeyPairException();
-		
+
 		this.publicKey = publicKey;
 		this.privateKey = privateKey;
-		
+
 		this.keyLength = publicKey.getLength();
 	}
 
 	private void generateKeyPair(int keyLength) throws RSAKeyTooShortException {
 		if(keyLength < 128)
 			throw new RSAKeyTooShortException();
-		
+
 		if(keyLength % 8 != 0)
 			keyLength += (keyLength % 8);
 
@@ -63,7 +63,7 @@ public final class RSAKeyPair {
 
 		do {
 			BigInteger p, q;
-			
+
 			do {
 				do {
 					// TODO: Les nombres devraient différer de quelques digits afin
@@ -71,15 +71,15 @@ public final class RSAKeyPair {
 					p = BigInteger.probablePrime(keyLength / 2, rand);
 					q = BigInteger.probablePrime(keyLength / 2, rand);
 				} while(p.equals(q)); // p != q
-	
+
 				n = p.multiply(q); // RSA: n = pq
 			} while(n.bitLength() != keyLength);
-			
+
 			BigInteger pMin1 = p.subtract(BigInteger.ONE); // (p-1)
 			BigInteger qMin1 = q.subtract(BigInteger.ONE); // (q-1)
-			
+
 			phi = pMin1.multiply(qMin1); // RSA: φ(n) = (p-1)(q-1)
-			
+
 			// Using λ(n) instead of φ(n):
 			// - The original version of RSA defined φ(n) = (p-1)(q-1).
 			// - In fact you can use the smaller Charmichael function instead:
@@ -88,7 +88,7 @@ public final class RSAKeyPair {
 			//   this definition.
 			lambda = phi.divide(pMin1.gcd(qMin1));
 		} while(lambda.compareTo(e) != 1 || !e.gcd(lambda).equals(BigInteger.ONE)); // e < [φ/λ] & e premier à λ
-		
+
 		// e est premier à λ, donc d existe
 		d = e.modInverse(lambda);
 
@@ -106,11 +106,11 @@ public final class RSAKeyPair {
 	public RSAKey getPublicKey() {
 		return publicKey;
 	}
-	
+
 	public int keyLength() {
 		return keyLength;
 	}
-	
+
 	public RSAKeyPair makePublic() {
 		return new RSAKeyPair(getPublicKey());
 	}

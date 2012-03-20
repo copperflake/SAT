@@ -6,10 +6,10 @@ import java.io.OutputStream;
 
 public abstract class RadioSocket {
 	protected RadioID id;
-	
+
 	public InputStream in;
 	public OutputStream out;
-	
+
 	public void close() throws IOException {
 		in.close();
 		out.close();
