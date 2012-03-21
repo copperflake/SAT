@@ -4,13 +4,14 @@ import sat.plane.Route;
 import sat.radio.RadioID;
 
 public class MessageRouting extends Message {
-	protected MessageType type = MessageType.ROUTING;
-	protected int priority = 2;
-
 	Route route;
 
 	public MessageRouting(RadioID id, int px, int py, Route route) {
 		super(id, px, py);
+
+		type = MessageType.ROUTING;
+		priority = 2;
+
 		this.route = route;
 	}
 

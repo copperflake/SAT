@@ -8,8 +8,8 @@ import sat.radio.RadioID;
 public abstract class Message implements Comparable<Message>, Serializable {
 	// Global attributes
 	private RadioID id;
-	private int posx;
-	private int posy;
+	private int posX;
+	private int posY;
 
 	// Defaults
 
@@ -22,8 +22,8 @@ public abstract class Message implements Comparable<Message>, Serializable {
 
 	public Message(RadioID i, int px, int py) {
 		id = i;
-		posx = px;
-		posy = py;
+		posX = px;
+		posY = py;
 
 		time = new Date();
 	}
@@ -32,12 +32,12 @@ public abstract class Message implements Comparable<Message>, Serializable {
 		return id;
 	}
 
-	public int getPosx() {
-		return posx;
+	public int getPosX() {
+		return posX;
 	}
 
-	public int getPosy() {
-		return posy;
+	public int getPosY() {
+		return posY;
 	}
 
 	public int getLength() {

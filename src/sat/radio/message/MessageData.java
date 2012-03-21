@@ -4,9 +4,6 @@ import sat.file.FileFormat;
 import sat.radio.RadioID;
 
 public class MessageData extends Message {
-	protected MessageType type = MessageType.DATA;
-	protected int priority = 4;
-
 	private int fileSize;
 	private FileFormat format;
 	private byte[] hash;
@@ -15,6 +12,9 @@ public class MessageData extends Message {
 
 	public MessageData(RadioID id, int px, int py) {
 		super(id, px, py);
+
+		type = MessageType.DATA;
+		priority = 4;
 	}
 
 	public byte[] getPayload() {

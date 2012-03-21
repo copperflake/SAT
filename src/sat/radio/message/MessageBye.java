@@ -3,11 +3,11 @@ package sat.radio.message;
 import sat.radio.RadioID;
 
 public class MessageBye extends Message {
-	protected MessageType type = MessageType.BYE;
-	protected int priority = 4;
-
 	public MessageBye(RadioID id, int px, int py) {
 		super(id, px, py);
+
+		type = MessageType.BYE;
+		priority = 4;
 	}
 
 	public String toString() {

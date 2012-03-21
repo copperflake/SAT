@@ -3,13 +3,13 @@ package sat.radio.message;
 import sat.radio.RadioID;
 
 public class MessageHello extends Message {
-	protected MessageType type = MessageType.HELLO;
-	protected int priority = 1;
-
 	private boolean ciphered;
 
 	public MessageHello(RadioID id, int px, int py) {
 		super(id, px, py);
+
+		type = MessageType.HELLO;
+		priority = 1;
 	}
 
 	public String toString() {

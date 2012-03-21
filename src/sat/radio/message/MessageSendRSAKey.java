@@ -4,14 +4,14 @@ import sat.crypto.RSAKey;
 import sat.radio.RadioID;
 
 public class MessageSendRSAKey extends Message {
+	private RSAKey publicKey;
+
 	public MessageSendRSAKey(RadioID i, int px, int py) {
 		super(i, px, py);
+
+		type = MessageType.SENDRSA;
+		priority = 2;
 	}
-
-	protected MessageType type = MessageType.SENDRSA;
-	protected int priority = 2;
-
-	private RSAKey publicKey;
 
 	public String toString() {
 		return "I'm a SendRSAKey";

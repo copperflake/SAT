@@ -3,13 +3,14 @@ package sat.radio.message;
 import sat.radio.RadioID;
 
 public class MessageMayDay extends Message {
-	protected MessageType type = MessageType.MAYDAY;
-	protected int priority = 0;
-
 	private String cause;
 
 	public MessageMayDay(RadioID id, int px, int py, String cause) {
 		super(id, px, py);
+
+		type = MessageType.MAYDAY;
+		priority = 0;
+
 		this.cause = cause;
 	}
 
