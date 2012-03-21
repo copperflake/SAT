@@ -1,11 +1,14 @@
 package sat;
 
+import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 import sat.plane.Plane;
 import sat.radio.RadioID;
+import sat.radio.message.MessageHello;
 import sat.radio.message.MessageKeepalive;
+import sat.radio.message.stream.MessageOutputStream;
 import sat.tower.Tower;
 
 /**
@@ -62,6 +65,21 @@ public final class SAT {
 	 */
 	public static void lab() {
 		try {
+			RadioID id = new RadioID("PLN");
+			System.out.println(id);
+			System.out.println(new String(id.toLegacyId()));
+			
+			RadioID id2 = new RadioID(id.toLegacyId());
+			System.out.println(id2);
+			
+			MessageOutputStream mos = new MessageOutputStream(System.out);
+			mos.writeMessage(new MessageHello(new RadioID(), 0, 0));
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+		
+		
+		/*try {
 			Socket sock = new Socket("localhost", 6969);
 			ObjectOutputStream ois = new ObjectOutputStream(sock.getOutputStream());
 
@@ -71,6 +89,6 @@ public final class SAT {
 			ois.close();
 		} catch(Exception e) {
 			e.printStackTrace();
-		}
+		}*/
 	}
 }
