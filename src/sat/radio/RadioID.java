@@ -37,12 +37,12 @@ public class RadioID implements Serializable {
 	/**
 	 * Nombre de chiffres de la partie horraire de l'identifiant.
 	 */
-	static private final int TIME_DIGIT = 4;
+	static private final int TIME_DIGIT = 3;
 
 	/**
 	 * Nombre de chiffres de la partie aléatoire de l'identifiant.
 	 */
-	static private final int RAND_DIGIT = 4;
+	static private final int RAND_DIGIT = 2;
 
 	static private final long TIME_POW = (long) Math.pow(10L, TIME_DIGIT);
 	static private final long RAND_POW = (long) Math.pow(10L, RAND_DIGIT);
@@ -58,18 +58,30 @@ public class RadioID implements Serializable {
 	 * Création d'un identifiant représentant un OVNI.
 	 */
 	public RadioID() {
-		UFO = true;
+		this("");
 	}
 
 	/**
 	 * Création d'un identifiant.
 	 * 
 	 * @param label
-	 *            Le label de l'identifiant.
+	 *            Le label de l'identifiant. Si ce label est vide, l'identifiant
+	 *            créé sera celui d'un UFO.
 	 */
 	public RadioID(String label) {
-		this.label = label;
+		if(label.isEmpty()) {
+			UFO = true;
+		} else {
+			this.label = label;
+		}
 
+		generateCode();
+	}
+
+	/**
+	 * Génère la partie variable de l'identifiant.
+	 */
+	private void generateCode() {
 		Date now = new Date();
 		time = (int) ((now.getTime() / 1000) % TIME_POW);
 
@@ -116,9 +128,38 @@ public class RadioID implements Serializable {
 	 * @return Un identifiant sous forme de tableau de bytes compatible avec le
 	 *         protocol officiel de l'ITP.
 	 */
-	public byte[] toLegacyID() {
-		// TODO: implements
-		return new byte[LEGACYID_LENGHT];
+	public byte[] toLegacyId() {
+		byte[] legacyId = new byte[LEGACYID_LENGHT];
+
+		// "X:000-00" the LegacyPrefix
+		legacyId[0] = 'X';
+		legacyId[1] = ':';
+
+		int available = LEGACYID_LENGHT - 3;
+
+		// Computing the rand size first give a small adventage to the
+		// time size. (division floors)
+		int randSize = available / 2; // Length of the random segment
+		String randSeg = String.valueOf(id);
+
+		int timeSize = available - randSize; // Lenght of the time segment
+		String timeSeg = String.valueOf(time);
+
+		// Computing the ID
+
+		// Time part
+		for(int i = 0, j = timeSeg.length(); i < timeSize; i++, j--) {
+			legacyId[i + 2] = (byte) ((j <= 0) ? '0' : timeSeg.charAt(i));
+		}
+
+		legacyId[timeSize + 2] = '-';
+
+		// Rand part
+		for(int i = 0, j = randSeg.length(); i < randSize; i++, j--) {
+			legacyId[i + timeSize + 3] = (byte) ((j <= 0) ? '0' : randSeg.charAt(i));
+		}
+
+		return legacyId;
 	}
 
 	private static final long serialVersionUID = 6714099615154964027L;
