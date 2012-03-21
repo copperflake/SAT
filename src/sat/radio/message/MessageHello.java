@@ -1,13 +1,15 @@
 package sat.radio.message;
 
-public class MessageHello extends Message {
-	protected MessageType type = MessageType.HELLO;
-	protected int priority = 1;
+import sat.radio.RadioID;
 
+public class MessageHello extends Message {
 	private boolean ciphered;
 
-	public MessageHello() {
-		super();
+	public MessageHello(RadioID id, int px, int py) {
+		super(id, px, py);
+
+		type = MessageType.HELLO;
+		priority = 1;
 	}
 
 	public String toString() {

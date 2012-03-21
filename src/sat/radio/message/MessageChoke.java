@@ -1,11 +1,13 @@
 package sat.radio.message;
 
-public class MessageChoke extends Message {
-	protected MessageType type = MessageType.CHOKE;
-	protected int priority = 1;
+import sat.radio.RadioID;
 
-	public MessageChoke() {
-		super();
+public class MessageChoke extends Message {
+	public MessageChoke(RadioID id, int px, int py) {
+		super(id, px, py);
+
+		type = MessageType.CHOKE;
+		priority = 1;
 	}
 
 	public String toString() {

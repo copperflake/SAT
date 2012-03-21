@@ -157,7 +157,7 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			listener = new SocketListener();
 			writer = new SocketWriter();
 		}
-		
+
 		public void start() {
 			listener.start();
 			writer.start();
@@ -241,7 +241,7 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			 * État du thread.
 			 */
 			private boolean running = true;
-			
+
 			public void run() {
 				Message message;
 

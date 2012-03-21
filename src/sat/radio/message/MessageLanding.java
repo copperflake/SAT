@@ -1,11 +1,13 @@
 package sat.radio.message;
 
-public class MessageLanding extends Message {
-	protected MessageType type = MessageType.LANDINGREQUEST;
-	protected int priority = 2;
+import sat.radio.RadioID;
 
-	public MessageLanding() {
-		super();
+public class MessageLanding extends Message {
+	public MessageLanding(RadioID id, int px, int py) {
+		super(id, px, py);
+
+		type = MessageType.LANDINGREQUEST;
+		priority = 2;
 	}
 
 	public String toString() {
