@@ -7,6 +7,28 @@ import java.util.Date;
  * L'identifiant d'un pair dans un réseau radio SAT.
  */
 public class RadioID implements Serializable {
+	// RadioID config
+
+	/**
+	 * Nombre de chiffres de la partie horraire de l'identifiant.
+	 */
+	static private final int TIME_DIGIT = 3;
+
+	/**
+	 * Nombre de chiffres de la partie aléatoire de l'identifiant.
+	 */
+	static private final int RAND_DIGIT = 2;
+
+	static private final long TIME_POW = (long) Math.pow(10L, TIME_DIGIT);
+	static private final long RAND_POW = (long) Math.pow(10L, RAND_DIGIT);
+	static private final long GLOB_POW = (long) Math.pow(10L, TIME_DIGIT + RAND_DIGIT);
+
+	/**
+	 * Longueur en byte des identifants classiques. Ces identifiants sont
+	 * compatible avec les identifiants du protocole officiel de l'ITP.
+	 */
+	static private final int LEGACYID_LENGHT = 8;
+
 	/**
 	 * Le label d'un identifiant. Le label préfixe le code du pair et permet de
 	 * différencier les différents types d'appareils plus facilement.
@@ -32,44 +54,63 @@ public class RadioID implements Serializable {
 	 */
 	private boolean UFO = false;
 
-	// RadioID config
+	/**
+	 * Indique si cet identifiant a été créé à partir d'un identifiant Legacy.
+	 */
+	private boolean legacy = false;
 
 	/**
-	 * Nombre de chiffres de la partie horraire de l'identifiant.
+	 * Garde en mémoire l'ancien identifiant LegacyID s'il ce RadioID a été créé
+	 * à partir d'un LegacyID.
 	 */
-	static private final int TIME_DIGIT = 4;
-
-	/**
-	 * Nombre de chiffres de la partie aléatoire de l'identifiant.
-	 */
-	static private final int RAND_DIGIT = 4;
-
-	static private final long TIME_POW = (long) Math.pow(10L, TIME_DIGIT);
-	static private final long RAND_POW = (long) Math.pow(10L, RAND_DIGIT);
-	static private final long GLOB_POW = (long) Math.pow(10L, TIME_DIGIT + RAND_DIGIT);
-
-	/**
-	 * Longueur en byte des identifants classiques. Ces identifiants sont
-	 * compatible avec les identifiants du protocole officiel de l'ITP.
-	 */
-	static private final int LEGACYID_LENGHT = 8;
+	private byte[] legacyId;
 
 	/**
 	 * Création d'un identifiant représentant un OVNI.
 	 */
 	public RadioID() {
-		UFO = true;
+		this("");
 	}
 
 	/**
 	 * Création d'un identifiant.
 	 * 
 	 * @param label
-	 *            Le label de l'identifiant.
+	 *            Le label de l'identifiant. Si ce label est vide, l'identifiant
+	 *            créé sera celui d'un UFO.
 	 */
 	public RadioID(String label) {
-		this.label = label;
+		if(label.isEmpty()) {
+			UFO = true;
+		} else {
+			this.label = label;
+		}
 
+		generateCode();
+	}
+
+	/**
+	 * Crée un identifiant à partir d'un identifiant ITP-compliant.
+	 * 
+	 * @param legacyId
+	 *            L'identifiant ITP-compliant à la base de ce RadioID.
+	 */
+	public RadioID(byte[] legacyId) {
+		this("L[" + new String(legacyId) + "]");
+
+		// Store the original legacy ID
+		this.legacyId = new byte[LEGACYID_LENGHT];
+
+		int length = (legacyId.length > LEGACYID_LENGHT) ? LEGACYID_LENGHT : legacyId.length;
+		System.arraycopy(legacyId, 0, this.legacyId, 0, length);
+
+		legacy = true;
+	}
+
+	/**
+	 * Génère la partie variable de l'identifiant.
+	 */
+	private void generateCode() {
 		Date now = new Date();
 		time = (int) ((now.getTime() / 1000) % TIME_POW);
 
@@ -88,12 +129,29 @@ public class RadioID implements Serializable {
 	}
 
 	/**
+	 * Indique si l'identifiant a été créé à partir d'un identifiant
+	 * ITP-compliant.
+	 * 
+	 * @return <code>true</code> si l'identifiant est ITP-compliant,
+	 *         <code>false</code> sinon.
+	 */
+	public boolean isLegacy() {
+		return legacy;
+	}
+
+	/**
 	 * Converti l'identifiant en une chaine de caractères.
 	 */
 	public String toString() {
 		// Si l'identifiant représente un OVNI, on retourne simplement "UFO".
 		if(isUFO())
 			return "UFO";
+
+		// Si l'identifiant provient d'un identifiant legacy, on n'affiche
+		// pas les données supplémentaires de RadioID.
+		if(isLegacy()) {
+			return label;
+		}
 
 		// Construction d'un grand nombre intégrant les informations de
 		// l'identifiant (heure / id). Ceci simplifie la conversion en chaine
@@ -111,14 +169,49 @@ public class RadioID implements Serializable {
 
 	/**
 	 * Converti l'identifiant en un format respectant le format imposé par le
-	 * protocol officiel de l'ITP.
+	 * protocol officiel de l'ITP. Si cet identifiant avait été créé à partir
+	 * d'un tel identifiant, l'identifiant ITP-compliant de base est retourné.
 	 * 
 	 * @return Un identifiant sous forme de tableau de bytes compatible avec le
 	 *         protocol officiel de l'ITP.
 	 */
-	public byte[] toLegacyID() {
-		// TODO: implements
-		return new byte[LEGACYID_LENGHT];
+	public byte[] toLegacyId() {
+		// Si un identifiant legacyId est déjà disponible, on le retourne,
+		// tout simplement.
+		if(legacyId != null)
+			return legacyId;
+
+		legacyId = new byte[LEGACYID_LENGHT];
+
+		// "X:000-00" the LegacyPrefix
+		legacyId[0] = 'X';
+		legacyId[1] = ':';
+
+		int available = LEGACYID_LENGHT - 3;
+
+		// Computing the rand size first give a small adventage to the
+		// time size. (division floors)
+		int randSize = available / 2; // Length of the random segment
+		String randSeg = String.valueOf(id);
+
+		int timeSize = available - randSize; // Lenght of the time segment
+		String timeSeg = String.valueOf(time);
+
+		// Computing the ID
+
+		// Time part
+		for(int i = 0, j = timeSeg.length(); i < timeSize; i++, j--) {
+			legacyId[i + 2] = (byte) ((j <= 0) ? '0' : timeSeg.charAt(i));
+		}
+
+		legacyId[timeSize + 2] = '-';
+
+		// Rand part
+		for(int i = 0, j = randSeg.length(); i < randSize; i++, j--) {
+			legacyId[i + timeSize + 3] = (byte) ((j <= 0) ? '0' : randSeg.charAt(i));
+		}
+
+		return legacyId;
 	}
 
 	private static final long serialVersionUID = 6714099615154964027L;
