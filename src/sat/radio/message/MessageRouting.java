@@ -1,6 +1,7 @@
 package sat.radio.message;
 
 import sat.plane.Route;
+import sat.radio.RadioID;
 
 public class MessageRouting extends Message {
 	protected MessageType type = MessageType.ROUTING;
@@ -8,8 +9,8 @@ public class MessageRouting extends Message {
 
 	Route route;
 
-	public MessageRouting(Route route) {
-		super();
+	public MessageRouting(RadioID id, int px, int py, Route route) {
+		super(id, px, py);
 		this.route = route;
 	}
 

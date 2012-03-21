@@ -1,6 +1,7 @@
 package sat.radio.message;
 
 import sat.file.FileFormat;
+import sat.radio.RadioID;
 
 public class MessageData extends Message {
 	protected MessageType type = MessageType.DATA;
@@ -12,8 +13,8 @@ public class MessageData extends Message {
 	private int packetNumber;
 	private byte[] payload;
 
-	public MessageData() {
-		super();
+	public MessageData(RadioID id, int px, int py) {
+		super(id, px, py);
 	}
 
 	public byte[] getPayload() {

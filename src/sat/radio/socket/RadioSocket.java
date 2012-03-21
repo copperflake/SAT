@@ -18,22 +18,22 @@ public abstract class RadioSocket {
 		in.close();
 		out.close();
 	}
-	
+
 	protected class RadioSocketInputStream extends FilterInputStream {
 		public RadioSocketInputStream(InputStream in) {
 			super(in);
 		}
-		
+
 		public void upgrade(InputStream in) {
 			this.in = in;
 		}
 	}
-	
+
 	protected class RadioSocketOutputStream extends FilterOutputStream {
 		public RadioSocketOutputStream(OutputStream out) {
 			super(out);
 		}
-		
+
 		public void upgrade(OutputStream out) {
 			this.out = out;
 		}

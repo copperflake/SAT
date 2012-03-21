@@ -1,17 +1,11 @@
 package sat;
 
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.net.Socket;
 
-import sat.crypto.RSAInputStream;
-import sat.crypto.RSAKeyPair;
-import sat.crypto.RSAOutputStream;
 import sat.plane.Plane;
+import sat.radio.RadioID;
 import sat.radio.message.MessageKeepalive;
-import sat.radio.message.MessageMayDay;
 import sat.tower.Tower;
 
 /**
@@ -70,10 +64,10 @@ public final class SAT {
 		try {
 			Socket sock = new Socket("localhost", 6969);
 			ObjectOutputStream ois = new ObjectOutputStream(sock.getOutputStream());
-			
-			ois.writeObject(new MessageKeepalive());
-			ois.writeObject(new MessageKeepalive());
-			
+
+			ois.writeObject(new MessageKeepalive(new RadioID(), 0, 0));
+			ois.writeObject(new MessageKeepalive(new RadioID(), 0, 0));
+
 			ois.close();
 		} catch(Exception e) {
 			e.printStackTrace();
