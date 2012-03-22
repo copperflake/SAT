@@ -1,20 +1,41 @@
 package sat.radio.message;
 
-import sat.file.FileFormat;
 import sat.radio.RadioID;
 
 public class MessageData extends Message {
-	private int fileSize;
-	private FileFormat format;
 	private byte[] hash;
-	private int packetNumber;
+	int continuation;
+	private byte[] format;
+	private int fileSize;
 	private byte[] payload;
 
-	public MessageData(RadioID id, int px, int py) {
+	public MessageData(RadioID id, int px, int py, byte[] hash, int continuation, byte[] format, int fileSize, byte[] payload) {
 		super(id, px, py);
 
 		type = MessageType.DATA;
 		priority = 4;
+		
+		this.hash = hash;
+		this.continuation = continuation;
+		this.format = format;
+		this.fileSize = fileSize;
+		this.payload = payload;
+	}
+
+	public byte[] getHash() {
+		return hash;
+	}
+
+	public int getContinuation() {
+		return continuation;
+	}
+
+	public byte[] getFormat() {
+		return format;
+	}
+
+	public int getFileSize() {
+		return fileSize;
 	}
 
 	public byte[] getPayload() {

@@ -14,6 +14,10 @@ public class MessageMayDay extends Message {
 		this.cause = cause;
 	}
 
+	public String getCause() {
+		return cause;
+	}
+
 	public String toString() {
 		return "I'm a May Day!";
 	}

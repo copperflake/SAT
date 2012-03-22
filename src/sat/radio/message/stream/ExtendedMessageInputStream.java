@@ -41,19 +41,16 @@ public class ExtendedMessageInputStream extends MessageInputStream {
 	 * <code>IOException</code> seront en revanche relancée.
 	 */
 	public Message readMessage() throws IOException {
-		// Cette méthode attend un message correct, et ignore les données 
-		// invalides.
-		while(true) {
-			try {
-				// Met fin à la boucle et retourne le premier message valide
-				// obtenu.
-				return (Message) ois.readObject();
-			} catch(IOException e) {
-				// Rethrow IOExceptions
-				throw e;
-			} catch(Exception e) {
-				// Ignore bad objects...
-			}
+		try {
+			// Met fin à la boucle et retourne le premier message valide
+			// obtenu.
+			return (Message) ois.readObject();
+		} catch(IOException e) {
+			// Rethrow IOExceptions
+			throw e;
+		} catch(Exception e) {
+			// Ignore bad objects...
+			return null;
 		}
 	}
 }

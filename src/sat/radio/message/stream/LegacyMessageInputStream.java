@@ -3,10 +3,11 @@ package sat.radio.message.stream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 
-import sat.radio.message.Message;
-import sat.radio.message.MessageHello;
-import sat.radio.message.MessageType;
+import sat.crypto.RSAKey;
+import sat.radio.RadioID;
+import sat.radio.message.*;
 
 /**
  * Flux d'entrée de message compatible avec le protocole de sérialisation de
@@ -36,16 +37,17 @@ public class LegacyMessageInputStream extends MessageInputStream {
 	/**
 	 * Lis un message depuis le flux d'entrée
 	 */
+	@SuppressWarnings("unused")
 	public Message readMessage() throws IOException {
 		// Lecture des paramètres communs à tous les messages.
 		// Attention, l'ordre de lecture est important ! (obviously)
-		byte[] planeID = fill(new byte[8]);
+		RadioID id = new RadioID(fill(new byte[8])); // PlaneID
 
 		int length = dis.readInt();
-		int priority = dis.readInt();
+		int priority = dis.readInt(); // Not used...
 
-		int posx = dis.readInt();
-		int posy = dis.readInt();
+		int px = dis.readInt();	// PosX
+		int py = dis.readInt();	// PoxY
 
 		// Le type du message
 		MessageType type = MessageType.values()[dis.readInt()];
@@ -56,16 +58,26 @@ public class LegacyMessageInputStream extends MessageInputStream {
 		switch(type) {
 			case HELLO:
 				byte reserved = dis.readByte();
-				//message = new MessageHello(reserved);
+				message = new MessageHello(id, px, py, reserved);
 				break;
 
 			case DATA:
+				byte[] hash = fill(new byte[20]);
+				int continuation = dis.readInt();
+				byte[] format = fill(new byte[4]);
+				int fileSize = dis.readInt();
+				byte[] payload = fill(new byte[length]);
+
+				message = new MessageData(id, px, py, hash, continuation, format, fileSize, payload);
 				break;
 
 			case MAYDAY:
+				String cause = new String(fill(new byte[length]));
+				message = new MessageMayDay(id, px, py, cause);
 				break;
 
 			case SENDRSA:
+				// What's that ?
 				int keySize = dis.readInt();
 
 				int modulusLength = dis.readInt();
@@ -74,24 +86,38 @@ public class LegacyMessageInputStream extends MessageInputStream {
 				int publicKeyLength = dis.readInt();
 				byte[] publicKey = fill(new byte[publicKeyLength]);
 
+				RSAKey key = new RSAKey(new BigInteger(publicKey), new BigInteger(modulus));
+
+				message = new MessageSendRSAKey(id, px, py, key);
 				break;
 
 			case CHOKE:
+				message = new MessageChoke(id, px, py);
 				break;
 
 			case UNCHOKE:
+				message = new MessageUnchoke(id, px, py);
 				break;
 
 			case BYE:
+				message = new MessageBye(id, px, py);
 				break;
 
 			case ROUTING:
+				int routingMessageType = dis.readInt();
+				int moveType = dis.readInt();
+				byte[] payload2 = fill(new byte[length]);
+				// TODO data
+
+				message = new MessageRouting(id, px, py, null);
 				break;
 
 			case KEEPALIVE:
+				message = new MessageKeepalive(id, px, py);
 				break;
 
 			case LANDINGREQUEST:
+				message = new MessageLanding(id, px, py);
 				break;
 		}
 
