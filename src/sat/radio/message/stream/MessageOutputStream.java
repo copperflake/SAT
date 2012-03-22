@@ -1,79 +1,37 @@
 package sat.radio.message.stream;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import sat.radio.message.*;
+import sat.radio.message.Message;
 
-public class MessageOutputStream extends FilterOutputStream {
-	private ByteArrayOutputStream baos;
-	private DataOutputStream dos;
-	
+/**
+ * Flux de sortie de message sérialisés selon un algorithme dépendant de la
+ * classe-fille utilisée.
+ */
+public abstract class MessageOutputStream extends FilterOutputStream {
+	/**
+	 * Crée un nouveau flux de sortie de messages écrivant les données
+	 * serialisées dans le flux donné.
+	 * 
+	 * @param out
+	 *            Le flux de sortie dans lequel les données serialisées seront
+	 *            écrites.
+	 */
 	public MessageOutputStream(OutputStream out) {
 		super(out);
-		
-		baos = new ByteArrayOutputStream();
-		dos = new DataOutputStream(baos);
 	}
 
-	public void writeMessage(Message m) throws IOException {
-		baos.reset();
-		
-		dos.write(m.getId().toLegacyId());
-		dos.writeInt(m.getLength());
-		dos.writeInt(m.getPosX());
-		dos.writeInt(m.getPosY());
-		
-		switch(m.getType()) {
-			case HELLO:
-				MessageHello hello = (MessageHello) m;
-				break;
-				
-			case DATA:
-				MessageData data = (MessageData) m;
-				break;
-				
-			case MAYDAY:
-				MessageMayDay mayday = (MessageMayDay) m;
-				break;
-				
-			case SENDRSA:
-				MessageSendRSAKey sendrsa = (MessageSendRSAKey) m;
-				break;
-				
-			case CHOKE:
-				MessageChoke choke = (MessageChoke) m;
-				break;
-				
-			case UNCHOKE:
-				MessageUnchoke unchoke = (MessageUnchoke) m;
-				break;
-				
-			case BYE:
-				MessageBye bye = (MessageBye) m;
-				break;
-				
-			case ROUTING:
-				MessageRouting routing = (MessageRouting) m;
-				break;
-				
-			case KEEPALIVE:
-				MessageKeepalive keepalive = (MessageKeepalive) m;
-				break;
-				
-			case LANDINGREQUEST:
-				MessageLanding landing = (MessageLanding) m;
-				break;
-				
-			default:
-				// Invalid message, send nothing
-				throw new IOException("Invalid message");
-		}
-		
-		dos.flush(); // useful ?
-		out.write(baos.toByteArray());
-	}
+	/**
+	 * Écrit un message dans le flux de message.
+	 * 
+	 * @param m
+	 *            Le message à serialiser et à écrire dans le flux interne.
+	 * 
+	 * @throws IOException
+	 *             L'écriture du message dans le flux interne peut générer une
+	 *             exception qui est alors passée au code appelant.
+	 */
+	abstract public void writeMessage(Message m) throws IOException;
 }
