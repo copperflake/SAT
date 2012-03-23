@@ -7,7 +7,6 @@ import java.net.InetAddress;
 
 import sat.GlobalCLI;
 import sat.radio.engine.server.RadioServerEngine;
-import sat.radio.engine.server.RadioServerFileEngine;
 import sat.radio.engine.server.RadioServerTCPEngine;
 
 /**
@@ -68,10 +67,7 @@ public class TowerCLI extends GlobalCLI {
 			engineType = "tcp";
 		}
 
-		if(engineType.equals("file")) {
-			out.println("[Warning] `listen file` requires a *nix system and is depreciated!");
-			engine = new RadioServerFileEngine(arg1);
-		} else if(engineType.equals("tcp")) {
+		if(engineType.equals("tcp")) {
 			if(arg1.isEmpty())
 				arg1 = "6969"; // Port par défaut
 			int port = Integer.parseInt(arg1);
