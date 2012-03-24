@@ -1,0 +1,7 @@
+#!/bin/bash
+git init
+git remote add origin git@github.com:EvoDev/SAT.git
+git fetch
+git pull origin master
+git branch --set-upstream master origin/master
+echo "	rebase = true" >> .git/config
