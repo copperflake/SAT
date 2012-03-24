@@ -1,15 +1,6 @@
 package sat;
 
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
-
 import sat.plane.Plane;
-import sat.radio.RadioID;
-import sat.radio.message.MessageHello;
-import sat.radio.message.MessageKeepalive;
-import sat.radio.message.stream.LegacyMessageOutputStream;
-import sat.radio.message.stream.MessageOutputStream;
 import sat.tower.Tower;
 
 /**
@@ -37,7 +28,7 @@ public final class SAT {
 		}
 
 		if(args[0].equals("lab")) {
-			lab();
+			Lab.lab(args);
 		} else if(args[0].equals("plane")) {
 			Plane.main(args);
 		} else if(args[0].equals("tower")) {
@@ -57,24 +48,5 @@ public final class SAT {
 		System.out.println("Available commands:");
 		System.out.println("    plane  |  Start a plane connected with towerIP");
 		System.out.println("    tower  |  Start a tower");
-	}
-
-	/**
-	 * Méthode utilitaire. Cette méthode est utilisée pour executer facilement
-	 * un morceau de code lors du développement. Elle n'a aucune utilité dans
-	 * l'application finale.
-	 */
-	public static void lab() {
-		try {
-			Socket sock = new Socket("localhost", 6969);
-			ObjectOutputStream ois = new ObjectOutputStream(sock.getOutputStream());
-
-			ois.writeObject(new MessageKeepalive(new RadioID(), 0, 0));
-			ois.writeObject(new MessageKeepalive(new RadioID(), 0, 0));
-
-			ois.close();
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
 	}
 }
