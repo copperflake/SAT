@@ -1,5 +1,8 @@
 package sat.tower;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -31,6 +34,62 @@ public class TowerCLI extends GlobalCLI {
 	public TowerCLI(Tower tower, InputStream in, PrintStream out) {
 		super(in, out, "Tower> ");
 		this.tower = tower;
+	}
+
+	/**
+	 * Affiche la configuration actuelle de la tour.
+	 */
+	public void config() {
+		tower.getConfig().list(out);
+	}
+
+	/**
+	 * Affiche la valeur d'un élément de la configuration de la tour.
+	 * 
+	 * @param key
+	 *            Le paramètre de configuration à afficher.
+	 */
+	public void get(String key) {
+		out.println(tower.getConfig().getProperty(key));
+	}
+
+	/**
+	 * Défini la valeur d'un paramètre de configuration.
+	 * 
+	 * @param key
+	 *            Le nom du paramètre à définir.
+	 * @param value
+	 *            La valeur du paramètre.
+	 */
+	public void set(String key, String value) {
+		tower.getConfig().setProperty(key, value);
+	}
+
+	/**
+	 * Enregistre la configuration de la tour dans un fichier.
+	 * 
+	 * @param path
+	 *            Le chemin du fichier dans lequel écrire la configuration.
+	 * 
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public void store(String path) throws FileNotFoundException, IOException {
+		tower.getConfig().store(new FileOutputStream(path), null);
+	}
+
+	/**
+	 * Charge une configuration depuis un fichier créé par la commande
+	 * <code>store</code>.
+	 * 
+	 * @param path
+	 *            Le chemin du fichier à lire.
+	 * 
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public void load(String path) throws FileNotFoundException, IOException {
+		tower.getConfig().load(new FileInputStream(path));
 	}
 
 	/**

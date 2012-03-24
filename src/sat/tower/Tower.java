@@ -2,6 +2,7 @@ package sat.tower;
 
 import java.io.IOException;
 
+import sat.cli.Config;
 import sat.radio.RadioServer;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.RadioServerDelegate;
@@ -15,7 +16,22 @@ public class Tower implements RadioServerDelegate {
 	/**
 	 * L'instance unique de la classe Tower.
 	 */
-	private static Tower instance = null;
+	private static Tower instance;
+
+	/**
+	 * La configuration par défaut d'une tour. Sert de modèle à la contruction
+	 * de la configuration spécifique aux instances d'une tour.
+	 */
+	private static Config defaults;
+
+	/**
+	 * Initialise la configuration par défaut avec les valeurs appropriées.
+	 */
+	private static void initDefaults() {
+		defaults = new Config();
+
+		//defaults.setProperty("foo", "bar");
+	}
 
 	/**
 	 * Constructeur privé. Impossible de créer une instance de cette classe
@@ -23,6 +39,7 @@ public class Tower implements RadioServerDelegate {
 	 * l'instance-unique de la tour.
 	 */
 	private Tower() {
+		config = new Config(defaults);
 	}
 
 	/**
@@ -32,6 +49,9 @@ public class Tower implements RadioServerDelegate {
 	 * @return L'instance unique de la classe Tower.
 	 */
 	public static Tower getInstance() {
+		if(defaults == null)
+			initDefaults();
+
 		if(instance == null)
 			instance = new Tower();
 
@@ -45,6 +65,19 @@ public class Tower implements RadioServerDelegate {
 	 * gestion technique de la communication avec le monde extérieur.
 	 */
 	private RadioServer radio = null;
+
+	/**
+	 * La configuration spécifique à une instance de la tour (même si en
+	 * pratique, la tour est un singleton).
+	 */
+	private Config config;
+
+	/**
+	 * Retourne l'objet de configuration de la tour.
+	 */
+	public Config getConfig() {
+		return config;
+	}
 
 	/**
 	 * Ajoute un moteur de radio à la radio de la tour et l'initialise.
