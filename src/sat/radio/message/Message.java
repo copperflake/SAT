@@ -38,7 +38,7 @@ public abstract class Message implements Comparable<Message>, Serializable {
 		type = MessageType.INVALID;
 	}
 
-	public RadioID getId() {
+	public RadioID getID() {
 		return id;
 	}
 

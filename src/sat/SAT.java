@@ -44,9 +44,9 @@ public final class SAT {
 	 * Affiche les instructions d'utilisation.
 	 */
 	public static void usage() {
-		System.out.println("Usage: java -jar sat.jar COMMAND <ARGS...>");
+		System.out.println("Usage: ./sat COMMAND");
 		System.out.println("Available commands:");
-		System.out.println("    plane  |  Start a plane connected with towerIP");
+		System.out.println("    plane  |  Start a plane");
 		System.out.println("    tower  |  Start a tower");
 	}
 }

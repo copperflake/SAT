@@ -60,7 +60,15 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 		if(this.engine != null)
 			throw new IOException("This radio already have a registered engine.");
 
-		this.engine = engine;
-		this.engine.init(this);
+		try {
+			this.engine = engine;
+			this.engine.init(this);
+		} catch(IOException e) {
+			// Reset the engine if initialization was not successful.
+			this.engine = null;
+
+			// Rethrow exception
+			throw e;
+		}
 	}
 }

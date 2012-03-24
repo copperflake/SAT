@@ -22,7 +22,7 @@ public class LegacyMessageOutputStream extends MessageOutputStream {
 	public void writeMessage(Message m) throws IOException {
 		baos.reset();
 
-		dos.write(m.getId().toLegacyId());
+		dos.write(m.getID().toLegacyID());
 		dos.writeInt(m.getLength());
 		dos.writeInt(m.getPriority());
 		dos.writeInt(m.getPosX());

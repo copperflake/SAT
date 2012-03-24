@@ -34,7 +34,7 @@ public class Plane implements RadioClientDelegate {
 	private static void initDefaults() {
 		defaults = new Config();
 
-		//defaults.setProperty("foo", "bar");
+		defaults.setProperty("legacy", "no");
 	}
 	
 	/**

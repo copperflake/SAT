@@ -63,7 +63,7 @@ public class RadioID implements Serializable {
 	 * Garde en mémoire l'ancien identifiant LegacyID s'il ce RadioID a été créé
 	 * à partir d'un LegacyID.
 	 */
-	private byte[] legacyId;
+	private byte[] legacyID;
 
 	/**
 	 * Création d'un identifiant représentant un OVNI.
@@ -92,17 +92,17 @@ public class RadioID implements Serializable {
 	/**
 	 * Crée un identifiant à partir d'un identifiant ITP-compliant.
 	 * 
-	 * @param legacyId
+	 * @param legacyID
 	 *            L'identifiant ITP-compliant à la base de ce RadioID.
 	 */
-	public RadioID(byte[] legacyId) {
-		this("L[" + new String(legacyId) + "]");
+	public RadioID(byte[] legacyID) {
+		this("L[" + new String(legacyID) + "]");
 
 		// Store the original legacy ID
-		this.legacyId = new byte[LEGACYID_LENGHT];
+		this.legacyID = new byte[LEGACYID_LENGHT];
 
-		int length = (legacyId.length > LEGACYID_LENGHT) ? LEGACYID_LENGHT : legacyId.length;
-		System.arraycopy(legacyId, 0, this.legacyId, 0, length);
+		int length = (legacyID.length > LEGACYID_LENGHT) ? LEGACYID_LENGHT : legacyID.length;
+		System.arraycopy(legacyID, 0, this.legacyID, 0, length);
 
 		legacy = true;
 	}
@@ -175,17 +175,17 @@ public class RadioID implements Serializable {
 	 * @return Un identifiant sous forme de tableau de bytes compatible avec le
 	 *         protocol officiel de l'ITP.
 	 */
-	public byte[] toLegacyId() {
-		// Si un identifiant legacyId est déjà disponible, on le retourne,
+	public byte[] toLegacyID() {
+		// Si un identifiant legacyID est déjà disponible, on le retourne,
 		// tout simplement.
-		if(legacyId != null)
-			return legacyId;
+		if(legacyID != null)
+			return legacyID;
 
-		legacyId = new byte[LEGACYID_LENGHT];
+		legacyID = new byte[LEGACYID_LENGHT];
 
 		// "X:000-00" the LegacyPrefix
-		legacyId[0] = 'X';
-		legacyId[1] = ':';
+		legacyID[0] = 'X';
+		legacyID[1] = ':';
 
 		int available = LEGACYID_LENGHT - 3;
 
@@ -201,17 +201,17 @@ public class RadioID implements Serializable {
 
 		// Time part
 		for(int i = 0, j = timeSeg.length(); i < timeSize; i++, j--) {
-			legacyId[i + 2] = (byte) ((j <= 0) ? '0' : timeSeg.charAt(i));
+			legacyID[i + 2] = (byte) ((j <= 0) ? '0' : timeSeg.charAt(i));
 		}
 
-		legacyId[timeSize + 2] = '-';
+		legacyID[timeSize + 2] = '-';
 
 		// Rand part
 		for(int i = 0, j = randSeg.length(); i < randSize; i++, j--) {
-			legacyId[i + timeSize + 3] = (byte) ((j <= 0) ? '0' : randSeg.charAt(i));
+			legacyID[i + timeSize + 3] = (byte) ((j <= 0) ? '0' : randSeg.charAt(i));
 		}
 
-		return legacyId;
+		return legacyID;
 	}
 
 	private static final long serialVersionUID = 6714099615154964027L;
