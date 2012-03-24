@@ -63,18 +63,4 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 		this.engine = engine;
 		this.engine.init(this);
 	}
-
-	// TODO: cleaning
-
-	public void mayDay(String cause, String dest) {
-		this.send(new MessageMayDay(cause), dest);
-	}
-
-	public void landing(String dest) {
-		this.send(new MessageLanding(), dest);
-	}
-
-	public void routing(Route route, String dest) {
-		this.send(new MessageRouting(route), dest);
-	}
 }

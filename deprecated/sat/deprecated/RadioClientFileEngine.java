@@ -1,6 +1,9 @@
-package sat.radio.engine.client;
+package sat.deprecated;
 
 import java.io.IOException;
+
+import sat.radio.engine.client.RadioClientEngine;
+import sat.radio.engine.client.RadioClientEngineDelegate;
 
 public class RadioClientFileEngine extends RadioClientEngine {
 	public RadioClientFileEngine(String path) {

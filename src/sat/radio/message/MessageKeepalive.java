@@ -1,11 +1,15 @@
 package sat.radio.message;
 
-public class MessageKeepalive extends Message {
-	protected MessageType type = MessageType.KEEPALIVE;
-	protected int priority = 3;
+import sat.radio.RadioID;
 
-	public MessageKeepalive() {
-		super();
+public class MessageKeepalive extends Message {
+	public MessageKeepalive(RadioID id, int px, int py) {
+		super(id, px, py);
+	}
+
+	public void resetTypeAndPriority() {
+		type = MessageType.KEEPALIVE;
+		priority = 3;
 	}
 
 	public String toString() {

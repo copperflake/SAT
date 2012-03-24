@@ -2,12 +2,47 @@ package sat.plane;
 
 import java.io.IOException;
 
+import sat.cli.Config;
 import sat.radio.RadioClient;
 import sat.radio.RadioClientDelegate;
 import sat.radio.engine.client.RadioClientEngine;
 
 public class Plane implements RadioClientDelegate {
-	RadioClient radio;
+	/**
+	 * La configuration par défaut d'un avion. Sert de modèle à la contruction
+	 * de la configuration spécifique aux instances d'avions.
+	 */
+	private static Config defaults;
+	
+	/**
+	 * La configuration spécifique à une instance d'un avion.
+	 */
+	private Config config;
+	
+	private RadioClient radio;
+	
+	public Plane() {
+		if(defaults == null)
+			initDefaults();
+		
+		config = new Config(defaults);
+	}
+	
+	/**
+	 * Initialise la configuration par défaut avec les valeurs appropriées.
+	 */
+	private static void initDefaults() {
+		defaults = new Config();
+
+		//defaults.setProperty("foo", "bar");
+	}
+	
+	/**
+	 * Retourne l'objet de configuration de l'avion.
+	 */
+	public Config getConfig() {
+		return config;
+	}
 
 	public void connect(RadioClientEngine engine) throws IOException {
 		if(radio == null)

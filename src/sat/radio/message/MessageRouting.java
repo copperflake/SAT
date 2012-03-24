@@ -1,16 +1,20 @@
 package sat.radio.message;
 
 import sat.plane.Route;
+import sat.radio.RadioID;
 
 public class MessageRouting extends Message {
-	protected MessageType type = MessageType.ROUTING;
-	protected int priority = 2;
-
 	Route route;
 
-	public MessageRouting(Route route) {
-		super();
+	public MessageRouting(RadioID id, int px, int py, Route route) {
+		super(id, px, py);
+
 		this.route = route;
+	}
+
+	public void resetTypeAndPriority() {
+		type = MessageType.ROUTING;
+		priority = 2;
 	}
 
 	public String toString() {

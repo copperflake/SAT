@@ -1,14 +1,23 @@
 package sat.radio.message;
 
-public class MessageMayDay extends Message {
-	protected MessageType type = MessageType.MAYDAY;
-	protected int priority = 0;
+import sat.radio.RadioID;
 
+public class MessageMayDay extends Message {
 	private String cause;
 
-	public MessageMayDay(String cause) {
-		super();
+	public MessageMayDay(RadioID id, int px, int py, String cause) {
+		super(id, px, py);
+
 		this.cause = cause;
+	}
+
+	public void resetTypeAndPriority() {
+		type = MessageType.MAYDAY;
+		priority = 0;
+	}
+
+	public String getCause() {
+		return cause;
 	}
 
 	public String toString() {

@@ -5,8 +5,8 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import sat.radio.RadioSocket;
-import sat.radio.RadioSocketDirect;
+import sat.radio.socket.RadioSocket;
+import sat.radio.socket.RadioSocketDirect;
 
 public class RadioServerTCPEngine extends RadioServerEngine {
 	private int port;

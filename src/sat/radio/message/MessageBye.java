@@ -1,11 +1,15 @@
 package sat.radio.message;
 
-public class MessageBye extends Message {
-	protected MessageType type = MessageType.BYE;
-	protected int priority = 4;
+import sat.radio.RadioID;
 
-	public MessageBye() {
-		super();
+public class MessageBye extends Message {
+	public MessageBye(RadioID id, int px, int py) {
+		super(id, px, py);
+	}
+
+	public void resetTypeAndPriority() {
+		type = MessageType.BYE;
+		priority = 4;
 	}
 
 	public String toString() {

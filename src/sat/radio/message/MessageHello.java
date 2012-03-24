@@ -1,13 +1,26 @@
 package sat.radio.message;
 
-public class MessageHello extends Message {
-	protected MessageType type = MessageType.HELLO;
-	protected int priority = 1;
+import sat.radio.RadioID;
 
+public class MessageHello extends Message {
 	private boolean ciphered;
 
-	public MessageHello() {
-		super();
+	public MessageHello(RadioID id, int px, int py, byte reserved) {
+		super(id, px, py);
+
+		ciphered = (reserved & (1 << 4)) != 0;
+	}
+
+	public void resetTypeAndPriority() {
+		type = MessageType.HELLO;
+		priority = 1;
+	}
+
+	/**
+	 * @return le byte <code>reserved</code> du protocole ITP.
+	 */
+	public byte getReserved() {
+		return (byte) (ciphered ? 1 << 4 : 0);
 	}
 
 	public String toString() {

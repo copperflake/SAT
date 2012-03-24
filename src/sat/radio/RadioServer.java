@@ -1,13 +1,15 @@
 package sat.radio;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.util.HashMap;
-import java.util.PriorityQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerEngineDelegate;
 import sat.radio.message.Message;
+import sat.radio.socket.RadioSocket;
 
 /**
  * Un serveur radio.
@@ -32,12 +34,7 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 	/**
 	 * File d'attente des messages entrants.
 	 */
-	private PriorityQueue<Message> incomingMessages;
-
-	/**
-	 * File d'attente des messages sortants.
-	 */
-	private PriorityQueue<Message> outgoingMessages;
+	private PriorityBlockingQueue<Message> incomingMessages;
 
 	/**
 	 * Thread de gestion des messages entrants.
@@ -45,14 +42,9 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 	private Thread incomingThread;
 
 	/**
-	 * Thread de gestion des messages sortants.
+	 * Liste des pairs connectés avec le gestionnaire associé.
 	 */
-	private Thread outgoingThread;
-
-	/**
-	 * Liste des pairs connectés avec le socket radio associé.
-	 */
-	private HashMap<RadioID, RadioSocket> sockets;
+	private HashMap<RadioID, SocketManager> managers;
 
 	/**
 	 * Crée un nouveau serveur radio.
@@ -64,31 +56,11 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 	public RadioServer(RadioServerDelegate delegate) {
 		setDelegate(delegate);
 
-		this.sockets = new HashMap<RadioID, RadioSocket>();
+		this.managers = new HashMap<RadioID, SocketManager>();
 
-		incomingMessages = new PriorityQueue<Message>();
-		outgoingMessages = new PriorityQueue<Message>();
+		incomingMessages = new PriorityBlockingQueue<Message>();
 
-		incomingThread = new Thread() {
-			public void run() {
-				synchronized(incomingMessages) {
-					while(true) {
-						if(!incomingMessages.isEmpty()) {
-							Message message = incomingMessages.poll();
-							System.out.println("Got message " + message);
-						} else {
-							try {
-								incomingMessages.wait();
-							} catch(InterruptedException e) {
-								// TODO handle
-								e.printStackTrace();
-							}
-						}
-					}
-				}
-			}
-		};
-
+		incomingThread = new IncomingMessageEmitter();
 		incomingThread.start();
 	}
 
@@ -129,53 +101,162 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 	 * Gestion de la connexion d'un nouveau client.
 	 */
 	public void onNewConnection(RadioSocket socket) {
-		new RadioSocketListener(socket).start();
+		new SocketManager(socket).start();
+	}
+
+	// - - - Threads Objects - - -
+
+	private class IncomingMessageEmitter extends Thread {
+		private boolean running = true;
+
+		public void run() {
+			while(running) {
+				Message message;
+				try {
+					message = incomingMessages.take();
+					System.out.println("Got message " + message);
+					// TODO: emit the message !
+				} catch(InterruptedException e) {
+				}
+			}
+		}
+
+		public void quit() {
+			running = false;
+		}
 	}
 
 	/**
-	 * Thread de gestion de l'entrée client.
+	 * Un gestionnaire de socket.
 	 */
-	protected class RadioSocketListener extends Thread {
+	private class SocketManager {
 		/**
-		 * Le socket géré par ce thread
+		 * Le socket géré par ce gestionnaire.
 		 */
-		RadioSocket socket;
+		private RadioSocket socket;
 
 		/**
-		 * Crée un nouveau thread d'écoute d'entrée client sur un socket
-		 * spécifique.
+		 * Le thread d'écoute d'entrée.
+		 */
+		private SocketListener listener;
+
+		/**
+		 * Le thread d'écoute de sortie.
+		 */
+		private SocketWriter writer;
+
+		/**
+		 * Crée un gestionnaire de socket.
 		 * 
 		 * @param socket
-		 *            Le socket à écouter.
+		 *            Le socket à gérer.
 		 */
-		public RadioSocketListener(RadioSocket socket) {
+		public SocketManager(RadioSocket socket) {
 			this.socket = socket;
+
+			listener = new SocketListener();
+			writer = new SocketWriter();
 		}
 
-		/**
-		 * Méthode principale du thread.
-		 */
-		public void run() {
-			try {
-				ObjectInputStream ois = new ObjectInputStream(socket.in);
-				System.out.println("Client Connected");
+		public void start() {
+			listener.start();
+			writer.start();
+		}
 
-				Message message;
-				while((message = (Message) ois.readObject()) != null) {
-					synchronized(incomingMessages) {
-						incomingMessages.add(message);
-						incomingMessages.notify();
+		public void quit() {
+			listener.quit();
+			writer.quit();
+		}
+
+		// - - - Listener - - -
+
+		/**
+		 * Thread de gestion de l'entrée du socket.
+		 */
+		private class SocketListener extends Thread {
+			/**
+			 * Le socket écouté par ce thread.
+			 */
+			private InputStream in;
+
+			/**
+			 * État du thread.
+			 */
+			private boolean running = true;
+
+			/**
+			 * Crée un nouveau thread d'écoute d'entrée client.
+			 */
+			public SocketListener() {
+				in = socket.in;
+			}
+
+			/**
+			 * Méthode principale du thread.
+			 */
+			public void run() {
+				// TODO: rework
+				try {
+					ObjectInputStream ois = new ObjectInputStream(in);
+					System.out.println("Client Connected");
+
+					Message message;
+					while((message = (Message) ois.readObject()) != null && running) {
+						synchronized(incomingMessages) {
+							incomingMessages.add(message);
+							incomingMessages.notify();
+						}
+					}
+				} catch(Exception e) {
+					// Close bad client
+					e.printStackTrace();
+					try {
+						socket.close();
+						SocketManager.this.quit();
+					} catch(IOException e1) {
+						// TODO handle
+						e1.printStackTrace();
 					}
 				}
-			} catch(Exception e) {
-				// Close bad client
-				e.printStackTrace();
-				try {
-					socket.close();
-				} catch(IOException e1) {
-					// TODO handle
-					e1.printStackTrace();
+			}
+
+			public void quit() {
+				running = false;
+				this.interrupt();
+			}
+		}
+
+		// - - - Writer - - -
+
+		/**
+		 * Thread de gestion de la liste d'attente des messages sortants.
+		 */
+		private class SocketWriter extends Thread {
+			/**
+			 * La file d'attente de messages à envoyer.
+			 */
+			private PriorityBlockingQueue<Message> queue = new PriorityBlockingQueue<Message>();
+
+			/**
+			 * État du thread.
+			 */
+			private boolean running = true;
+
+			public void run() {
+				Message message;
+
+				while(running) {
+					try {
+						message = queue.take();
+						// TODO: write message in output stream
+					} catch(InterruptedException e) {
+					}
 				}
+			}
+
+			public void quit() {
+				running = false;
+				this.interrupt();
 			}
 		}
 	}

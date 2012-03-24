@@ -1,4 +1,4 @@
-package sat.radio.engine.server;
+package sat.deprecated;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -10,14 +10,14 @@ import java.io.ObjectInputStream;
 
 import sat.EndOfWorldException;
 import sat.radio.engine.file.FileEngineMessage;
+import sat.radio.engine.server.RadioServerEngine;
+import sat.radio.engine.server.RadioServerEngineDelegate;
 
 /**
  * Moteur d'échange de message par fichier.
- * 
  * <p>
  * En pratique ce moteur n'utilise pas de vrai fichier, mais des pipes *nix
  * créés avec `mkfifo`. Il n'est donc pas portable et peu performant.
- * 
  * <p>
  * Il a été développé pour respecter l'ordre des ITP du projet. Une fois les
  * moteurs réseau tel que RadioServerUDPEngine diponibles, ce moteur ne devrait
