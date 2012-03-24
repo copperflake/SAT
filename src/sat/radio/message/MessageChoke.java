@@ -5,7 +5,9 @@ import sat.radio.RadioID;
 public class MessageChoke extends Message {
 	public MessageChoke(RadioID id, int px, int py) {
 		super(id, px, py);
+	}
 
+	public void resetTypeAndPriority() {
 		type = MessageType.CHOKE;
 		priority = 1;
 	}

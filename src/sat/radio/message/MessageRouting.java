@@ -9,10 +9,12 @@ public class MessageRouting extends Message {
 	public MessageRouting(RadioID id, int px, int py, Route route) {
 		super(id, px, py);
 
+		this.route = route;
+	}
+
+	public void resetTypeAndPriority() {
 		type = MessageType.ROUTING;
 		priority = 2;
-
-		this.route = route;
 	}
 
 	public String toString() {

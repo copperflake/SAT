@@ -14,8 +14,11 @@ public abstract class Message implements Comparable<Message>, Serializable {
 	// Defaults
 
 	private int length = 0;
-	protected int priority = 5;
-	protected MessageType type = MessageType.INVALID;
+
+	// Ces attributs ne seront pas sérialisé pour des raisons de sécurité
+	// avec le flux Extended.
+	transient protected int priority;
+	transient protected MessageType type;
 
 	// Additions
 	protected Date time;
@@ -26,6 +29,13 @@ public abstract class Message implements Comparable<Message>, Serializable {
 		posY = py;
 
 		time = new Date();
+
+		resetTypeAndPriority();
+	}
+
+	public void resetTypeAndPriority() {
+		priority = 5;
+		type = MessageType.INVALID;
 	}
 
 	public RadioID getId() {

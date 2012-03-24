@@ -5,7 +5,9 @@ import sat.radio.RadioID;
 public class MessageLanding extends Message {
 	public MessageLanding(RadioID id, int px, int py) {
 		super(id, px, py);
+	}
 
+	public void resetTypeAndPriority() {
 		type = MessageType.LANDINGREQUEST;
 		priority = 2;
 	}

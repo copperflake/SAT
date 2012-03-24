@@ -44,7 +44,9 @@ public class ExtendedMessageInputStream extends MessageInputStream {
 		try {
 			// Met fin à la boucle et retourne le premier message valide
 			// obtenu.
-			return (Message) ois.readObject();
+			Message message = (Message) ois.readObject();
+			message.resetTypeAndPriority(); // Reset type and priority
+			return message;
 		} catch(IOException e) {
 			// Rethrow IOExceptions
 			throw e;

@@ -8,10 +8,12 @@ public class MessageHello extends Message {
 	public MessageHello(RadioID id, int px, int py, byte reserved) {
 		super(id, px, py);
 
+		ciphered = (reserved & (1 << 4)) != 0;
+	}
+
+	public void resetTypeAndPriority() {
 		type = MessageType.HELLO;
 		priority = 1;
-
-		ciphered = (reserved & (1 << 4)) != 0;
 	}
 
 	/**

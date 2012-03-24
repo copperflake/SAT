@@ -8,10 +8,12 @@ public class MessageMayDay extends Message {
 	public MessageMayDay(RadioID id, int px, int py, String cause) {
 		super(id, px, py);
 
+		this.cause = cause;
+	}
+
+	public void resetTypeAndPriority() {
 		type = MessageType.MAYDAY;
 		priority = 0;
-
-		this.cause = cause;
 	}
 
 	public String getCause() {

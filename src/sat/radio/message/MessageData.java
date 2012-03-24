@@ -12,14 +12,16 @@ public class MessageData extends Message {
 	public MessageData(RadioID id, int px, int py, byte[] hash, int continuation, byte[] format, int fileSize, byte[] payload) {
 		super(id, px, py);
 
-		type = MessageType.DATA;
-		priority = 4;
-		
 		this.hash = hash;
 		this.continuation = continuation;
 		this.format = format;
 		this.fileSize = fileSize;
 		this.payload = payload;
+	}
+
+	public void resetTypeAndPriority() {
+		type = MessageType.DATA;
+		priority = 4;
 	}
 
 	public byte[] getHash() {

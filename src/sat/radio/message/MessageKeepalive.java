@@ -5,7 +5,9 @@ import sat.radio.RadioID;
 public class MessageKeepalive extends Message {
 	public MessageKeepalive(RadioID id, int px, int py) {
 		super(id, px, py);
+	}
 
+	public void resetTypeAndPriority() {
 		type = MessageType.KEEPALIVE;
 		priority = 3;
 	}

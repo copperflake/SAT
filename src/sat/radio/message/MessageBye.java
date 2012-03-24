@@ -5,7 +5,9 @@ import sat.radio.RadioID;
 public class MessageBye extends Message {
 	public MessageBye(RadioID id, int px, int py) {
 		super(id, px, py);
+	}
 
+	public void resetTypeAndPriority() {
 		type = MessageType.BYE;
 		priority = 4;
 	}
