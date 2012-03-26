@@ -1,4 +1,4 @@
-package sat.file;
+package sat.utils.file;
 
 public class FileSegment {
 	private byte[] data;

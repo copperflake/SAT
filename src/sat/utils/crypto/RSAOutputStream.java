@@ -1,4 +1,4 @@
-package sat.crypto;
+package sat.utils.crypto;
 
 import java.io.IOException;
 import java.io.OutputStream;

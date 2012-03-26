@@ -2,11 +2,11 @@ package sat.radio;
 
 import java.io.FileNotFoundException;
 
-import sat.file.FileSegment;
-import sat.file.SegmentableFile;
 import sat.radio.message.Message;
 import sat.radio.message.MessageData;
 import sat.radio.message.MessageSendRSAKey;
+import sat.utils.file.FileSegment;
+import sat.utils.file.SegmentableFile;
 
 /**
  * Une radio non-spécialisée (ni client, ni serveur). Cette classe fourni les

@@ -3,7 +3,7 @@ package sat;
 import java.io.InputStream;
 import java.io.PrintStream;
 
-import sat.cli.CLI;
+import sat.utils.cli.CLI;
 
 /**
  * Interface CLI globale au projet SAT. Propose certaines méthodes utilitaires

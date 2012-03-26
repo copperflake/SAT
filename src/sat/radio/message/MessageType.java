@@ -3,6 +3,9 @@ package sat.radio.message;
 public enum MessageType {
 	// ITP Defined
 	HELLO, DATA, MAYDAY, SENDRSA, CHOKE, UNCHOKE, BYE, ROUTING, KEEPALIVE, LANDINGREQUEST,
+	
+	// ITP Reserved
+	ITP_RESERVED_1, ITP_RESERVED_2, ITP_RESERVED_3, ITP_RESERVED_4, ITP_RESERVED_5,
 
 	// ITP Extensions
 	INVALID

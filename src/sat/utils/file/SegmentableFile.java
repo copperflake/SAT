@@ -1,4 +1,4 @@
-package sat.file;
+package sat.utils.file;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;

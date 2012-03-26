@@ -1,4 +1,4 @@
-package sat.test.crypto;
+package sat.tests.crypto;
 
 import static org.junit.Assert.*;
 

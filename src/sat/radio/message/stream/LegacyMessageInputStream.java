@@ -5,9 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 
-import sat.crypto.RSAKey;
 import sat.radio.RadioID;
 import sat.radio.message.*;
+import sat.utils.crypto.RSAKey;
 
 /**
  * Flux d'entrée de message compatible avec le protocole de sérialisation de

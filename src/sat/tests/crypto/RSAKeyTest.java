@@ -1,4 +1,4 @@
-package sat.test.crypto;
+package sat.tests.crypto;
 
 import static org.junit.Assert.*;
 
@@ -9,7 +9,7 @@ import org.junit.Test;
 public class RSAKeyTest {
 	@Test
 	public void test() {
-		sat.crypto.RSAKey key = new sat.crypto.RSAKey(BigInteger.ONE, BigInteger.TEN);
+		sat.utils.crypto.RSAKey key = new sat.utils.crypto.RSAKey(BigInteger.ONE, BigInteger.TEN);
 
 		assertEquals(BigInteger.ONE, key.getExponent());
 		assertEquals(BigInteger.TEN, key.getModulus());

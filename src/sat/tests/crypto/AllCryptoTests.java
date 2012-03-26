@@ -1,4 +1,4 @@
-package sat.test.crypto;
+package sat.tests.crypto;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;

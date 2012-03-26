@@ -1,7 +1,7 @@
 package sat.radio.message;
 
-import sat.crypto.RSAKey;
 import sat.radio.RadioID;
+import sat.utils.crypto.RSAKey;
 
 public class MessageSendRSAKey extends Message {
 	private RSAKey key;

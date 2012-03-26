@@ -1,4 +1,4 @@
-package sat.crypto;
+package sat.utils.crypto;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;

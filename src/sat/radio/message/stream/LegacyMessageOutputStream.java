@@ -5,8 +5,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import sat.crypto.RSAKey;
 import sat.radio.message.*;
+import sat.utils.crypto.RSAKey;
 
 public class LegacyMessageOutputStream extends MessageOutputStream {
 	private ByteArrayOutputStream baos;

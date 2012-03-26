@@ -1,4 +1,4 @@
-package sat.crypto;
+package sat.utils.crypto;
 
 /**
  * Exception lancée lors de la création d'une paire de clés avec des clés

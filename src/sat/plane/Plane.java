@@ -2,10 +2,10 @@ package sat.plane;
 
 import java.io.IOException;
 
-import sat.cli.Config;
 import sat.radio.RadioClient;
 import sat.radio.RadioClientDelegate;
 import sat.radio.engine.client.RadioClientEngine;
+import sat.utils.cli.Config;
 
 public class Plane implements RadioClientDelegate {
 	/**

@@ -1,4 +1,4 @@
-package sat.cli;
+package sat.utils.cli;
 
 import java.io.InputStream;
 import java.io.PrintStream;

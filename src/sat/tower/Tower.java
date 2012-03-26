@@ -2,10 +2,10 @@ package sat.tower;
 
 import java.io.IOException;
 
-import sat.cli.Config;
 import sat.radio.RadioServer;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.RadioServerDelegate;
+import sat.utils.cli.Config;
 
 /**
  * Une tour de contrôle. Cette classe est un Singleton.
