@@ -5,11 +5,11 @@ import sat.radio.RadioID;
 public class MessageData extends Message {
 	private byte[] hash;
 	int continuation;
-	private String format;
+	private byte[] format;
 	private int fileSize;
 	private byte[] payload;
-	
-	public MessageData(RadioID id, int px, int py, byte[] hash, int continuation, String format, int fileSize, byte[] payload) {
+
+	public MessageData(RadioID id, int px, int py, byte[] hash, int continuation, byte[] format, int fileSize, byte[] payload) {
 		super(id, px, py);
 
 		this.hash = hash;
@@ -31,8 +31,8 @@ public class MessageData extends Message {
 	public int getContinuation() {
 		return continuation;
 	}
-	
-	public String getFormat() {
+
+	public byte[] getFormat() {
 		return format;
 	}
 

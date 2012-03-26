@@ -2,9 +2,11 @@ package sat.radio;
 
 import java.io.FileNotFoundException;
 
+import sat.file.FileSegment;
 import sat.file.SegmentableFile;
 import sat.radio.message.Message;
 import sat.radio.message.MessageData;
+import sat.radio.message.MessageSendRSAKey;
 
 /**
  * Une radio non-spécialisée (ni client, ni serveur). Cette classe fourni les
@@ -20,10 +22,14 @@ public abstract class Radio {
 	protected RadioID id;
 
 	public void sendFile(String path, String dest) throws FileNotFoundException {
-		SegmentableFile file = new SegmentableFile(path);
-		while(file.iterator().hasNext()) {
-			MessageData message = new MessageData(id, px, py, file.getHash(), file.iterator().getCounter(), file.getFormat(), file.getSize(), file.iterator().next());
-		}
+		//SegmentableFile file = new SegmentableFile(path);
+		int i = 0;
+		//while(file.iterator().hasNext()) {
+		int px = 0;
+		int py = 0;
+		// TODO: do
+		//MessageData message = new MessageData(id, px, py, file.getHash(), i++, file.getFormat(), file.getSize(), file.iterator().next());
+		//}
 	}
 
 	protected void send(Message msg, String dest) {

@@ -45,10 +45,6 @@ public class SegmentableFile implements Iterable<FileSegment> {
 			public void remove() {
 				// Not available !
 			}
-
-			public int getCounter() {
-				return currentSegment;
-			}
 		};
 	}
 
