@@ -1,10 +1,11 @@
 package sat.radio.message;
 
 import sat.radio.RadioID;
+import sat.utils.geo.Coordinates;
 
 public class MessageBye extends Message {
-	public MessageBye(RadioID id, int px, int py) {
-		super(id, px, py);
+	public MessageBye(RadioID id, Coordinates c) {
+		super(id, c);
 	}
 
 	public void resetTypeAndPriority() {

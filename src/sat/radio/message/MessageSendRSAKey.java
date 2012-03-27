@@ -2,12 +2,13 @@ package sat.radio.message;
 
 import sat.radio.RadioID;
 import sat.utils.crypto.RSAKey;
+import sat.utils.geo.Coordinates;
 
 public class MessageSendRSAKey extends Message {
 	private RSAKey key;
 
-	public MessageSendRSAKey(RadioID i, int px, int py, RSAKey key) {
-		super(i, px, py);
+	public MessageSendRSAKey(RadioID i, Coordinates c, RSAKey key) {
+		super(i, c);
 
 		this.key = key;
 	}

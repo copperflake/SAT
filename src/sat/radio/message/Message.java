@@ -4,12 +4,12 @@ import java.io.Serializable;
 import java.util.Date;
 
 import sat.radio.RadioID;
+import sat.utils.geo.Coordinates;
 
 public abstract class Message implements Comparable<Message>, Serializable {
 	// Global attributes
 	private RadioID id;
-	private int posX;
-	private int posY;
+	private Coordinates coords;
 
 	// Defaults
 
@@ -23,10 +23,9 @@ public abstract class Message implements Comparable<Message>, Serializable {
 	// Additions
 	protected Date time;
 
-	public Message(RadioID i, int px, int py) {
+	public Message(RadioID i, Coordinates c) {
 		id = i;
-		posX = px;
-		posY = py;
+		coords = c;
 
 		time = new Date();
 
@@ -42,12 +41,8 @@ public abstract class Message implements Comparable<Message>, Serializable {
 		return id;
 	}
 
-	public int getPosX() {
-		return posX;
-	}
-
-	public int getPosY() {
-		return posY;
+	public Coordinates getCoordinates() {
+		return coords;
 	}
 
 	public int getLength() {

@@ -1,6 +1,7 @@
 package sat.radio.message;
 
 import sat.radio.RadioID;
+import sat.utils.geo.Coordinates;
 
 public class MessageData extends Message {
 	private byte[] hash;
@@ -9,8 +10,8 @@ public class MessageData extends Message {
 	private int fileSize;
 	private byte[] payload;
 
-	public MessageData(RadioID id, int px, int py, byte[] hash, int continuation, byte[] format, int fileSize, byte[] payload) {
-		super(id, px, py);
+	public MessageData(RadioID id, Coordinates c, byte[] hash, int continuation, byte[] format, int fileSize, byte[] payload) {
+		super(id, c);
 
 		this.hash = hash;
 		this.continuation = continuation;

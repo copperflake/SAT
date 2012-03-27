@@ -1,10 +1,11 @@
 package sat.radio.message;
 
 import sat.radio.RadioID;
+import sat.utils.geo.Coordinates;
 
 public class MessageChoke extends Message {
-	public MessageChoke(RadioID id, int px, int py) {
-		super(id, px, py);
+	public MessageChoke(RadioID id, Coordinates c) {
+		super(id, c);
 	}
 
 	public void resetTypeAndPriority() {

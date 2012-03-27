@@ -2,12 +2,13 @@ package sat.radio.message;
 
 import sat.plane.Route;
 import sat.radio.RadioID;
+import sat.utils.geo.Coordinates;
 
 public class MessageRouting extends Message {
 	Route route;
 
-	public MessageRouting(RadioID id, int px, int py, Route route) {
-		super(id, px, py);
+	public MessageRouting(RadioID id, Coordinates c, Route route) {
+		super(id, c);
 
 		this.route = route;
 	}

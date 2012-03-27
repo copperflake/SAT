@@ -18,7 +18,7 @@ public class PlaneCLI extends GlobalCLI {
 		super(in, out, "Plane> ");
 		this.plane = plane;
 	}
-	
+
 	/**
 	 * Affiche la configuration actuelle de l'avion.
 	 */

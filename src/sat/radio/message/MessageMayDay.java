@@ -1,12 +1,13 @@
 package sat.radio.message;
 
 import sat.radio.RadioID;
+import sat.utils.geo.Coordinates;
 
 public class MessageMayDay extends Message {
 	private String cause;
 
-	public MessageMayDay(RadioID id, int px, int py, String cause) {
-		super(id, px, py);
+	public MessageMayDay(RadioID id, Coordinates c, String cause) {
+		super(id, c);
 
 		this.cause = cause;
 	}

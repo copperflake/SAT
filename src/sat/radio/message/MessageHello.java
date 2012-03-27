@@ -1,13 +1,14 @@
 package sat.radio.message;
 
 import sat.radio.RadioID;
+import sat.utils.geo.Coordinates;
 
 public class MessageHello extends Message {
 	private boolean ciphered;
 	private boolean extended;
 
-	public MessageHello(RadioID id, int px, int py, boolean ciphered, boolean extended) {
-		super(id, px, py);
+	public MessageHello(RadioID id, Coordinates c, boolean ciphered, boolean extended) {
+		super(id, c);
 
 		this.ciphered = ciphered;
 		this.extended = extended;

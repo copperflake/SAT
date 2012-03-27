@@ -1,5 +1,5 @@
 package sat.radio;
 
-public interface RadioServerDelegate {
+public interface RadioServerDelegate extends RadioDelegate {
 
 }

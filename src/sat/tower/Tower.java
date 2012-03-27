@@ -6,6 +6,7 @@ import sat.radio.RadioServer;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.RadioServerDelegate;
 import sat.utils.cli.Config;
+import sat.utils.geo.Coordinates;
 
 /**
  * Une tour de contrôle. Cette classe est un Singleton.
@@ -112,5 +113,11 @@ public class Tower implements RadioServerDelegate {
 
 		TowerCLI repl = new TowerCLI(tower, System.in, System.out);
 		Thread replThread = repl.runInNewThread();
+	}
+
+	// - - - Delegate - - -
+
+	public Coordinates getLocation() {
+		return new Coordinates(0, 0, 0);
 	}
 }

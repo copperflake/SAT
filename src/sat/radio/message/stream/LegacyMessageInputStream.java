@@ -8,6 +8,7 @@ import java.math.BigInteger;
 import sat.radio.RadioID;
 import sat.radio.message.*;
 import sat.utils.crypto.RSAKey;
+import sat.utils.geo.Coordinates;
 
 /**
  * Flux d'entrée de message compatible avec le protocole de sérialisation de
@@ -49,6 +50,8 @@ public class LegacyMessageInputStream extends MessageInputStream {
 		int px = dis.readInt();	// PosX
 		int py = dis.readInt();	// PoxY
 
+		Coordinates c = new Coordinates(px, py, 0);
+
 		// Le type du message
 		MessageType type = MessageType.values()[dis.readInt()];
 
@@ -58,11 +61,11 @@ public class LegacyMessageInputStream extends MessageInputStream {
 		switch(type) {
 			case HELLO:
 				byte reserved = dis.readByte();
-				
+
 				boolean ciphered = (reserved & (1 << 4)) != 0;
 				boolean extended = (reserved & (1 << 7)) != 0;
-				
-				message = new MessageHello(id, px, py, ciphered, extended);
+
+				message = new MessageHello(id, c, ciphered, extended);
 				break;
 
 			case DATA:
@@ -72,12 +75,12 @@ public class LegacyMessageInputStream extends MessageInputStream {
 				int fileSize = dis.readInt();
 				byte[] payload = fill(new byte[length]);
 
-				message = new MessageData(id, px, py, hash, continuation, format, fileSize, payload);
+				message = new MessageData(id, c, hash, continuation, format, fileSize, payload);
 				break;
 
 			case MAYDAY:
 				String cause = new String(fill(new byte[length]));
-				message = new MessageMayDay(id, px, py, cause);
+				message = new MessageMayDay(id, c, cause);
 				break;
 
 			case SENDRSA:
@@ -92,19 +95,19 @@ public class LegacyMessageInputStream extends MessageInputStream {
 
 				RSAKey key = new RSAKey(new BigInteger(publicKey), new BigInteger(modulus));
 
-				message = new MessageSendRSAKey(id, px, py, key);
+				message = new MessageSendRSAKey(id, c, key);
 				break;
 
 			case CHOKE:
-				message = new MessageChoke(id, px, py);
+				message = new MessageChoke(id, c);
 				break;
 
 			case UNCHOKE:
-				message = new MessageUnchoke(id, px, py);
+				message = new MessageUnchoke(id, c);
 				break;
 
 			case BYE:
-				message = new MessageBye(id, px, py);
+				message = new MessageBye(id, c);
 				break;
 
 			case ROUTING:
@@ -113,15 +116,15 @@ public class LegacyMessageInputStream extends MessageInputStream {
 				byte[] payload2 = fill(new byte[length]);
 				// TODO data
 
-				message = new MessageRouting(id, px, py, null);
+				message = new MessageRouting(id, c, null);
 				break;
 
 			case KEEPALIVE:
-				message = new MessageKeepalive(id, px, py);
+				message = new MessageKeepalive(id, c);
 				break;
 
 			case LANDINGREQUEST:
-				message = new MessageLanding(id, px, py);
+				message = new MessageLanding(id, c);
 				break;
 		}
 

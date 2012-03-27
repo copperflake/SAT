@@ -4,6 +4,6 @@ package sat.radio;
  * Un délégué d'un client radio. Ce délégué est charger de gérer les différents
  * événements produits par le client radio au cours de son fonctionnement.s
  */
-public interface RadioClientDelegate {
+public interface RadioClientDelegate extends RadioDelegate {
 	// To be specified...
 }

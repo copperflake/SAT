@@ -7,6 +7,7 @@ import java.io.OutputStream;
 
 import sat.radio.message.*;
 import sat.utils.crypto.RSAKey;
+import sat.utils.geo.Coordinates;
 
 public class LegacyMessageOutputStream extends MessageOutputStream {
 	private ByteArrayOutputStream baos;
@@ -25,8 +26,11 @@ public class LegacyMessageOutputStream extends MessageOutputStream {
 		dos.write(m.getID().toLegacyID());
 		dos.writeInt(m.getLength());
 		dos.writeInt(m.getPriority());
-		dos.writeInt(m.getPosX());
-		dos.writeInt(m.getPosY());
+
+		Coordinates c = m.getCoordinates();
+
+		dos.writeInt(c.getX());
+		dos.writeInt(c.getY());
 
 		switch(m.getType()) {
 			case HELLO:

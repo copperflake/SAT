@@ -8,7 +8,7 @@ public class RadioClientTCPEngine extends RadioClientEngine {
 	private InetAddress host;
 	private int port;
 	private Socket socket;
-	
+
 	public RadioClientTCPEngine(InetAddress host, int port) {
 		this.host = host;
 		this.port = port;
