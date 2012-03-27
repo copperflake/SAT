@@ -32,7 +32,11 @@ public class LegacyMessageOutputStream extends MessageOutputStream {
 			case HELLO:
 				MessageHello hello = (MessageHello) m;
 
-				dos.write(hello.getReserved());
+				byte reserved = 0;
+				reserved += hello.isCiphered() ? 1 << 4 : 0;
+				reserved += hello.isExtended() ? 1 << 7 : 0;
+
+				dos.write(reserved);
 				break;
 
 			case DATA:

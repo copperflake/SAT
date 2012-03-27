@@ -58,7 +58,11 @@ public class LegacyMessageInputStream extends MessageInputStream {
 		switch(type) {
 			case HELLO:
 				byte reserved = dis.readByte();
-				message = new MessageHello(id, px, py, reserved);
+				
+				boolean ciphered = (reserved & (1 << 4)) != 0;
+				boolean extended = (reserved & (1 << 7)) != 0;
+				
+				message = new MessageHello(id, px, py, ciphered, extended);
 				break;
 
 			case DATA:
@@ -125,9 +129,7 @@ public class LegacyMessageInputStream extends MessageInputStream {
 	}
 
 	/**
-	 * Replis un buffer donné. En d'autre termes: lis autant de bytes que la
-	 * taille du buffer passé en paramètre depuis le flux d'entrée interne et
-	 * les écrits dans ce même buffer.
+	 * Replis un buffer donné.
 	 * 
 	 * @param buffer
 	 *            Un buffer de byte qui sera rempli avec les bytes disponible
@@ -142,10 +144,7 @@ public class LegacyMessageInputStream extends MessageInputStream {
 	 *             lecture est succeptible de lever une exception.
 	 */
 	private byte[] fill(byte[] buffer) throws IOException {
-		for(int i = 0; i < buffer.length; i++) {
-			buffer[i] = dis.readByte();
-		}
-
+		dis.readFully(buffer);
 		return buffer;
 	}
 }

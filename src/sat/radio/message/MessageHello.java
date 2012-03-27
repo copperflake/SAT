@@ -4,11 +4,13 @@ import sat.radio.RadioID;
 
 public class MessageHello extends Message {
 	private boolean ciphered;
+	private boolean extended;
 
-	public MessageHello(RadioID id, int px, int py, byte reserved) {
+	public MessageHello(RadioID id, int px, int py, boolean ciphered, boolean extended) {
 		super(id, px, py);
 
-		ciphered = (reserved & (1 << 4)) != 0;
+		this.ciphered = ciphered;
+		this.extended = extended;
 	}
 
 	public void resetTypeAndPriority() {
@@ -16,11 +18,12 @@ public class MessageHello extends Message {
 		priority = 1;
 	}
 
-	/**
-	 * @return le byte <code>reserved</code> du protocole ITP.
-	 */
-	public byte getReserved() {
-		return (byte) (ciphered ? 1 << 4 : 0);
+	public boolean isCiphered() {
+		return ciphered;
+	}
+
+	public boolean isExtended() {
+		return extended;
 	}
 
 	public String toString() {
