@@ -2,9 +2,9 @@ package sat.tower;
 
 import java.io.IOException;
 
-import sat.radio.RadioServer;
 import sat.radio.engine.server.RadioServerEngine;
-import sat.radio.RadioServerDelegate;
+import sat.radio.server.RadioServer;
+import sat.radio.server.RadioServerDelegate;
 import sat.utils.cli.Config;
 import sat.utils.geo.Coordinates;
 

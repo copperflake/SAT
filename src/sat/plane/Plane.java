@@ -2,8 +2,8 @@ package sat.plane;
 
 import java.io.IOException;
 
-import sat.radio.RadioClient;
-import sat.radio.RadioClientDelegate;
+import sat.radio.client.RadioClient;
+import sat.radio.client.RadioClientDelegate;
 import sat.radio.engine.client.RadioClientEngine;
 import sat.utils.cli.Config;
 import sat.utils.geo.Coordinates;

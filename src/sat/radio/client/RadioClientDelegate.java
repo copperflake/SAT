@@ -1,4 +1,6 @@
-package sat.radio;
+package sat.radio.client;
+
+import sat.radio.RadioDelegate;
 
 /**
  * Un délégué d'un client radio. Ce délégué est charger de gérer les différents

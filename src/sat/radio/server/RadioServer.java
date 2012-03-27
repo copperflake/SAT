@@ -1,4 +1,4 @@
-package sat.radio;
+package sat.radio.server;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -6,12 +6,16 @@ import java.io.ObjectInputStream;
 import java.util.HashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 
+import sat.radio.Radio;
+import sat.radio.RadioID;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerEngineDelegate;
 import sat.radio.message.Message;
+import sat.radio.message.MessageHello;
 import sat.radio.message.stream.UpgradableMessageInputStream;
 import sat.radio.message.stream.UpgradableMessageOutputStream;
 import sat.radio.socket.RadioSocket;
+import sat.utils.geo.Coordinates;
 
 /**
  * Un serveur radio.
@@ -238,12 +242,42 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			 */
 			private void handleMessage(Message m) {
 				switch(m.getType()) {
+					case HELLO:
+						handleMessage((MessageHello) m);
+						break;
+
 					default:
 						// No short circuit, send it to incoming queue
 						incomingMessages.put(m);
 				}
 			}
+
+			/**
+			 * Gestion du message Hello.
+			 */
+			private void handleMessage(MessageHello m) {
+				// Enable encryption
+				ciphered = m.isCiphered();
+
+				// Enable extended protocol
+				extended = m.isExtended();
+
+				Coordinates coords = delegate.getLocation();
+				writer.send(new MessageHello(id, coords, ciphered, extended));
+				
+				if(extended) {
+					try {
+						upgrade();
+						writer.upgrade();
+					} catch(IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
+			}
+			
+			public void upgrade() throws IOException {
+				mis.upgrade();
 			}
 
 			public void quit() {
@@ -298,6 +332,10 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 
 			public void send(Message m) {
 				queue.put(m);
+			}
+			
+			public void upgrade() throws IOException {
+				mos.upgrade();
 			}
 
 			public void quit() {

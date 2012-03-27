@@ -1,4 +1,4 @@
-package sat.radio.engine.file;
+package sat.deprecated;
 
 import java.io.Serializable;
 
