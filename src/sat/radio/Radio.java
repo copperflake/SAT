@@ -21,6 +21,10 @@ public abstract class Radio {
 	 */
 	protected RadioID id;
 
+	public Radio(String label) {
+		id = new RadioID(label);
+	}
+
 	public void sendFile(String path, String dest) throws FileNotFoundException {
 		//SegmentableFile file = new SegmentableFile(path);
 		int i = 0;

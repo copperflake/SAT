@@ -37,7 +37,9 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 	 * @param delegate
 	 *            Le délégué chargé de la gestion des événements.
 	 */
-	public RadioClient(RadioClientDelegate delegate) {
+	public RadioClient(RadioClientDelegate delegate, String label) {
+		super(label);
+
 		this.delegate = delegate;
 	}
 

@@ -47,7 +47,7 @@ public class Plane implements RadioClientDelegate {
 
 	public void connect(RadioClientEngine engine) throws IOException {
 		if(radio == null)
-			radio = new RadioClient(this);
+			radio = new RadioClient(this, "PLN");
 		radio.connect(engine);
 	}
 

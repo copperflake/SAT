@@ -53,7 +53,9 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 	 *            Le délégué qui sera chargé de la gestion des événements de la
 	 *            radio.
 	 */
-	public RadioServer(RadioServerDelegate delegate) {
+	public RadioServer(RadioServerDelegate delegate, String label) {
+		super(label);
+
 		setDelegate(delegate);
 
 		this.managers = new HashMap<RadioID, SocketManager>();

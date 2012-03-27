@@ -92,7 +92,7 @@ public class Tower implements RadioServerDelegate {
 	 */
 	public void listen(RadioServerEngine engine) throws IOException {
 		if(radio == null)
-			radio = new RadioServer(this);
+			radio = new RadioServer(this, "TWR");
 		radio.listen(engine);
 	}
 
