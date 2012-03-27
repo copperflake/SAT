@@ -9,6 +9,8 @@ import java.util.concurrent.PriorityBlockingQueue;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerEngineDelegate;
 import sat.radio.message.Message;
+import sat.radio.message.stream.UpgradableMessageInputStream;
+import sat.radio.message.stream.UpgradableMessageOutputStream;
 import sat.radio.socket.RadioSocket;
 
 /**
@@ -148,6 +150,17 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 		private SocketWriter writer;
 
 		/**
+		 * Indique si ce manager s'occupe d'un client utilisant le protocole
+		 * étendu plutôt que le protocole ITP.
+		 */
+		private boolean extended = false;
+
+		/**
+		 * Indique si ce socket est sécurisé.
+		 */
+		private boolean ciphered = false;
+
+		/**
 		 * Crée un gestionnaire de socket.
 		 * 
 		 * @param socket
@@ -160,12 +173,22 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			writer = new SocketWriter();
 		}
 
+		public boolean isExtended() {
+			return extended;
+		}
+
 		public void start() {
 			listener.start();
 			writer.start();
 		}
 
 		public void quit() {
+			try {
+				socket.close();
+			} catch(IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			listener.quit();
 			writer.quit();
 		}
@@ -177,9 +200,9 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 		 */
 		private class SocketListener extends Thread {
 			/**
-			 * Le socket écouté par ce thread.
+			 * Flux d'entrée de messages.
 			 */
-			private InputStream in;
+			private UpgradableMessageInputStream mis;
 
 			/**
 			 * État du thread.
@@ -190,35 +213,36 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			 * Crée un nouveau thread d'écoute d'entrée client.
 			 */
 			public SocketListener() {
-				in = socket.in;
+				mis = new UpgradableMessageInputStream(socket.in);
 			}
 
 			/**
 			 * Méthode principale du thread.
 			 */
 			public void run() {
-				// TODO: rework
 				try {
-					ObjectInputStream ois = new ObjectInputStream(in);
-					System.out.println("Client Connected");
-
 					Message message;
-					while((message = (Message) ois.readObject()) != null && running) {
-						synchronized(incomingMessages) {
-							incomingMessages.add(message);
-							incomingMessages.notify();
-						}
+					// TODO: handle null
+					while((message = mis.readMessage()) != null && running) {
+						handleMessage(message);
 					}
 				} catch(Exception e) {
 					// Close bad client
 					e.printStackTrace();
-					try {
-						socket.close();
-						SocketManager.this.quit();
-					} catch(IOException e1) {
-						// TODO handle
-						e1.printStackTrace();
-					}
+					SocketManager.this.quit();
+				}
+			}
+
+			/**
+			 * Gestion du court-circuitage des messages protocolaires.
+			 */
+			private void handleMessage(Message m) {
+				switch(m.getType()) {
+					default:
+						// No short circuit, send it to incoming queue
+						incomingMessages.put(m);
+				}
+			}
 				}
 			}
 
@@ -235,6 +259,11 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 		 */
 		private class SocketWriter extends Thread {
 			/**
+			 * Flux de sortie des messages.
+			 */
+			private UpgradableMessageOutputStream mos;
+
+			/**
 			 * La file d'attente de messages à envoyer.
 			 */
 			private PriorityBlockingQueue<Message> queue = new PriorityBlockingQueue<Message>();
@@ -244,16 +273,31 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			 */
 			private boolean running = true;
 
+			/**
+			 * Crée un nouveau thread d'écrite vers un pair.
+			 */
+			public SocketWriter() {
+				mos = new UpgradableMessageOutputStream(socket.out);
+			}
+
 			public void run() {
 				Message message;
 
 				while(running) {
 					try {
 						message = queue.take();
-						// TODO: write message in output stream
+						System.out.print("Sending " + message);
+						mos.writeMessage(message);
 					} catch(InterruptedException e) {
+					} catch(IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 				}
+			}
+
+			public void send(Message m) {
+				queue.put(m);
 			}
 
 			public void quit() {

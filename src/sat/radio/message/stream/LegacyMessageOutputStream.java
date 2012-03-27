@@ -32,52 +32,27 @@ public class LegacyMessageOutputStream extends MessageOutputStream {
 		dos.writeInt(c.getX());
 		dos.writeInt(c.getY());
 
+		dos.writeInt(m.getType().ordinal());
+
 		switch(m.getType()) {
 			case HELLO:
-				MessageHello hello = (MessageHello) m;
-
-				byte reserved = 0;
-				reserved += hello.isCiphered() ? 1 << 4 : 0;
-				reserved += hello.isExtended() ? 1 << 7 : 0;
-
-				dos.write(reserved);
+				writeMessageAttributes((MessageHello) m);
 				break;
 
 			case DATA:
-				MessageData data = (MessageData) m;
-
-				dos.write(data.getHash());
-				dos.writeInt(data.getContinuation());
-				dos.write(data.getFormat());
-				dos.writeInt(data.getFileSize());
-				dos.write(data.getPayload());
+				writeMessageAttributes((MessageData) m);
 				break;
 
 			case MAYDAY:
-				MessageMayDay mayday = (MessageMayDay) m;
-
-				dos.writeChars(mayday.getCause());
+				writeMessageAttributes((MessageMayDay) m);
 				break;
 
 			case SENDRSA:
-				MessageSendRSAKey sendrsa = (MessageSendRSAKey) m;
-				RSAKey key = sendrsa.getKey();
-
-				dos.writeInt(key.getLength());
-
-				byte[] modulus = key.getModulus().toByteArray();
-				dos.writeInt(modulus.length);
-				dos.write(modulus);
-
-				byte[] exponent = key.getExponent().toByteArray();
-				dos.writeInt(exponent.length);
-				dos.write(exponent);
+				writeMessageAttributes((MessageSendRSAKey) m);
 				break;
 
 			case ROUTING:
-				MessageRouting routing = (MessageRouting) m;
-
-				// TODO: data
+				writeMessageAttributes((MessageRouting) m);
 				break;
 
 			case CHOKE:
@@ -95,5 +70,45 @@ public class LegacyMessageOutputStream extends MessageOutputStream {
 
 		dos.flush(); // useful ?
 		out.write(baos.toByteArray());
+		out.flush();
+	}
+
+	private void writeMessageAttributes(MessageHello m) throws IOException {
+		byte reserved = 0;
+
+		reserved += m.isCiphered() ? 1 << 4 : 0;
+		reserved += m.isExtended() ? 1 << 7 : 0;
+
+		dos.write(reserved);
+	}
+
+	private void writeMessageAttributes(MessageData m) throws IOException {
+		dos.write(m.getHash());
+		dos.writeInt(m.getContinuation());
+		dos.write(m.getFormat());
+		dos.writeInt(m.getFileSize());
+		dos.write(m.getPayload());
+	}
+
+	private void writeMessageAttributes(MessageMayDay m) throws IOException {
+		dos.writeChars(m.getCause());
+	}
+
+	private void writeMessageAttributes(MessageSendRSAKey m) throws IOException {
+		RSAKey key = m.getKey();
+
+		dos.writeInt(key.getLength());
+
+		byte[] modulus = key.getModulus().toByteArray();
+		dos.writeInt(modulus.length);
+		dos.write(modulus);
+
+		byte[] exponent = key.getExponent().toByteArray();
+		dos.writeInt(exponent.length);
+		dos.write(exponent);
+	}
+
+	private void writeMessageAttributes(MessageRouting m) throws IOException {
+		// TODO
 	}
 }
