@@ -1,5 +1,6 @@
 package sat.radio.server;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -13,6 +14,7 @@ import sat.radio.message.MessageHello;
 import sat.radio.message.stream.UpgradableMessageInputStream;
 import sat.radio.message.stream.UpgradableMessageOutputStream;
 import sat.radio.socket.RadioSocket;
+import sat.radio.socket.RadioSocketState;
 import sat.utils.geo.Coordinates;
 
 /**
@@ -157,6 +159,11 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 		private SocketWriter writer;
 
 		/**
+		 * État de cette connexion avec l'avion.
+		 */
+		private RadioSocketState state = RadioSocketState.HANDSHAKE;
+
+		/**
 		 * Indique si ce manager s'occupe d'un client utilisant le protocole
 		 * étendu plutôt que le protocole ITP.
 		 */
@@ -204,15 +211,28 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			synchronized(managers) {
 				managers.put(socketID, this);
 			}
+
+			state = RadioSocketState.READY;
+			delegate.onPlaneConnected(socketID);
 		}
 
-		public void quit() {
+		private void quit() {
+			// Unregister
+			if(state == RadioSocketState.READY) {
+				synchronized(managers) {
+					managers.remove(socketID);
+				}
+
+				delegate.onPlaneDisconnected(socketID);
+			}
+
 			try {
 				socket.close();
 			} catch(IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.err.println("Error while closing socket!?");
+				e.printStackTrace(System.err);
 			}
+
 			listener.quit();
 			writer.quit();
 		}
@@ -246,17 +266,25 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			public void run() {
 				try {
 					Message message;
-					// TODO: handle null
-					while((message = mis.readMessage()) != null && running) {
+
+					while(running) {
+						synchronized(mis) {
+							message = mis.readMessage();
+						}
+
 						handleMessage(message);
 					}
-				} catch(Exception e) {
-					// Close bad client
-					e.printStackTrace();
+				} catch(EOFException e) {
+					System.err.println("Plane disconnected");
+					SocketManager.this.quit();
+				} catch(IOException e) {
+					System.err.println("Cannot read from plane socket");
+					e.printStackTrace(System.err);
+
+					// Unable to read message, disconnect plane.
 					SocketManager.this.quit();
 				}
 			}
-
 			/**
 			 * Gestion du court-circuitage des messages protocolaires.
 			 */
@@ -289,16 +317,32 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 
 				socketID = m.getID();
 
-				// If we use the extended protocol, we can upgrade components
 				if(extended) {
+					// If we use the extended protocol, we can upgrade
+					// components and wait for the extended handshake.
 					SocketManager.this.upgrade();
+				} else {
+					// Socket is ready!
+					SocketManager.this.register();
 				}
 			}
 
+			/**
+			 * Upgrade le flux de lecture sous-jacent. Le nouveau flux sera de
+			 * type ExtendedMessageInputStream.
+			 * 
+			 * @throws IOException
+			 *             Si l'upgrade du flux a généré une exception.
+			 */
 			public void upgrade() throws IOException {
-				mis.upgrade();
+				synchronized(mis) {
+					mis.upgrade();
+				}
 			}
 
+			/**
+			 * Arrête le thread d'écoute.
+			 */
 			public void quit() {
 				running = false;
 				this.interrupt();
@@ -339,24 +383,48 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 				while(running) {
 					try {
 						message = queue.take();
-						System.out.print("Sending " + message);
-						mos.writeMessage(message);
+						synchronized(mos) {
+							mos.writeMessage(message);
+						}
 					} catch(InterruptedException e) {
 					} catch(IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						System.err.println("Cannot write to plane socket");
+						e.printStackTrace(System.err);
+
+						// Unable to write message, disconnect plane.
+						SocketManager.this.quit();
 					}
 				}
 			}
 
+			/**
+			 * Envoie un message à l'avion.
+			 * 
+			 * @param m
+			 *            Le message à envoyer.
+			 */
 			public void send(Message m) {
 				queue.put(m);
 			}
 
+			/**
+			 * Upgrade le flux d'écriture sous-jacent. Le nouveau flux sera de
+			 * type ExtendedMessageOutputStream.
+			 * 
+			 * @throws IOException
+			 *             Si l'upgrade du flux a généré une exception.
+			 */
 			public void upgrade() throws IOException {
-				mos.upgrade();
+				// Ensure the message output stream is not in use
+				// when upgrading.
+				synchronized(mos) {
+					mos.upgrade();
+				}
 			}
 
+			/**
+			 * Arrête le thread.
+			 */
 			public void quit() {
 				running = false;
 				this.interrupt();

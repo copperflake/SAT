@@ -128,6 +128,9 @@ public class LegacyMessageInputStream extends MessageInputStream {
 				break;
 		}
 
+		if(message == null)
+			throw new IOException("Unable to deserialize message");
+
 		return message;
 	}
 

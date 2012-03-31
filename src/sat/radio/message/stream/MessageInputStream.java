@@ -30,12 +30,13 @@ public abstract class MessageInputStream extends FilterInputStream {
 	/**
 	 * Lis un message depuis le flux d'entrée.
 	 * 
-	 * @return Un objet message désérialisé. Cette méthode retourne null si une
-	 *         erreur est survenue pendant la lecture du message.
+	 * @return Un objet message désérialisé.
 	 * 
 	 * @throws IOException
 	 *             La lecture du flux d'entrée peut générer une exception qui
-	 *             est retournée au code appelant.
+	 *             est retournée au code appelant. De plus si un erreur survient
+	 *             lors de la déserialisation du message, une exception est
+	 *             lancée.
 	 */
 	public abstract Message readMessage() throws IOException;
 }

@@ -2,6 +2,7 @@ package sat.tower;
 
 import java.io.IOException;
 
+import sat.radio.RadioID;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.message.Message;
 import sat.radio.server.RadioServer;
@@ -126,7 +127,15 @@ public class Tower implements RadioServerDelegate {
 
 	// - - - Delegate - - -
 
+	public void onPlaneConnected(RadioID plane) {
+		System.out.println("Plane connected");
+	}
+
+	public void onPlaneDisconnected(RadioID plane) {
+		System.out.println("Plane disconnected");
+	}
+
 	public void onMessage(Message message) {
-		System.out.println("Tower got message " + message);
+		System.out.println("Tower got message " + message + " from " + message.getID());
 	}
 }
