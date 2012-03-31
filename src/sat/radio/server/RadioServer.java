@@ -1,8 +1,6 @@
 package sat.radio.server;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.util.HashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 
@@ -45,7 +43,7 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 	/**
 	 * Thread de gestion des messages entrants.
 	 */
-	private Thread incomingThread;
+	private IncomingMessageEmitter incomingThread;
 
 	/**
 	 * Liste des pairs connectés avec le gestionnaire associé.
@@ -62,7 +60,7 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 	public RadioServer(RadioServerDelegate delegate, String label) {
 		super(label);
 
-		setDelegate(delegate);
+		this.delegate = delegate;
 
 		this.managers = new HashMap<RadioID, SocketManager>();
 
@@ -70,16 +68,6 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 
 		incomingThread = new IncomingMessageEmitter();
 		incomingThread.start();
-	}
-
-	/**
-	 * Modifie le délégué du serveur radio.
-	 * 
-	 * @param delegate
-	 *            Nouveau délégué.
-	 */
-	public void setDelegate(RadioServerDelegate delegate) {
-		this.delegate = delegate;
 	}
 
 	/**
@@ -103,17 +91,23 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 		this.engine.init(this);
 	}
 
-	// - - - Engine Events - - -
+	// - - - Engine Events Delegate - - -
 
 	/**
 	 * Gestion de la connexion d'un nouveau client.
 	 */
 	public void onNewConnection(RadioSocket socket) {
+		// Lancement d'un SocketManager qui s'occupera de ce client
 		new SocketManager(socket).start();
 	}
 
-	// - - - Threads Objects - - -
+	// - - - Event Emitter - - -
 
+	/**
+	 * Gestionnaire de la file d'attente de message entrant. Ce thread écoute la
+	 * queue incomingMessages et notifie le délégué de la radio de l'arrivée de
+	 * nouveaux messages.
+	 */
 	private class IncomingMessageEmitter extends Thread {
 		private boolean running = true;
 
@@ -122,17 +116,21 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 				Message message;
 				try {
 					message = incomingMessages.take();
-					System.out.println("Got message " + message);
-					// TODO: emit the message !
+					delegate.onMessage(message);
 				} catch(InterruptedException e) {
 				}
 			}
 		}
 
+		/**
+		 * Arrête le thread de notification.
+		 */
 		public void quit() {
 			running = false;
 		}
 	}
+
+	// - - - Socket Manager - - -
 
 	/**
 	 * Un gestionnaire de socket.
@@ -142,6 +140,11 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 		 * Le socket géré par ce gestionnaire.
 		 */
 		private RadioSocket socket;
+
+		/**
+		 * L'id de l'avion auquel correspond ce socket.
+		 */
+		private RadioID socketID;
 
 		/**
 		 * Le thread d'écoute d'entrée.
@@ -184,6 +187,23 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 		public void start() {
 			listener.start();
 			writer.start();
+		}
+
+		private void upgrade() {
+			try {
+				listener.upgrade();
+				writer.upgrade();
+			} catch(IOException e) {
+				// Failed to upgrade streams
+				e.printStackTrace();
+				quit();
+			}
+		}
+
+		private void register() {
+			synchronized(managers) {
+				managers.put(socketID, this);
+			}
 		}
 
 		public void quit() {
@@ -257,25 +277,24 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			 */
 			private void handleMessage(MessageHello m) {
 				// Enable encryption
-				ciphered = m.isCiphered();
+				if(delegate.getConfig().getBoolean("radio.ciphered"))
+					ciphered = m.isCiphered();
 
-				// Enable extended protocol
-				extended = m.isExtended();
+				// Enable extended protocol if not disabled
+				if(!delegate.getConfig().getBoolean("radio.legacy"))
+					extended = m.isExtended();
 
 				Coordinates coords = delegate.getLocation();
 				writer.send(new MessageHello(id, coords, ciphered, extended));
-				
+
+				socketID = m.getID();
+
+				// If we use the extended protocol, we can upgrade components
 				if(extended) {
-					try {
-						upgrade();
-						writer.upgrade();
-					} catch(IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					SocketManager.this.upgrade();
 				}
 			}
-			
+
 			public void upgrade() throws IOException {
 				mis.upgrade();
 			}
@@ -333,7 +352,7 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			public void send(Message m) {
 				queue.put(m);
 			}
-			
+
 			public void upgrade() throws IOException {
 				mos.upgrade();
 			}

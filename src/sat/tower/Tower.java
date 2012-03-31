@@ -3,6 +3,7 @@ package sat.tower;
 import java.io.IOException;
 
 import sat.radio.engine.server.RadioServerEngine;
+import sat.radio.message.Message;
 import sat.radio.server.RadioServer;
 import sat.radio.server.RadioServerDelegate;
 import sat.utils.cli.Config;
@@ -31,7 +32,8 @@ public class Tower implements RadioServerDelegate {
 	private static void initDefaults() {
 		defaults = new Config();
 
-		//defaults.setProperty("foo", "bar");
+		defaults.setProperty("radio.ciphered", "yes");
+		defaults.setProperty("radio.legacy", "no");
 	}
 
 	/**
@@ -81,6 +83,13 @@ public class Tower implements RadioServerDelegate {
 	}
 
 	/**
+	 * Retourne les coordonées de la tour.
+	 */
+	public Coordinates getLocation() {
+		return new Coordinates(0, 0, 0);
+	}
+
+	/**
 	 * Ajoute un moteur de radio à la radio de la tour et l'initialise.
 	 * 
 	 * @param engine
@@ -111,13 +120,13 @@ public class Tower implements RadioServerDelegate {
 
 		Tower tower = getInstance();
 
-		TowerCLI repl = new TowerCLI(tower, System.in, System.out);
-		Thread replThread = repl.runInNewThread();
+		TowerCLI cli = new TowerCLI(tower, System.in, System.out);
+		Thread cliThread = cli.runInNewThread();
 	}
 
 	// - - - Delegate - - -
 
-	public Coordinates getLocation() {
-		return new Coordinates(0, 0, 0);
+	public void onMessage(Message message) {
+		System.out.println("Tower got message " + message);
 	}
 }

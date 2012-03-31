@@ -5,6 +5,7 @@ import java.io.IOException;
 import sat.radio.client.RadioClient;
 import sat.radio.client.RadioClientDelegate;
 import sat.radio.engine.client.RadioClientEngine;
+import sat.radio.message.Message;
 import sat.utils.cli.Config;
 import sat.utils.geo.Coordinates;
 
@@ -45,6 +46,10 @@ public class Plane implements RadioClientDelegate {
 		return config;
 	}
 
+	public Coordinates getLocation() {
+		return new Coordinates(0, 0, 0);
+	}
+
 	public void connect(RadioClientEngine engine) throws IOException {
 		if(radio == null)
 			radio = new RadioClient(this, "PLN");
@@ -60,9 +65,9 @@ public class Plane implements RadioClientDelegate {
 		Thread replThread = repl.runInNewThread();
 	}
 
-	// - - - Delegate - - -
+	// - - - Delegate Events - - -
 
-	public Coordinates getLocation() {
-		return new Coordinates(0, 0, 0);
+	public void onMessage(Message message) {
+		System.out.println("Plane got message " + message);
 	}
 }
