@@ -92,10 +92,10 @@ public class Base64 {
 		for(int i = 0, j = 0; i < encoded.length; i += 4, j += 3) {
 			// Try to decode all four encoded chars
 			try {
-				a = decodeUnit(encoded[i]);
-				b = decodeUnit(encoded[i + 1]);
-				c = decodeUnit(encoded[i + 2]);
-				d = decodeUnit(encoded[i + 3]);
+				a = decodeChar(encoded[i]);
+				b = decodeChar(encoded[i + 1]);
+				c = decodeChar(encoded[i + 2]);
+				d = decodeChar(encoded[i + 3]);
 			} catch(Exception e) {
 				// Invalid data
 				return new byte[0];
@@ -131,9 +131,9 @@ public class Base64 {
 	/**
 	 * Décode un caractère encodé en Base64.
 	 */
-	private static byte decodeUnit(byte unit) throws Exception {
+	private static byte decodeChar(byte character) throws Exception {
 		for(byte i = 0; i < alpha.length; i++) {
-			if(alpha[i] == unit)
+			if(alpha[i] == character)
 				return i;
 		}
 

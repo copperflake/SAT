@@ -61,8 +61,8 @@ public class Plane implements RadioClientDelegate {
 
 		Plane plane = new Plane();
 
-		PlaneCLI repl = new PlaneCLI(plane, System.in, System.out);
-		Thread replThread = repl.runInNewThread();
+		PlaneCLI cli = new PlaneCLI(plane, System.in, System.out);
+		Thread cliThread = cli.runInNewThread();
 	}
 
 	// - - - Delegate Events - - -
