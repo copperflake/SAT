@@ -9,7 +9,7 @@ import sat.radio.message.Message;
 import sat.utils.cli.Config;
 import sat.utils.geo.Coordinates;
 
-public class Plane implements RadioClientDelegate {
+public class Plane {
 	/**
 	 * La configuration par défaut d'un avion. Sert de modèle à la contruction
 	 * de la configuration spécifique aux instances d'avions.
@@ -52,7 +52,7 @@ public class Plane implements RadioClientDelegate {
 
 	public void connect(RadioClientEngine engine) throws IOException {
 		if(radio == null)
-			radio = new RadioClient(this, "PLN");
+			radio = new RadioClient(new Delegate(), "PLN");
 		radio.connect(engine);
 	}
 
@@ -65,9 +65,19 @@ public class Plane implements RadioClientDelegate {
 		Thread cliThread = cli.runInNewThread();
 	}
 
-	// - - - Delegate Events - - -
+	// - - - Delegate - - -
 
-	public void onMessage(Message message) {
-		System.out.println("Plane got message " + message);
+	private class Delegate implements RadioClientDelegate {
+		public Config getConfig() {
+			return Plane.this.getConfig();
+		}
+
+		public Coordinates getLocation() {
+			return Plane.this.getLocation();
+		}
+
+		public void onMessage(Message message) {
+			System.out.println("Plane got message " + message + " from " + message.getID());
+		}
 	}
 }

@@ -13,7 +13,7 @@ import sat.utils.geo.Coordinates;
 /**
  * Une tour de contrôle. Cette classe est un Singleton.
  */
-public class Tower implements RadioServerDelegate {
+public class Tower {
 	// - - - Singleton Tools - - -
 
 	/**
@@ -102,7 +102,7 @@ public class Tower implements RadioServerDelegate {
 	 */
 	public void listen(RadioServerEngine engine) throws IOException {
 		if(radio == null)
-			radio = new RadioServer(this, "TWR");
+			radio = new RadioServer(new Delegate(), "TWR");
 		radio.listen(engine);
 	}
 
@@ -127,15 +127,25 @@ public class Tower implements RadioServerDelegate {
 
 	// - - - Delegate - - -
 
-	public void onPlaneConnected(RadioID plane) {
-		System.out.println("Plane connected");
-	}
+	private class Delegate implements RadioServerDelegate {
+		public Config getConfig() {
+			return Tower.this.getConfig();
+		}
 
-	public void onPlaneDisconnected(RadioID plane) {
-		System.out.println("Plane disconnected");
-	}
+		public Coordinates getLocation() {
+			return Tower.this.getLocation();
+		}
 
-	public void onMessage(Message message) {
-		System.out.println("Tower got message " + message + " from " + message.getID());
+		public void onPlaneConnected(RadioID plane) {
+			System.out.println("Plane connected");
+		}
+
+		public void onPlaneDisconnected(RadioID plane) {
+			System.out.println("Plane disconnected");
+		}
+
+		public void onMessage(Message message) {
+			System.out.println("Tower got message " + message + " from " + message.getID());
+		}
 	}
 }

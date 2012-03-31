@@ -25,7 +25,7 @@ import sat.utils.geo.Coordinates;
  * utilise en interne un moteur de serveur radio qui s'occupe de gérer la partie
  * technique des communications.
  */
-public class RadioServer extends Radio implements RadioServerEngineDelegate {
+public class RadioServer extends Radio {
 	/**
 	 * Le délégué de ce serveur radio, il sera responsable de gérer les
 	 * événements emis par la radio au cours de son fonctionnement.
@@ -91,17 +91,19 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			return;
 
 		this.engine = engine;
-		this.engine.init(this);
+		this.engine.init(new Delegate());
 	}
 
 	// - - - Engine Events Delegate - - -
 
-	/**
-	 * Gestion de la connexion d'un nouveau client.
-	 */
-	public void onNewConnection(RadioSocket socket) {
-		// Lancement d'un SocketManager qui s'occupera de ce client
-		new SocketManager(socket).start();
+	private class Delegate implements RadioServerEngineDelegate {
+		/**
+		 * Gestion de la connexion d'un nouveau client.
+		 */
+		public void onNewConnection(RadioSocket socket) {
+			// Lancement d'un SocketManager qui s'occupera de ce client
+			new SocketManager(socket).start();
+		}
 	}
 
 	// - - - Event Emitter - - -
