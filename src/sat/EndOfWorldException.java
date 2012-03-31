@@ -10,5 +10,8 @@ public class EndOfWorldException extends RuntimeException {
 		super(message);
 	}
 
+	public EndOfWorldException() {
+	}
+
 	private static final long serialVersionUID = 6213373596458198719L;
 }

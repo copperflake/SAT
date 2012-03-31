@@ -13,7 +13,7 @@ public class MessageSendRSAKey extends Message {
 		this.key = key;
 	}
 
-	public void resetTypeAndPriority() {
+	public void setTypeAndPriority() {
 		type = MessageType.SENDRSA;
 		priority = 2;
 	}

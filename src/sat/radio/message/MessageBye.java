@@ -8,7 +8,7 @@ public class MessageBye extends Message {
 		super(id, c);
 	}
 
-	public void resetTypeAndPriority() {
+	public void setTypeAndPriority() {
 		type = MessageType.BYE;
 		priority = 4;
 	}

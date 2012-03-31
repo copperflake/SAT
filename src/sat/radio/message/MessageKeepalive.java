@@ -8,7 +8,7 @@ public class MessageKeepalive extends Message {
 		super(id, c);
 	}
 
-	public void resetTypeAndPriority() {
+	public void setTypeAndPriority() {
 		type = MessageType.KEEPALIVE;
 		priority = 3;
 	}

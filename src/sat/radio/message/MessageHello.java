@@ -14,7 +14,7 @@ public class MessageHello extends Message {
 		this.extended = extended;
 	}
 
-	public void resetTypeAndPriority() {
+	public void setTypeAndPriority() {
 		type = MessageType.HELLO;
 		priority = 1;
 	}

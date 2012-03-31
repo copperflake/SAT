@@ -20,7 +20,7 @@ public class MessageData extends Message {
 		this.payload = payload;
 	}
 
-	public void resetTypeAndPriority() {
+	public void setTypeAndPriority() {
 		type = MessageType.DATA;
 		priority = 4;
 	}

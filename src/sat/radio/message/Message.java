@@ -29,10 +29,10 @@ public abstract class Message implements Comparable<Message>, Serializable {
 
 		time = new Date();
 
-		resetTypeAndPriority();
+		setTypeAndPriority();
 	}
 
-	public void resetTypeAndPriority() {
+	public void setTypeAndPriority() {
 		priority = 5;
 		type = MessageType.INVALID;
 	}

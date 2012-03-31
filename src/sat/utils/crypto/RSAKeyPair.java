@@ -15,12 +15,12 @@ public final class RSAKeyPair {
 		try {
 			generateKeyPair(1024);
 			this.keyLength = 1024;
-		} catch(RSAKeyTooShortException e) {
-			throw new EndOfWorldException("keyLength of 1024 is not too small!");
+		} catch(RSAException e) {
+			throw new EndOfWorldException();
 		}
 	}
 
-	public RSAKeyPair(int keyLength) throws RSAKeyTooShortException {
+	public RSAKeyPair(int keyLength) throws RSAException {
 		generateKeyPair(keyLength);
 		this.keyLength = keyLength;
 	}
@@ -32,16 +32,16 @@ public final class RSAKeyPair {
 		this.keyLength = publicKey.getLength();
 	}
 
-	public RSAKeyPair(RSAKey publicKey, RSAKey privateKey) throws RSAInvalidKeyPairException {
+	public RSAKeyPair(RSAKey publicKey, RSAKey privateKey) throws RSAException {
 		// TODO: check key validity (better)
 		if(!publicKey.getModulus().equals(privateKey.getModulus()))
-			throw new RSAInvalidKeyPairException();
+			throw new RSAException("Invalid key pair");
 
 		if(publicKey.getLength() != privateKey.getLength())
-			throw new RSAInvalidKeyPairException();
+			throw new RSAException("Invalid key pair");
 
 		if(publicKey.getLength() % 8 != 0)
-			throw new RSAInvalidKeyPairException();
+			throw new RSAException("Invalid key pair");
 
 		this.publicKey = publicKey;
 		this.privateKey = privateKey;
@@ -49,9 +49,9 @@ public final class RSAKeyPair {
 		this.keyLength = publicKey.getLength();
 	}
 
-	private void generateKeyPair(int keyLength) throws RSAKeyTooShortException {
+	private void generateKeyPair(int keyLength) throws RSAException {
 		if(keyLength < 128)
-			throw new RSAKeyTooShortException();
+			throw new RSAException("Key is too short");
 
 		if(keyLength % 8 != 0)
 			keyLength += (keyLength % 8);
@@ -96,9 +96,9 @@ public final class RSAKeyPair {
 		this.privateKey = new RSAKey(d, n);
 	}
 
-	public RSAKey getPrivateKey() throws RSAMissingPrivateKeyException {
+	public RSAKey getPrivateKey() throws RSAException {
 		if(privateKey == null)
-			throw new RSAMissingPrivateKeyException();
+			throw new RSAException("Private key is missing");
 
 		return privateKey;
 	}

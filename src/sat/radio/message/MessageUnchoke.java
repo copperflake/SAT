@@ -8,7 +8,7 @@ public class MessageUnchoke extends Message {
 		super(id, c);
 	}
 
-	public void resetTypeAndPriority() {
+	public void setTypeAndPriority() {
 		type = MessageType.UNCHOKE;
 		priority = 4;
 	}

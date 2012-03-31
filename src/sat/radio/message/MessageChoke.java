@@ -8,7 +8,7 @@ public class MessageChoke extends Message {
 		super(id, c);
 	}
 
-	public void resetTypeAndPriority() {
+	public void setTypeAndPriority() {
 		type = MessageType.CHOKE;
 		priority = 1;
 	}

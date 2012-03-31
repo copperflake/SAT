@@ -13,7 +13,7 @@ public class MessageRouting extends Message {
 		this.route = route;
 	}
 
-	public void resetTypeAndPriority() {
+	public void setTypeAndPriority() {
 		type = MessageType.ROUTING;
 		priority = 2;
 	}

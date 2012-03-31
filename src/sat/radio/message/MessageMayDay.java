@@ -12,7 +12,7 @@ public class MessageMayDay extends Message {
 		this.cause = cause;
 	}
 
-	public void resetTypeAndPriority() {
+	public void setTypeAndPriority() {
 		type = MessageType.MAYDAY;
 		priority = 0;
 	}

@@ -8,7 +8,7 @@ public class MessageLanding extends Message {
 		super(id, c);
 	}
 
-	public void resetTypeAndPriority() {
+	public void setTypeAndPriority() {
 		type = MessageType.LANDINGREQUEST;
 		priority = 2;
 	}
