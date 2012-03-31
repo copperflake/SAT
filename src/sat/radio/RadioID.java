@@ -1,12 +1,13 @@
 package sat.radio;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Date;
 
 /**
  * L'identifiant d'un pair dans un réseau radio SAT.
  */
-public class RadioID implements Serializable {
+public final class RadioID implements Serializable {
 	// RadioID config
 
 	/**
@@ -48,13 +49,6 @@ public class RadioID implements Serializable {
 	private long id;
 
 	/**
-	 * Indique si le pair resprésenté est un OVNI. Les ovnis apparaissent lors
-	 * de la création d'un identifiant avec des informations invalides ou si
-	 * l'identification du pair n'a pas pu se faire correctement.
-	 */
-	private boolean UFO = false;
-
-	/**
 	 * Indique si cet identifiant a été créé à partir d'un identifiant Legacy.
 	 */
 	private boolean legacy = false;
@@ -66,13 +60,6 @@ public class RadioID implements Serializable {
 	private byte[] legacyID;
 
 	/**
-	 * Création d'un identifiant représentant un OVNI.
-	 */
-	public RadioID() {
-		this("");
-	}
-
-	/**
 	 * Création d'un identifiant.
 	 * 
 	 * @param label
@@ -80,12 +67,7 @@ public class RadioID implements Serializable {
 	 *            créé sera celui d'un UFO.
 	 */
 	public RadioID(String label) {
-		if(label.isEmpty()) {
-			UFO = true;
-		} else {
-			this.label = label;
-		}
-
+		this.label = label;
 		generateCode();
 	}
 
@@ -96,7 +78,7 @@ public class RadioID implements Serializable {
 	 *            L'identifiant ITP-compliant à la base de ce RadioID.
 	 */
 	public RadioID(byte[] legacyID) {
-		this("L[" + new String(legacyID) + "]");
+		this("L:" + new String(legacyID));
 
 		// Store the original legacy ID
 		this.legacyID = new byte[LEGACYID_LENGHT];
@@ -118,17 +100,6 @@ public class RadioID implements Serializable {
 	}
 
 	/**
-	 * Indique si l'identifiant représente un OVNI ou un pair correctement
-	 * identifié.
-	 * 
-	 * @return <code>true</code> si l'identifiant représente un OVNI,
-	 *         <code>false</code> sinon.
-	 */
-	public boolean isUFO() {
-		return UFO;
-	}
-
-	/**
 	 * Indique si l'identifiant a été créé à partir d'un identifiant
 	 * ITP-compliant.
 	 * 
@@ -143,10 +114,6 @@ public class RadioID implements Serializable {
 	 * Converti l'identifiant en une chaine de caractères.
 	 */
 	public String toString() {
-		// Si l'identifiant représente un OVNI, on retourne simplement "UFO".
-		if(isUFO())
-			return "UFO";
-
 		// Si l'identifiant provient d'un identifiant legacy, on n'affiche
 		// pas les données supplémentaires de RadioID.
 		if(isLegacy()) {
@@ -189,7 +156,7 @@ public class RadioID implements Serializable {
 
 		int available = LEGACYID_LENGHT - 3;
 
-		// Computing the rand size first give a small adventage to the
+		// Computing the rand size first give a small advantage to the
 		// time size. (division floors)
 		int randSize = available / 2; // Length of the random segment
 		String randSeg = String.valueOf(id);
@@ -212,6 +179,47 @@ public class RadioID implements Serializable {
 		}
 
 		return legacyID;
+	}
+
+	/**
+	 * Compare deux RadioID entre eux.
+	 */
+	public boolean equals(Object o) {
+		// Obvious equality
+		if(this == o)
+			return true;
+
+		// Obvious inequality
+		if((o == null) || (o.getClass() != this.getClass()))
+			return false;
+
+		RadioID rid = (RadioID) o;
+
+		if(isLegacy() && rid.isLegacy()) {
+			// Two ID are legacy
+			return Arrays.equals(legacyID, rid.legacyID);
+		} else if(isLegacy() || rid.isLegacy()) {
+			// One ID is legacy
+			if(isLegacy()) {
+				return Arrays.equals(legacyID, rid.toLegacyID());
+			} else {
+				return Arrays.equals(toLegacyID(), rid.legacyID);
+			}
+		} else {
+			// Two are not legacy
+			return (label.equals(rid.label) && time == rid.time && id == rid.id);
+		}
+	}
+
+	/**
+	 * Génère un hashcode de cet ID. Le hashcode vérifie la propriété suivante:
+	 * <code>id1.hashCode() == id2.hashCode()</code> si les deux ID sont égaux,
+	 * c'est à dire que <code>id1.equals(id2)</code> retournerait
+	 * <code>TRUE</code>. En revanche, deux ID différents peuvent avoir le même
+	 * hashcode, il n'indique donc pas l'égalité de façon sûr.
+	 */
+	public int hashCode() {
+		return Arrays.hashCode(toLegacyID());
 	}
 
 	private static final long serialVersionUID = 6714099615154964027L;

@@ -115,7 +115,7 @@ public abstract class CLI implements Runnable {
 		return parts.toArray(new String[parts.size()]);
 	}
 
-	private void eval(String line) {
+	public void eval(String line) {
 		String[] parts = split(line);
 
 		if(parts.length == 0) {
