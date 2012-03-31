@@ -66,9 +66,11 @@ public abstract class Message implements Comparable<Message>, Serializable {
 	public int compareTo(Message msg) {
 		if(priority < msg.getPriority()) {
 			return 1;
-		} else if(priority > msg.getPriority()) {
+		}
+		else if(priority > msg.getPriority()) {
 			return -1;
-		} else {
+		}
+		else {
 			if(getTime().compareTo(msg.getTime()) > 0)
 				return 1;
 			else if(getTime().compareTo(msg.getTime()) < 0)

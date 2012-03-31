@@ -37,7 +37,8 @@ public class RadioServerTCPEngine extends RadioServerEngine {
 						RadioSocket socket = new RadioSocketDirect(client.getInputStream(), client.getOutputStream());
 
 						getDelegate().onNewConnection(socket);
-					} catch(IOException e) {
+					}
+					catch(IOException e) {
 						// Ignore bad clients !
 					}
 				}

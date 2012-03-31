@@ -140,18 +140,21 @@ public abstract class CLI implements Runnable {
 		for(int i = 0; i < args_required; i++) {
 			if(i >= args_counts) {
 				args[i] = "";
-			} else {
+			}
+			else {
 				args[i] = parts[i + 1];
 			}
 		}
 
 		try {
 			method.invoke(this, (Object[]) args);
-		} catch(InvocationTargetException e) {
+		}
+		catch(InvocationTargetException e) {
 			// The call-stack for InvocationTargetException is always the
 			// same. So, ignore it and print TargetException.
 			e.getTargetException().printStackTrace(out);
-		} catch(Exception e) {
+		}
+		catch(Exception e) {
 			e.printStackTrace(out);
 		}
 	}

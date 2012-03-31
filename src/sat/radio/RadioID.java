@@ -195,18 +195,21 @@ public final class RadioID implements Serializable {
 
 		RadioID rid = (RadioID) o;
 
+		// Two ID are legacy
 		if(isLegacy() && rid.isLegacy()) {
-			// Two ID are legacy
 			return Arrays.equals(legacyID, rid.legacyID);
-		} else if(isLegacy() || rid.isLegacy()) {
-			// One ID is legacy
+		}
+		// One ID is legacy
+		else if(isLegacy() || rid.isLegacy()) {
 			if(isLegacy()) {
 				return Arrays.equals(legacyID, rid.toLegacyID());
-			} else {
+			}
+			else {
 				return Arrays.equals(toLegacyID(), rid.legacyID);
 			}
-		} else {
-			// Two are not legacy
+		}
+		// Two are not legacy
+		else {
 			return (label.equals(rid.label) && time == rid.time && id == rid.id);
 		}
 	}

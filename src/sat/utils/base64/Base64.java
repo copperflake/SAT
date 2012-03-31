@@ -36,11 +36,13 @@ public class Base64 {
 				B = raw[i + 1];
 				if(i + 2 < raw.length) {
 					C = raw[i + 2];
-				} else {
+				}
+				else {
 					C = 0;
 					padding = 1;
 				}
-			} else {
+			}
+			else {
 				B = 0;
 				C = 0;
 				padding = 2;
@@ -96,7 +98,8 @@ public class Base64 {
 				b = decodeChar(encoded[i + 1]);
 				c = decodeChar(encoded[i + 2]);
 				d = decodeChar(encoded[i + 3]);
-			} catch(Exception e) {
+			}
+			catch(Exception e) {
 				// Invalid data
 				return new byte[0];
 			}

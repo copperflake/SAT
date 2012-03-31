@@ -62,7 +62,8 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 		try {
 			this.engine = engine;
 			this.engine.init(this);
-		} catch(IOException e) {
+		}
+		catch(IOException e) {
 			// Reset the engine if initialization was not successful.
 			this.engine = null;
 

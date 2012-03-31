@@ -134,10 +134,12 @@ public class TowerCLI extends GlobalCLI {
 				// Une interface a été précisée
 				InetAddress iface = InetAddress.getByName(arg2);
 				engine = new RadioServerTCPEngine(port, iface);
-			} else {
+			}
+			else {
 				engine = new RadioServerTCPEngine(port);
 			}
-		} else {
+		}
+		else {
 			out.println("Error: unknown radio engine type");
 			return;
 		}

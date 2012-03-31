@@ -47,10 +47,12 @@ public class ExtendedMessageInputStream extends MessageInputStream {
 			Message message = (Message) ois.readObject();
 			message.setTypeAndPriority(); // Reset type and priority
 			return message;
-		} catch(IOException e) {
+		}
+		catch(IOException e) {
 			// Rethrow IOExceptions
 			throw e;
-		} catch(Exception e) {
+		}
+		catch(Exception e) {
 			// Ignore bad objects...
 			return null;
 		}

@@ -7,6 +7,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 
 import sat.radio.Radio;
 import sat.radio.RadioID;
+import sat.radio.RadioProtocolException;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerEngineDelegate;
 import sat.radio.message.Message;
@@ -119,7 +120,8 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 				try {
 					message = incomingMessages.take();
 					delegate.onMessage(message);
-				} catch(InterruptedException e) {
+				}
+				catch(InterruptedException e) {
 				}
 			}
 		}
@@ -200,7 +202,8 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			try {
 				listener.upgrade();
 				writer.upgrade();
-			} catch(IOException e) {
+			}
+			catch(IOException e) {
 				// Failed to upgrade streams
 				e.printStackTrace();
 				quit();
@@ -228,7 +231,8 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 
 			try {
 				socket.close();
-			} catch(IOException e) {
+			}
+			catch(IOException e) {
 				System.err.println("Error while closing socket!?");
 				e.printStackTrace(System.err);
 			}
@@ -274,23 +278,36 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 
 						handleMessage(message);
 					}
-				} catch(EOFException e) {
-					System.err.println("Plane disconnected");
+				}
+				catch(EOFException e) {
 					SocketManager.this.quit();
-				} catch(IOException e) {
+				}
+				catch(RadioProtocolException e) {
+					// Invalid message for this state, disconnect plane.
+					System.err.println("Protocol Exception from Plane");
+					e.printStackTrace(System.err);
+					SocketManager.this.quit();
+				}
+				catch(IOException e) {
+					// Unable to read message, disconnect plane.
 					System.err.println("Cannot read from plane socket");
 					e.printStackTrace(System.err);
-
-					// Unable to read message, disconnect plane.
 					SocketManager.this.quit();
 				}
 			}
 			/**
 			 * Gestion du court-circuitage des messages protocolaires.
+			 * 
+			 * @throws RadioProtocolException
+			 *             Si le message reçu n'est pas autorisé dans l'état
+			 *             actuel de la connexion.
 			 */
-			private void handleMessage(Message m) {
+			private void handleMessage(Message m) throws RadioProtocolException {
 				switch(m.getType()) {
 					case HELLO:
+						if(state != RadioSocketState.HANDSHAKE)
+							throw new RadioProtocolException("Cannot receive HELLO in state " + state);
+
 						handleMessage((MessageHello) m);
 						break;
 
@@ -304,13 +321,13 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			 * Gestion du message Hello.
 			 */
 			private void handleMessage(MessageHello m) {
-				// Enable encryption
-				if(delegate.getConfig().getBoolean("radio.ciphered"))
-					ciphered = m.isCiphered();
-
 				// Enable extended protocol if not disabled
 				if(!delegate.getConfig().getBoolean("radio.legacy"))
 					extended = m.isExtended();
+
+				// Enable encryption
+				if(delegate.getConfig().getBoolean("radio.ciphered"))
+					ciphered = m.isCiphered();
 
 				Coordinates coords = delegate.getLocation();
 				writer.send(new MessageHello(id, coords, ciphered, extended));
@@ -321,7 +338,11 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 					// If we use the extended protocol, we can upgrade
 					// components and wait for the extended handshake.
 					SocketManager.this.upgrade();
-				} else {
+				}
+				else if(ciphered) {
+					state = RadioSocketState.CIPHER_NEGOCIATION;
+				}
+				else {
 					// Socket is ready!
 					SocketManager.this.register();
 				}
@@ -386,8 +407,10 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 						synchronized(mos) {
 							mos.writeMessage(message);
 						}
-					} catch(InterruptedException e) {
-					} catch(IOException e) {
+					}
+					catch(InterruptedException e) {
+					}
+					catch(IOException e) {
 						System.err.println("Cannot write to plane socket");
 						e.printStackTrace(System.err);
 

@@ -18,7 +18,8 @@ public class SegmentableFile implements Iterable<FileSegment> {
 		this.file = new RandomAccessFile(this.pathname, "rw");
 		try {
 			this.calculateHash();
-		} catch(NoSuchAlgorithmException e) {
+		}
+		catch(NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -35,7 +36,8 @@ public class SegmentableFile implements Iterable<FileSegment> {
 			public FileSegment next() {
 				try {
 					return getSegment(currentSegment++);
-				} catch(IOException e) {
+				}
+				catch(IOException e) {
 					e.printStackTrace();
 					// TODO blah
 					return null;
@@ -69,7 +71,8 @@ public class SegmentableFile implements Iterable<FileSegment> {
 			if(numRead > 0) {
 				digest.update(buffer, 0, numRead);
 			}
-		} while(numRead != -1);
+		}
+		while(numRead != -1);
 
 		return digest.digest();
 	}

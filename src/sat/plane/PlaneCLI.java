@@ -92,7 +92,8 @@ public class PlaneCLI extends GlobalCLI {
 			int port = Integer.parseInt(arg2);
 
 			engine = new RadioClientTCPEngine(host, port);
-		} else {
+		}
+		else {
 			out.println("Error: unknown radio engine type");
 			return;
 		}

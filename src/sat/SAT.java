@@ -29,11 +29,14 @@ public final class SAT {
 
 		if(args[0].equals("lab")) {
 			Lab.lab(args);
-		} else if(args[0].equals("plane")) {
+		}
+		else if(args[0].equals("plane")) {
 			Plane.main(args);
-		} else if(args[0].equals("tower")) {
+		}
+		else if(args[0].equals("tower")) {
 			Tower.main(args);
-		} else {
+		}
+		else {
 			// Commande inconnue
 			System.out.println("Unknown command " + args[0] + "...");
 			usage();
