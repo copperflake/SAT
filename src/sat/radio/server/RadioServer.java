@@ -210,7 +210,7 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			}
 		}
 
-		private void register() {
+		private void ready() {
 			synchronized(managers) {
 				managers.put(socketID, this);
 			}
@@ -305,16 +305,42 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			private void handleMessage(Message m) throws RadioProtocolException {
 				switch(m.getType()) {
 					case HELLO:
-						if(state != RadioSocketState.HANDSHAKE)
-							throw new RadioProtocolException("Cannot receive HELLO in state " + state);
+						// HELLO can be received only when in HANDSHAKE state
+						if(state != RadioSocketState.HANDSHAKE) {
+							throwInvalidState(m);
+						}
 
 						handleMessage((MessageHello) m);
 						break;
 
 					default:
+						// If not in READY state, the message must be a
+						// protocol message.
+						// Since all protocol messages are short-circuited in
+						// this switch, and we are in the default case, it's
+						// obviously not a protocol message.
+						if(state != RadioSocketState.READY) {
+							throwInvalidState(m);
+						}
+
 						// No short circuit, send it to incoming queue
 						incomingMessages.put(m);
 				}
+			}
+
+			/**
+			 * Méthode utilitaire pour lancer les exceptions au protocole
+			 * lorsque le message reçu ne correspond pas à celui attendu par
+			 * rapport à l'état actuel de la connexion.
+			 * 
+			 * @param m
+			 *            Le message reçu. Utilisé pour récupérer son type.
+			 * 
+			 * @throws RadioProtocolException
+			 *             L'exception générée.
+			 */
+			private void throwInvalidState(Message m) throws RadioProtocolException {
+				throw new RadioProtocolException("Cannot receive " + m.getType() + " in state " + state);
 			}
 
 			/**
@@ -322,12 +348,14 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 			 */
 			private void handleMessage(MessageHello m) {
 				// Enable extended protocol if not disabled
-				if(!delegate.getConfig().getBoolean("radio.legacy"))
+				if(!delegate.getConfig().getBoolean("radio.legacy")) {
 					extended = m.isExtended();
+				}
 
 				// Enable encryption
-				if(delegate.getConfig().getBoolean("radio.ciphered"))
+				if(delegate.getConfig().getBoolean("radio.ciphered")) {
 					ciphered = m.isCiphered();
+				}
 
 				Coordinates coords = delegate.getLocation();
 				writer.send(new MessageHello(id, coords, ciphered, extended));
@@ -344,7 +372,7 @@ public class RadioServer extends Radio implements RadioServerEngineDelegate {
 				}
 				else {
 					// Socket is ready!
-					SocketManager.this.register();
+					SocketManager.this.ready();
 				}
 			}
 
