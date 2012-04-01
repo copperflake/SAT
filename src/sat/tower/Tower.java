@@ -136,6 +136,22 @@ public class Tower {
 		Tower tower = getInstance();
 
 		TowerCLI cli = new TowerCLI(tower, System.in, System.out);
+
+		if(args.length > 1) {
+			// Run commands provided
+			try {
+				BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(args[1])));
+
+				String line;
+				while((line = reader.readLine()) != null) {
+					cli.eval(line);
+				}
+			}
+			catch(IOException e) {
+				e.printStackTrace();
+			}
+		}
+
 		Thread cliThread = cli.runInNewThread();
 	}
 
