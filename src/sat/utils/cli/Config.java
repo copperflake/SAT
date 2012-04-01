@@ -56,7 +56,7 @@ public class Config extends Properties {
 	 *            Le nom du paramètre à lire.
 	 */
 	public int getInt(String key) {
-		return Integer.parseInt(getProperty(key));
+		return key == null ? 0 : Integer.parseInt(getProperty(key));
 	}
 
 	private static final long serialVersionUID = -7067941402784421244L;

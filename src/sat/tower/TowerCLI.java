@@ -1,5 +1,6 @@
 package sat.tower;
 
+import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -11,6 +12,7 @@ import java.net.InetAddress;
 import sat.GlobalCLI;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerTCPEngine;
+import sat.utils.crypto.RSAKeyPair;
 
 /**
  * Interface CLI de la tour de contrôle.
@@ -145,5 +147,20 @@ public class TowerCLI extends GlobalCLI {
 		}
 
 		tower.listen(engine);
+	}
+
+	public void writekey(String path) throws IOException {
+		FileOutputStream fos = new FileOutputStream(path);
+		DataOutputStream dos = new DataOutputStream(fos);
+
+		RSAKeyPair keyPair = tower.getKeyPair().makePublic();
+
+		dos.writeInt(keyPair.keyLength());
+
+		dos.writeInt(keyPair.getPublicKey().getModulus().toByteArray().length);
+		dos.write(keyPair.getPublicKey().getModulus().toByteArray());
+
+		dos.writeInt(keyPair.getPublicKey().getExponent().toByteArray().length);
+		dos.write(keyPair.getPublicKey().getExponent().toByteArray());
 	}
 }

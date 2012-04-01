@@ -12,10 +12,14 @@ import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerEngineDelegate;
 import sat.radio.message.Message;
 import sat.radio.message.MessageHello;
+import sat.radio.message.MessageSendRSAKey;
 import sat.radio.message.stream.UpgradableMessageInputStream;
 import sat.radio.message.stream.UpgradableMessageOutputStream;
 import sat.radio.socket.RadioSocket;
 import sat.radio.socket.RadioSocketState;
+import sat.utils.crypto.RSAInputStream;
+import sat.utils.crypto.RSAKeyPair;
+import sat.utils.crypto.RSAOutputStream;
 import sat.utils.geo.Coordinates;
 
 /**
@@ -61,7 +65,7 @@ public class RadioServer extends Radio {
 	 *            radio.
 	 */
 	public RadioServer(RadioServerDelegate delegate, String label) {
-		super(label);
+		super(label, delegate.getConfig().getInt("radio.keylength"));
 
 		this.delegate = delegate;
 
@@ -315,6 +319,16 @@ public class RadioServer extends Radio {
 						handleMessage((MessageHello) m);
 						break;
 
+					case SENDRSA:
+						// SENDRSA can be received only when in
+						// CIPHER_NEGOCIATION state
+						if(state != RadioSocketState.CIPHER_NEGOCIATION) {
+							throwInvalidState(m);
+						}
+
+						handleMessage((MessageSendRSAKey) m);
+						break;
+
 					default:
 						// If not in READY state, the message must be a
 						// protocol message.
@@ -371,11 +385,25 @@ public class RadioServer extends Radio {
 				}
 				else if(ciphered) {
 					state = RadioSocketState.CIPHER_NEGOCIATION;
+					socket.in.upgrade(new RSAInputStream(socket.in.getStream(), keyPair));
 				}
 				else {
 					// Socket is ready!
 					SocketManager.this.ready();
 				}
+			}
+
+			/**
+			 * Gestion du message SendRSAKey
+			 */
+			public void handleMessage(MessageSendRSAKey m) {
+				// Upgrade the output stream to write encrypted data with the
+				// plane public key.
+				RSAKeyPair planeKey = new RSAKeyPair(m.getKey());
+				socket.out.upgrade(new RSAOutputStream(socket.out.getStream(), planeKey));
+
+				// Socket is ready for general usage.
+				SocketManager.this.ready();
 			}
 
 			/**

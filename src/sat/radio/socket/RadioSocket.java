@@ -19,9 +19,13 @@ public abstract class RadioSocket {
 		out.close();
 	}
 
-	protected class RadioSocketInputStream extends FilterInputStream {
+	public static class RadioSocketInputStream extends FilterInputStream {
 		public RadioSocketInputStream(InputStream in) {
 			super(in);
+		}
+
+		public InputStream getStream() {
+			return in;
 		}
 
 		public void upgrade(InputStream in) {
@@ -29,9 +33,13 @@ public abstract class RadioSocket {
 		}
 	}
 
-	protected class RadioSocketOutputStream extends FilterOutputStream {
+	public static class RadioSocketOutputStream extends FilterOutputStream {
 		public RadioSocketOutputStream(OutputStream out) {
 			super(out);
+		}
+
+		public OutputStream getStream() {
+			return out;
 		}
 
 		public void upgrade(OutputStream out) {

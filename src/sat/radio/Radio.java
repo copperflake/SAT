@@ -3,10 +3,8 @@ package sat.radio;
 import java.io.FileNotFoundException;
 
 import sat.radio.message.Message;
-import sat.radio.message.MessageData;
-import sat.radio.message.MessageSendRSAKey;
-import sat.utils.file.FileSegment;
-import sat.utils.file.SegmentableFile;
+import sat.utils.crypto.RSAException;
+import sat.utils.crypto.RSAKeyPair;
 
 /**
  * Une radio non-spécialisée (ni client, ni serveur). Cette classe fourni les
@@ -21,8 +19,24 @@ public abstract class Radio {
 	 */
 	protected RadioID id;
 
-	public Radio(String label) {
+	/**
+	 * Les clés RSA utilisées pour crypter les communications de cette radio.
+	 */
+	protected RSAKeyPair keyPair;
+
+	public Radio(String label, int keyLength) {
 		id = new RadioID(label);
+		try {
+			keyPair = new RSAKeyPair(keyLength);
+		}
+		catch(RSAException e) {
+			// Invalid key length, ignore
+			keyPair = new RSAKeyPair();
+		}
+	}
+
+	public RSAKeyPair getKeyPair() {
+		return keyPair;
 	}
 
 	public void sendFile(String path, String dest) throws FileNotFoundException {

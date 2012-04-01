@@ -1,6 +1,9 @@
 package sat.tower;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 import sat.radio.RadioID;
 import sat.radio.engine.server.RadioServerEngine;
@@ -8,6 +11,7 @@ import sat.radio.message.Message;
 import sat.radio.server.RadioServer;
 import sat.radio.server.RadioServerDelegate;
 import sat.utils.cli.Config;
+import sat.utils.crypto.RSAKeyPair;
 import sat.utils.geo.Coordinates;
 
 /**
@@ -35,6 +39,7 @@ public class Tower {
 
 		defaults.setProperty("radio.ciphered", "yes");
 		defaults.setProperty("radio.legacy", "no");
+		defaults.setProperty("radio.keylength", "1024");
 	}
 
 	/**
@@ -101,9 +106,18 @@ public class Tower {
 	 *             <code>IOException</code> qui est passée au code appelant.
 	 */
 	public void listen(RadioServerEngine engine) throws IOException {
+		lazyRadioInit();
+		radio.listen(engine);
+	}
+
+	public RSAKeyPair getKeyPair() {
+		lazyRadioInit();
+		return radio.getKeyPair();
+	}
+
+	private void lazyRadioInit() {
 		if(radio == null)
 			radio = new RadioServer(new Delegate(), "TWR");
-		radio.listen(engine);
 	}
 
 	// - - - Main method - - -
