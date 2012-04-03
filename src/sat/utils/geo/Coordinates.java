@@ -1,5 +1,8 @@
 package sat.utils.geo;
 
+/**
+ * Coordonées d'un composant du système SAT.
+ */
 public class Coordinates {
 	private int x;
 	private int y;

@@ -2,6 +2,7 @@ package sat.plane;
 
 import java.io.IOException;
 
+import sat.radio.RadioID;
 import sat.radio.client.RadioClient;
 import sat.radio.client.RadioClientDelegate;
 import sat.radio.engine.client.RadioClientEngine;
@@ -76,7 +77,7 @@ public class Plane {
 			return Plane.this.getLocation();
 		}
 
-		public void onMessage(Message message) {
+		public void onMessage(RadioID tower, Message message) {
 			System.out.println("Plane got message " + message + " from " + message.getID());
 		}
 	}

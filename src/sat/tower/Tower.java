@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Observable;
 
 import sat.radio.RadioID;
 import sat.radio.engine.server.RadioServerEngine;
@@ -17,7 +18,7 @@ import sat.utils.geo.Coordinates;
 /**
  * Une tour de contrôle. Cette classe est un Singleton.
  */
-public class Tower {
+public class Tower extends Observable {
 	// - - - Singleton Tools - - -
 
 	/**
@@ -167,15 +168,23 @@ public class Tower {
 		}
 
 		public void onPlaneConnected(RadioID plane) {
-			System.out.println("Plane connected");
+			System.out.println("Plane " + plane + " connected");
 		}
 
 		public void onPlaneDisconnected(RadioID plane) {
-			System.out.println("Plane disconnected");
+			System.out.println("Plane " + plane + " disconnected");
 		}
 
-		public void onMessage(Message message) {
-			System.out.println("Tower got message " + message + " from " + message.getID());
+		public void onMessage(RadioID plane, Message message) {
+			switch(message.getType()) {
+				case KEEPALIVE:
+					System.out.println("Tower got keepalive from " + plane);
+					break;
+
+				default:
+					System.out.println("Tower cannot handle message " + message.getType());
+					radio.kick(plane);
+			}
 		}
 	}
 }

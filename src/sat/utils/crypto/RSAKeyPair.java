@@ -6,11 +6,35 @@ import java.util.Random;
 
 import sat.EndOfWorldException;
 
+/**
+ * Une paire de clé RSA (publique, privée). Cette classe fourni également les
+ * méthodes de chiffrement et déchiffrement avec ces clés.
+ * <p>
+ * Il est possible d'avoir un demi-paire de clé, c'est à dire une paire de clé
+ * dont la composante privée est absente. Dans un tel cas, il n'est pas possible
+ * d'utiliser les fonctions nécessitant une clé privée. La clé publique est en
+ * revanche toujours disponible.
+ */
 public final class RSAKeyPair {
+	/**
+	 * La clé publique.
+	 */
 	private RSAKey publicKey;
+
+	/**
+	 * La clé privée. Possiblement null.
+	 */
 	private RSAKey privateKey;
+
+	/**
+	 * La longueur des clés de cette paire de clé.
+	 */
 	private int keyLength;
 
+	/**
+	 * Crée une nouvelle paire de clé avec une clé publique et privée générée
+	 * aléatoirement. La longueur de ces clés sera de 1024 bits.
+	 */
 	public RSAKeyPair() {
 		try {
 			generateKeyPair(1024);
@@ -21,11 +45,26 @@ public final class RSAKeyPair {
 		}
 	}
 
+	/**
+	 * Crée une paire de clé générée dynamiquement de taille donnée.
+	 * 
+	 * @param keyLength
+	 *            La longeueur des clés générées.
+	 * 
+	 * @throws RSAException
+	 *             Si la longueur des clés est insufisante (< 128 bits).
+	 */
 	public RSAKeyPair(int keyLength) throws RSAException {
 		generateKeyPair(keyLength);
 		this.keyLength = keyLength;
 	}
 
+	/**
+	 * Crée une demi-paire de clé avec uniquement une composante publique.
+	 * 
+	 * @param publicKey
+	 *            La composante publique de cette paire de clé.
+	 */
 	public RSAKeyPair(RSAKey publicKey) {
 		this.publicKey = publicKey;
 		this.privateKey = null; // Half keyPair
@@ -33,6 +72,18 @@ public final class RSAKeyPair {
 		this.keyLength = publicKey.getLength();
 	}
 
+	/**
+	 * Crée une paire de clé contenant une composante privée et publique donnée.
+	 * 
+	 * @param publicKey
+	 *            La composante publique de la paire de clé.
+	 * @param privateKey
+	 *            La composante privée de la paire de clé.
+	 * 
+	 * @throws RSAException
+	 *             Si les deux clés fournies sont incompatible entre elles, une
+	 *             exception est générée.
+	 */
 	public RSAKeyPair(RSAKey publicKey, RSAKey privateKey) throws RSAException {
 		// TODO: check key validity (better)
 		if(!publicKey.getModulus().equals(privateKey.getModulus()))
@@ -50,6 +101,9 @@ public final class RSAKeyPair {
 		this.keyLength = publicKey.getLength();
 	}
 
+	/**
+	 * Fonction interne de génération de clé.
+	 */
 	private void generateKeyPair(int keyLength) throws RSAException {
 		if(keyLength < 128)
 			throw new RSAException("Key is too short");
@@ -91,7 +145,8 @@ public final class RSAKeyPair {
 			//   this definition.
 			lambda = phi.divide(pMin1.gcd(qMin1));
 		}
-		while(lambda.compareTo(e) != 1 || !e.gcd(lambda).equals(BigInteger.ONE)); // e < [φ/λ] & e premier à λ
+		// e < [φ/λ] & e premier à λ
+		while(lambda.compareTo(e) != 1 || !e.gcd(lambda).equals(BigInteger.ONE));
 
 		// e est premier à λ, donc d existe
 		d = e.modInverse(lambda);
@@ -100,6 +155,11 @@ public final class RSAKeyPair {
 		this.privateKey = new RSAKey(d, n);
 	}
 
+	/**
+	 * Retourne la clé privée de cette paire de clé.
+	 * 
+	 * @throws RSAException Si la clé privée n'est pas disponible.
+	 */
 	public RSAKey getPrivateKey() throws RSAException {
 		if(privateKey == null)
 			throw new RSAException("Private key is missing");
@@ -107,14 +167,23 @@ public final class RSAKeyPair {
 		return privateKey;
 	}
 
+	/**
+	 * Retourne la clé publique de cette paire de clé. Contrairement à la clé préviée, celle-ci est toujours disponible.
+	 */
 	public RSAKey getPublicKey() {
 		return publicKey;
 	}
 
+	/**
+	 * Retourne la longueur des clés de cette paire de clé.
+	 */
 	public int keyLength() {
 		return keyLength;
 	}
 
+	/**
+	 * Crée une nouvelle paire de clé dont la composante privée est absente.
+	 */
 	public RSAKeyPair makePublic() {
 		return new RSAKeyPair(getPublicKey());
 	}
@@ -137,7 +206,7 @@ public final class RSAKeyPair {
 	}
 
 	/**
-	 * KeyPair string serialization
+	 * KeyPair string serialization. [DEBUG]
 	 */
 	public String toString() {
 		return "{" + publicKey + ";" + privateKey + "}";

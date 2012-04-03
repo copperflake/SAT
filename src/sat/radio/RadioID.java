@@ -6,10 +6,11 @@ import java.util.Date;
 
 /**
  * L'identifiant d'un pair dans un réseau radio SAT.
+ * <p>
+ * Cette classe supporte les méthodes nécessaire à son utilisation de façon
+ * transparente dans des objets de type <code>HashMap</code>.
  */
 public final class RadioID implements Serializable {
-	// RadioID config
-
 	/**
 	 * Nombre de chiffres de la partie horraire de l'identifiant.
 	 */
@@ -182,7 +183,7 @@ public final class RadioID implements Serializable {
 	}
 
 	/**
-	 * Compare deux RadioID entre eux.
+	 * Compare deux RadioID entre eux et indique s'ils sont égaux.
 	 */
 	public boolean equals(Object o) {
 		// Obvious equality

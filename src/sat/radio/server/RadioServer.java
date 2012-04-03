@@ -12,6 +12,7 @@ import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerEngineDelegate;
 import sat.radio.message.Message;
 import sat.radio.message.MessageHello;
+import sat.radio.message.MessageKeepalive;
 import sat.radio.message.MessageSendRSAKey;
 import sat.radio.message.stream.UpgradableMessageInputStream;
 import sat.radio.message.stream.UpgradableMessageOutputStream;
@@ -26,13 +27,18 @@ import sat.utils.geo.Coordinates;
  * Un serveur radio.
  * <p>
  * Un serveur radio écoute un flux d'entrée en attente de client radio. Il
- * utilise en interne un moteur de serveur radio qui s'occupe de gérer la partie
+ * repose sur un moteur de serveur radio qui s'occupe de gérer la partie
  * technique des communications.
+ * <p>
+ * Le serveur est conçu pour être integré dans un objet qui s'occupera de gérer
+ * les différents évenement qui surviennent lors de l'execution. Cet objet est
+ * appelé le <code>delegate</code>.
  */
 public class RadioServer extends Radio {
 	/**
 	 * Le délégué de ce serveur radio, il sera responsable de gérer les
-	 * événements emis par la radio au cours de son fonctionnement.
+	 * événements emis par la radio au cours de son fonctionnement ainsi que de
+	 * fournir certaines informations comme la position et la configuration.
 	 */
 	private RadioServerDelegate delegate;
 
@@ -43,22 +49,27 @@ public class RadioServer extends Radio {
 	private RadioServerEngine engine;
 
 	/**
-	 * File d'attente des messages entrants.
+	 * File d'attente des messages entrants. Chaque message entrant sera placé
+	 * dans cette queue qui est lue par l'objet {@link IncomingMessageEmitter}.
 	 */
 	private PriorityBlockingQueue<Message> incomingMessages;
 
 	/**
-	 * Thread de gestion des messages entrants.
+	 * Thread de gestion des messages entrants. Surveille la queue de messages
+	 * entrants et se charge d'appeler la méthode <code>onMessage</code> du
+	 * délégué.
 	 */
 	private IncomingMessageEmitter incomingThread;
 
 	/**
-	 * Liste des pairs connectés avec le gestionnaire associé.
+	 * Liste des pairs connectés avec le gestionnaire associé. Chaque Manager a
+	 * la responsabilité de s'ajouter dans cette liste lorsqu'il devient prêt à
+	 * être utilisé.
 	 */
 	private HashMap<RadioID, SocketManager> managers;
 
 	/**
-	 * Crée un nouveau serveur radio.
+	 * Crée un nouveau serveur radio qui dépend du délégué spécifié.
 	 * 
 	 * @param delegate
 	 *            Le délégué qui sera chargé de la gestion des événements de la
@@ -80,7 +91,8 @@ public class RadioServer extends Radio {
 	/**
 	 * Défini et initialise le moteur d'écoute de ce serveur radio.
 	 * <p>
-	 * Cette fonction est sans effet si le moteur a déjà été défini.
+	 * Cette fonction est (pour l'instant) sans effet si le moteur a déjà été
+	 * défini.
 	 * 
 	 * @param engine
 	 *            Le moteur de serveur radio à utiliser.
@@ -98,6 +110,14 @@ public class RadioServer extends Radio {
 		this.engine.init(new Delegate());
 	}
 
+	/**
+	 * Déconnecte de force un client de ce serveur. Cette méthode est utilisée
+	 * par l'objet superviseur (dans notre cas la tour) pour déconnecter de
+	 * force un avion en cas d'erreur.
+	 * 
+	 * @param id
+	 *            Le RadioID du client à déconnecter.
+	 */
 	public void kick(RadioID id) {
 		synchronized(managers) {
 			if(managers.containsKey(id)) {
@@ -108,34 +128,59 @@ public class RadioServer extends Radio {
 
 	// - - - Engine Events Delegate - - -
 
+	/**
+	 * L'objet délégué qui sera passé au moteur de radio. Ces méthodes sont
+	 * implémentées dans une classe imbriquée plutôt que directement dans la
+	 * classe principale pour éviter d'exposer des méthodes théoriquement
+	 * privées (puisqu'elle ne doivent pas être appelée par l'objet superviseur
+	 * (la tour)) mais qui doivent être déclarées public pour pouvoir être
+	 * appelées par le moteur.
+	 * <p>
+	 * Note: un concept de classes "amies" comme le propose C++ permettrait
+	 * d'éviter cette classe interne. Il n'existe pas de façon en Java d'émuler
+	 * ce comportement.
+	 */
 	private class Delegate implements RadioServerEngineDelegate {
 		/**
 		 * Gestion de la connexion d'un nouveau client.
+		 * <p>
+		 * Lors d'une connexion, un nouveau {@link SocketManager} est créé pour
+		 * gérer cette connexion.
 		 */
 		public void onNewConnection(RadioSocket socket) {
-			// Lancement d'un SocketManager qui s'occupera de ce client
-			new SocketManager(socket).start();
+			// Memory management is weird here...
+			//
+			// This object launches 2 threads, these threads are inner-classes,
+			// so they have an implicit reference to their parents. So this
+			// object will not be garbage-collected by Java despite no direct
+			// reference to it (at least until registered when ready)!
+			new SocketManager(socket);
 		}
 	}
 
 	// - - - Event Emitter - - -
 
 	/**
-	 * Gestionnaire de la file d'attente de message entrant. Ce thread écoute la
-	 * queue incomingMessages et notifie le délégué de la radio de l'arrivée de
-	 * nouveaux messages.
+	 * Gestionnaire de la file d'attente de messages entrants. Ce thread
+	 * surveille la queue incomingMessages et notifie le délégué de la radio de
+	 * l'arrivée de nouveaux messages.
 	 */
 	private class IncomingMessageEmitter extends Thread {
+		/**
+		 * Indicateur d'état. Le thread s'arrête si défini à <code>false</code>.
+		 */
 		private boolean running = true;
 
 		public void run() {
 			while(running) {
 				Message message;
 				try {
-					message = incomingMessages.take();
-					delegate.onMessage(message);
+					message = incomingMessages.take(); // Blocking
+					delegate.onMessage(message.getID(), message);
 				}
 				catch(InterruptedException e) {
+					// -> incomingMessage.take() interrupted
+					// nothing to do, loop.
 				}
 			}
 		}
@@ -143,8 +188,10 @@ public class RadioServer extends Radio {
 		/**
 		 * Arrête le thread de notification.
 		 */
+		// TODO: cette méthode sera appelée à l'arrêt de la radio [NYI]
 		public void quit() {
 			running = false;
+			this.interrupt();
 		}
 	}
 
@@ -152,6 +199,12 @@ public class RadioServer extends Radio {
 
 	/**
 	 * Un gestionnaire de socket.
+	 * <p>
+	 * Cet objet est responsable de toute la gestion d'un client particulier.
+	 * C'est à dire qu'il initialisera le thread d'écoute et d'écriture
+	 * correspondant, surveillera l'état de la communication (HANDSHAKE, READY,
+	 * ...) et s'occupera des messages protocolaires qui n'ont pas d'intérêt
+	 * pour la tour elle-même (court-circuitage).
 	 */
 	private class SocketManager {
 		/**
@@ -200,18 +253,26 @@ public class RadioServer extends Radio {
 			this.socket = socket;
 
 			listener = new SocketListener();
+			listener.start();
+
 			writer = new SocketWriter();
+			writer.start();
 		}
 
+		/**
+		 * Indique si le socket géré correspond à un client supportant le
+		 * protocole étendu.
+		 */
 		public boolean isExtended() {
 			return extended;
 		}
 
-		public void start() {
-			listener.start();
-			writer.start();
-		}
-
+		/**
+		 * Upgrade les flux d'entrée/sortie en les passant en mode Extended
+		 * plutôt que Legacy. Cette méthode execute simplement les méthodes
+		 * <code>upgrade</code> des objets {@link SocketListener} et
+		 * {@link SocketWriter} sous-jacents.
+		 */
 		private void upgrade() {
 			try {
 				listener.upgrade();
@@ -219,11 +280,22 @@ public class RadioServer extends Radio {
 			}
 			catch(IOException e) {
 				// Failed to upgrade streams
+				System.out.println("Failed to upgrade streams...");
 				e.printStackTrace();
 				quit();
 			}
 		}
 
+		/**
+		 * Passe ce SocketManager en état <code>READY</code>.
+		 * <p>
+		 * Il sera désormais possible de l'utiliser pour envoyer des messages
+		 * quelconque et il sera inscrit dans la liste des gestionnaires actifs
+		 * de la radio en utilisant le RadioID obtenu lors du handshake.
+		 * <p>
+		 * L'appel de cette méthode génère également une notification de type
+		 * <code>onPlaneConnected</code> au délégué de la radio.
+		 */
 		private void ready() {
 			synchronized(managers) {
 				managers.put(socketID, this);
@@ -233,31 +305,60 @@ public class RadioServer extends Radio {
 			delegate.onPlaneConnected(socketID);
 		}
 
+		/**
+		 * Déconnecte de force le client associé à ce SocketManager. Cette
+		 * méthode est appelée automatiquement par la méthode <code>kick</code>
+		 * de la classe RadioServer.
+		 * <p>
+		 * Cette méthode appel ensuite quit() pour forcer l'arrêt et la
+		 * déconnexion de ce client.
+		 */
 		public void kick() {
 			// TODO: if extended, send KICK notice
 			quit();
 		}
 
+		/**
+		 * Arrête ce SocketManager et ferme le RadioSocket sous-jacent. Cette
+		 * méthode provoque aussi l'arrêt des threads SocketListener et
+		 * SocketWriter internes.
+		 * <p>
+		 * Cette méthode ne peut être appelée directement depuis l'extérieur.
+		 * Elle est appelée implicitement par la méthode <code>kick</code> ou
+		 * explicitement par les threads de lecture/écriture interne si une
+		 * erreur provoquant la déconnexion du client survient lors de leur
+		 * execution.
+		 * <p>
+		 * La bonne méthode pour déconnecter un client depuis l'extérieur est
+		 * d'utiliser la méthode <code>kick</code>.
+		 */
 		private void quit() {
-			// Prevent multiple calls
-			if(state == RadioSocketState.CLOSING)
-				return;
+			synchronized(state) {
+				// Prevent multiples calls
+				// quit -> socket.close() -> IOException -> quit
+				if(state == RadioSocketState.CLOSING)
+					return;
 
-			// Unregister
-			if(state == RadioSocketState.READY) {
-				synchronized(managers) {
-					managers.remove(socketID);
+				// Unregister
+				if(state == RadioSocketState.READY) {
+					// Disconnect notification
+					// Notification must be the first thing done.
+					delegate.onPlaneDisconnected(socketID);
+
+					synchronized(managers) {
+						managers.remove(socketID);
+					}
 				}
 
-				delegate.onPlaneDisconnected(socketID);
+				state = RadioSocketState.CLOSING;
 			}
-
-			state = RadioSocketState.CLOSING;
 
 			listener.quit();
 			writer.quit();
 
 			try {
+				// TODO: if we must ensure empty output queue, socket closing
+				// must be handled by Listener / Writer (and decomposed).
 				socket.close();
 			}
 			catch(IOException e) {
@@ -269,16 +370,24 @@ public class RadioServer extends Radio {
 		// - - - Listener - - -
 
 		/**
-		 * Thread de gestion de l'entrée du socket.
+		 * Thread de gestion de l'entrée du socket. Ce thread utilise un flux
+		 * d'entrée de messages pour recevoir les messages envoyés par le
+		 * client, il effectue ensuite les traitements nécessaires si le message
+		 * reçu doit être court-circuité (messages protocolaires) ou le place
+		 * dans la liste d'attente des messages à transmettre à la tour.
 		 */
 		private class SocketListener extends Thread {
 			/**
-			 * Flux d'entrée de messages.
+			 * Flux d'entrée de messages. Ce flux est de type
+			 * UpgradableMessageInputStream pour pouvoir plus tard être
+			 * dynamiquement modifié en flux de type étendu si cette version du
+			 * protocole est supportée par le client.
 			 */
 			private UpgradableMessageInputStream mis;
 
 			/**
-			 * État du thread.
+			 * État du thread. Le thread s'arrête si défini à <code>false</code>
+			 * .
 			 */
 			private boolean running = true;
 
@@ -297,14 +406,18 @@ public class RadioServer extends Radio {
 					Message message;
 
 					while(running) {
+						// Read one message from input stream.
 						synchronized(mis) {
 							message = mis.readMessage();
 						}
 
+						// Handle it!
 						handleMessage(message);
 					}
 				}
 				catch(EOFException e) {
+					// Connexion closed
+					// TODO: EOF unexpected without BYE!
 					SocketManager.this.quit();
 				}
 				catch(RadioProtocolException e) {
@@ -325,7 +438,18 @@ public class RadioServer extends Radio {
 			}
 
 			/**
-			 * Gestion du court-circuitage des messages protocolaires.
+			 * Gestion du court-circuitage des messages protocolaires. Cette
+			 * méthode s'assure que l'état de la connexion permet la réception
+			 * du message en question, appel la fonction de court-circuitage si
+			 * nécessaire ou place le message dans la file d'attente de messages
+			 * qui seront envoyés à la tour de contrôle.
+			 * 
+			 * @param m
+			 *            Le message reçu. Cette méthode n'utilise que les
+			 *            fonctions génériques d'un message (définie dans la
+			 *            classe <code>Message</code>). Si un message nécessite
+			 *            un traitement particulier, il sera passé à une des
+			 *            méthodes <code>handleMessage</code> spécifiques.
 			 * 
 			 * @throws RadioProtocolException
 			 *             Si le message reçu n'est pas autorisé dans l'état
@@ -351,6 +475,14 @@ public class RadioServer extends Radio {
 
 						handleMessage((MessageSendRSAKey) m);
 						break;
+
+					case KEEPALIVE:
+						// Keepalive is used to reset socket timeout, handle it.
+						handleMessage((MessageKeepalive) m);
+
+						// But is also used for updating plane position, so tower
+						// must receive it. No break!
+						//break;
 
 					default:
 						// If not in READY state, the message must be a
@@ -383,7 +515,16 @@ public class RadioServer extends Radio {
 			}
 
 			/**
-			 * Gestion du message Hello.
+			 * Gestion du message Hello. Ce message est totalement cour-circuité
+			 * car il ne présente pas d'intérêt pour la tour de contrôle. Il
+			 * sert à initiliser les informations de l'avion correspondant comme
+			 * son RadioID et son support du chiffrement et du protocole étendu.
+			 * <p>
+			 * Cette méthode envoie automatiquement le message
+			 * <code>MessageHello</code> correspondant à l'avion.
+			 * <p>
+			 * Cette méthode s'assure ensuite de gérer le passage en mode étendu
+			 * et/ou chiffré si l'avion le supporte.
 			 */
 			private void handleMessage(MessageHello m) {
 				// Enable extended protocol if not disabled
@@ -404,6 +545,8 @@ public class RadioServer extends Radio {
 				if(extended) {
 					// If we use the extended protocol, we can upgrade
 					// components and wait for the extended handshake.
+
+					// TODO: upgrade only listener, writer will be upgraded later
 					SocketManager.this.upgrade();
 				}
 				else if(ciphered) {
@@ -417,7 +560,11 @@ public class RadioServer extends Radio {
 			}
 
 			/**
-			 * Gestion du message SendRSAKey
+			 * Gestion du message SendRSAKey. Lors de la réception de ce
+			 * message, le flux de sortie est mis à jour afin de supporter le
+			 * chiffrement avec la clé publique de l'avion. Le socket est
+			 * ensuite défini à l'état <code>READY</code> et signalé comme
+			 * nouvelle connexion à la tour.
 			 */
 			public void handleMessage(MessageSendRSAKey m) {
 				// Upgrade the output stream to write encrypted data with the
@@ -427,6 +574,14 @@ public class RadioServer extends Radio {
 
 				// Socket is ready for general usage.
 				SocketManager.this.ready();
+			}
+
+			/**
+			 * Gestion du message KeepAlive. Remet à zéro le timeout de
+			 * déconnexion de l'avion en cas d'inactivité. [NYI]
+			 */
+			public void handleMessage(MessageKeepalive m) {
+				// Nothing for now
 			}
 
 			/**
@@ -454,7 +609,9 @@ public class RadioServer extends Radio {
 		// - - - Writer - - -
 
 		/**
-		 * Thread de gestion de la liste d'attente des messages sortants.
+		 * Thread de gestion de la liste d'attente des messages sortants. Ce
+		 * thread possède sa propre queue d'envoi de message depuis laquelle il
+		 * récupérera les messages à envoyé à l'avion selon leur priorité.
 		 */
 		private class SocketWriter extends Thread {
 			/**
@@ -473,7 +630,8 @@ public class RadioServer extends Radio {
 			private boolean running = true;
 
 			/**
-			 * Crée un nouveau thread d'écrite vers un pair.
+			 * Crée un nouveau thread d'écriture vers un client. Ce thread
+			 * utilisera le flux de sortie du socket du SocketManager.
 			 */
 			public SocketWriter() {
 				mos = new UpgradableMessageOutputStream(socket.out);
@@ -482,6 +640,8 @@ public class RadioServer extends Radio {
 			public void run() {
 				Message message;
 
+				// TODO: ensure empty queue before quitting
+				// flush all message including BYE before closing socket.
 				while(running) {
 					try {
 						message = queue.take();
@@ -490,6 +650,7 @@ public class RadioServer extends Radio {
 						}
 					}
 					catch(InterruptedException e) {
+						// queue.take interrupted, loop.
 					}
 					catch(IOException e) {
 						System.err.println("Cannot write to plane socket");
@@ -502,7 +663,10 @@ public class RadioServer extends Radio {
 			}
 
 			/**
-			 * Envoie un message à l'avion.
+			 * Envoie un message à l'avion. Le message est placé dans la file
+			 * d'attente d'envoi et son envoi effectif sera différé. Si la file
+			 * d'attente contient plusieurs messages, ceux de la priorité la
+			 * plus élevée seront envoyés en premiers.
 			 * 
 			 * @param m
 			 *            Le message à envoyer.
@@ -527,7 +691,10 @@ public class RadioServer extends Radio {
 			}
 
 			/**
-			 * Arrête le thread.
+			 * Arrête le thread. Cet arrêt détruit tout les messages pas encore
+			 * envoyés et qui sont dans la file d'attente. Néanmoins si un
+			 * message est actuellement en cours d'envoi, son envoi sera terminé
+			 * avant de terminer le thread.
 			 */
 			public void quit() {
 				running = false;

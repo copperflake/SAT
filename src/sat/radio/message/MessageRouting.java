@@ -1,16 +1,12 @@
 package sat.radio.message;
 
-import sat.plane.Route;
 import sat.radio.RadioID;
 import sat.utils.geo.Coordinates;
 
 public class MessageRouting extends Message {
-	Route route;
 
-	public MessageRouting(RadioID id, Coordinates c, Route route) {
+	public MessageRouting(RadioID id, Coordinates c) {
 		super(id, c);
-
-		this.route = route;
 	}
 
 	public void setTypeAndPriority() {

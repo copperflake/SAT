@@ -11,7 +11,15 @@ import org.junit.Test;
 
 import sat.radio.RadioID;
 
+/**
+ * Test l'objet RadioID.
+ */
 public class RadioIDTest {
+	/**
+	 * Vérifie que les hashcodes et la méthode <code>equals()</code> retourne
+	 * des résultats corrects pour deux objets RadioID dinstincts mais
+	 * identiques à base d'identifiants Legacy.
+	 */
 	@Test
 	public void testLegacyEquality() {
 		RadioID id1 = new RadioID(new byte[] { 'H', 'E', 'L', 'L', 'O' });
@@ -21,6 +29,11 @@ public class RadioIDTest {
 		assertTrue(id1.equals(id2));
 	}
 
+	/**
+	 * Vérifie que les hashcodes et la méthode <code>equals()</code> retourne
+	 * des résultats corrects pour deux objets RadioID dinstincts mais
+	 * identiques après sérialisation/déserialisation par un flux ObjectStream.
+	 */
 	@Test
 	public void testExtendedSerializedEquality() throws Exception {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -41,6 +54,10 @@ public class RadioIDTest {
 
 	}
 
+	/**
+	 * Vérifie que deux objets RadioID distinct créés séparément mais avec le
+	 * même label ne soient pas considérés identiques.
+	 */
 	@Test
 	public void testExtendedInquality() throws Exception {
 		RadioID id1 = new RadioID("PLN");

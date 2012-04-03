@@ -53,7 +53,14 @@ public class LegacyMessageInputStream extends MessageInputStream {
 		Coordinates c = new Coordinates(px, py, 0);
 
 		// Le type du message
-		MessageType type = MessageType.values()[dis.readInt()];
+		MessageType type;
+		try {
+			type = MessageType.values()[dis.readInt()];
+		}
+		catch(RuntimeException e) {
+			// Error with type deserialization
+			throw new IOException("Invalid message type");
+		}
 
 		// Message qui sera retourné.
 		Message message = null;
@@ -116,7 +123,7 @@ public class LegacyMessageInputStream extends MessageInputStream {
 				byte[] payload2 = fill(new byte[length]);
 				// TODO data
 
-				message = new MessageRouting(id, c, null);
+				message = new MessageRouting(id, c);
 				break;
 
 			case KEEPALIVE:

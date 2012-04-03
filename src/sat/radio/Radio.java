@@ -11,7 +11,6 @@ import sat.utils.crypto.RSAKeyPair;
  * outils communs utilisés à la fois par les serveurs-radio et les
  * client-radios.
  */
-
 public abstract class Radio {
 	/**
 	 * L'identifiant de cette radio. Tous les éléments d'un réseau radio SAT
@@ -24,17 +23,31 @@ public abstract class Radio {
 	 */
 	protected RSAKeyPair keyPair;
 
+	/**
+	 * Crée une nouvelle radio avec un label d'identifiant et une longueur de
+	 * clé définie.
+	 * 
+	 * @param label
+	 *            Le label de l'identifiant de cette radio.
+	 * @param keyLength
+	 *            La longueur de clé à utiliser pour le chiffrement.
+	 */
 	public Radio(String label, int keyLength) {
 		id = new RadioID(label);
+
+		// Key generation
 		try {
 			keyPair = new RSAKeyPair(keyLength);
 		}
 		catch(RSAException e) {
-			// Invalid key length, ignore
+			// Invalid key length, ignore given length and use default
 			keyPair = new RSAKeyPair();
 		}
 	}
 
+	/**
+	 * Retourne la clé utilisée par cette radio.
+	 */
 	public RSAKeyPair getKeyPair() {
 		return keyPair;
 	}
@@ -51,6 +64,5 @@ public abstract class Radio {
 	}
 
 	protected void send(Message msg, String dest) {
-
 	}
 }

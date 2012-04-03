@@ -11,3 +11,5 @@ import sat.tests.radio.AllRadioTests;
 @SuiteClasses({ AllCryptoTests.class, AllRadioTests.class })
 public class AllTests {
 }
+
+// TODO: MOAR TEST!
