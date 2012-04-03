@@ -137,6 +137,6 @@ public class RSAInputStream extends InputStream {
 		if(bufferPosition >= bufferLength)
 			load();
 
-		return buffer[bufferPosition++];
+		return buffer[bufferPosition++] & 0xff;
 	}
 }
