@@ -98,6 +98,14 @@ public class RadioServer extends Radio {
 		this.engine.init(new Delegate());
 	}
 
+	public void kick(RadioID id) {
+		synchronized(managers) {
+			if(managers.containsKey(id)) {
+				managers.get(id).kick();
+			}
+		}
+	}
+
 	// - - - Engine Events Delegate - - -
 
 	private class Delegate implements RadioServerEngineDelegate {
@@ -225,7 +233,16 @@ public class RadioServer extends Radio {
 			delegate.onPlaneConnected(socketID);
 		}
 
+		public void kick() {
+			// TODO: if extended, send KICK notice
+			quit();
+		}
+
 		private void quit() {
+			// Prevent multiple calls
+			if(state == RadioSocketState.CLOSING)
+				return;
+
 			// Unregister
 			if(state == RadioSocketState.READY) {
 				synchronized(managers) {
@@ -235,6 +252,11 @@ public class RadioServer extends Radio {
 				delegate.onPlaneDisconnected(socketID);
 			}
 
+			state = RadioSocketState.CLOSING;
+
+			listener.quit();
+			writer.quit();
+
 			try {
 				socket.close();
 			}
@@ -242,9 +264,6 @@ public class RadioServer extends Radio {
 				System.err.println("Error while closing socket!?");
 				e.printStackTrace(System.err);
 			}
-
-			listener.quit();
-			writer.quit();
 		}
 
 		// - - - Listener - - -
@@ -295,12 +314,16 @@ public class RadioServer extends Radio {
 					SocketManager.this.quit();
 				}
 				catch(IOException e) {
-					// Unable to read message, disconnect plane.
-					System.err.println("Cannot read from plane socket");
-					e.printStackTrace(System.err);
-					SocketManager.this.quit();
+					// If socket is closing, it's expected.
+					if(state != RadioSocketState.CLOSING) {
+						// Unable to read message, disconnect plane.
+						System.err.println("Cannot read from plane socket");
+						e.printStackTrace(System.err);
+						SocketManager.this.quit();
+					}
 				}
 			}
+
 			/**
 			 * Gestion du court-circuitage des messages protocolaires.
 			 * 
