@@ -1,8 +1,5 @@
 package sat.utils.geo;
 
-/**
- * Coordonées d'un composant du système SAT.
- */
 public class Coordinates {
 	private int x;
 	private int y;
@@ -24,5 +21,11 @@ public class Coordinates {
 
 	public int getZ() {
 		return z;
+	}
+	
+	public boolean equals(Coordinates obj) {
+		if(obj.getX() == this.x && obj.getY() == this.y && obj.getZ() == this.z)
+			return true;
+		return false;
 	}
 }
