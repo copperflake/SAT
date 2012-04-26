@@ -56,11 +56,11 @@ public class Controls {
 	private ActionListener actionListener = new ActionListener() {
 		public void onAction(String name, boolean keyPressed, float tpf) {
 			if(name.equals("MoveEnable")) {
-				inputManager.setCursorVisible(!keyPressed);
+				//inputManager.setCursorVisible(!keyPressed);
 				moveEnable = keyPressed;
 			}
 			else if(name.equals("RotateEnable")) {
-				inputManager.setCursorVisible(!keyPressed);
+				//inputManager.setCursorVisible(!keyPressed);
 				rotateEnable = keyPressed;
 			}
 		}
@@ -70,31 +70,31 @@ public class Controls {
 		public void onAnalog(String name, float value, float tpf) {
 			if(name.equals("MoveX-L")) {
 				if(moveEnable && !rotateEnable)
-					app.moveCamSide(value);
-				else if(rotateEnable && !moveEnable)
-					app.rotateCamH(value);
-			}
-			else if(name.equals("MoveX-R")) {
-				if(moveEnable && !rotateEnable)
 					app.moveCamSide(-value);
 				else if(rotateEnable && !moveEnable)
 					app.rotateCamH(-value);
 			}
-			else if(name.equals("MoveY-U")) {
+			else if(name.equals("MoveX-R")) {
 				if(moveEnable && !rotateEnable)
-					app.moveCamFront(value);
+					app.moveCamSide(value);
 				else if(rotateEnable && !moveEnable)
-					app.rotateCamV(value);
-				else if(moveEnable && rotateEnable)
-					app.moveCamY(value);
+					app.rotateCamH(value);
 			}
-			else if(name.equals("MoveY-D")) {
+			else if(name.equals("MoveY-U")) {
 				if(moveEnable && !rotateEnable)
 					app.moveCamFront(-value);
 				else if(rotateEnable && !moveEnable)
 					app.rotateCamV(-value);
 				else if(moveEnable && rotateEnable)
 					app.moveCamY(-value);
+			}
+			else if(name.equals("MoveY-D")) {
+				if(moveEnable && !rotateEnable)
+					app.moveCamFront(value);
+				else if(rotateEnable && !moveEnable)
+					app.rotateCamV(value);
+				else if(moveEnable && rotateEnable)
+					app.moveCamY(value);
 			}
 			else if(name.equals("ZoomIn"))
 				app.zoom(value);

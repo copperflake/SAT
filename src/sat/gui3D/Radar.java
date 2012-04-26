@@ -56,8 +56,8 @@ public class Radar extends SimpleApplication {
 		boolean DoF = false;
 		boolean effects = false;
 
-		moveSpeed = 20f;
-		rotSpeed = 20f;
+		moveSpeed = 100f;
+		rotSpeed = 300f;
 		zoomSpeed = 5f;
 
 		center = new Vector3f(0, 0, 0);
