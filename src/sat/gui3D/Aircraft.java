@@ -15,7 +15,6 @@ public class Aircraft {
 	private Node simsWrapper;
 	private Geometry model;
 	private Geometry sims;
-	private float speed;
 	
 	private ArrayList<DatedCoordinates> path;
 	
@@ -39,14 +38,26 @@ public class Aircraft {
 		mainNode.setLocalRotation(new Quaternion(new float[]{0f, (float) (Math.random()*Math.PI*2), 0f}));
 		
 		parent.attachChild(mainNode);
-		
-		speed = (float) (0.25f+Math.random()*0.8f);
 	}
 	
 	public void addDestination(FloatCoordinates pos, Date date) {
 		path.add(new DatedCoordinates(pos, date));
 	}
 	
+	private void moveTo(FloatCoordinates coords) {
+		//if(...)
+			moveStraightTo(coords);
+		//else
+			//moveStraightTo(coords);
+	}
+	
+	private void moveStraightTo(FloatCoordinates coords) {
+		
+	}
+
+	private void moveCircleTo(FloatCoordinates coords) {
+		
+	}
 	public Node getNode() {
 		return mainNode;
 	}
@@ -54,9 +65,5 @@ public class Aircraft {
 	public void update(float t) {
 		sims.setLocalTranslation(sims.getLocalTranslation().x, (float) (Math.sin(t*2f)+1)*sims.getLocalScale().y*2, sims.getLocalTranslation().z);
 		sims.rotate(0f, 0.01f, 0f);
-		
-		//float d = speed*t;
-		//mainNode.setLocalTranslation((float) Math.sin(d)*40f, 0f, (float) Math.cos(d)*40f);
-		//mainNode.setLocalRotation(new Quaternion(new float[]{(float) -Math.PI/5, d, 0f}));
 	}
 }
