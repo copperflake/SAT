@@ -1,11 +1,19 @@
 package sat.gui3D;
 
 import com.jme3.input.InputManager;
+import com.jme3.input.JoyInput;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
+import com.jme3.input.controls.JoyButtonTrigger;
+import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
+import com.jme3.input.event.JoyAxisEvent;
+import com.jme3.input.JoyInput;
+import com.jme3.input.Joystick;
+
+import de.lessvoid.nifty.input.keyboard.KeyboardInputEvent;
 
 public class Controls {
 	private InputManager inputManager;
@@ -45,11 +53,14 @@ public class Controls {
 		inputManager.addMapping("ZoomIn", new MouseAxisTrigger(MouseInput.AXIS_WHEEL, false));
 		inputManager.addMapping("ZoomOut", new MouseAxisTrigger(MouseInput.AXIS_WHEEL, true));
 
+		inputManager.addMapping("TEST", new KeyTrigger(KeyboardInputEvent.KEY_T));
+		inputManager.addMapping("TEST", new JoyButtonTrigger(0, JoyInput.AXIS_POV_X));
+
 		moveEnable = false;
 		rotateEnable = false;
 		inputManager.setCursorVisible(true);
 
-		inputManager.addListener(actionListener, new String[] { "Exit", "MoveEnable", "RotateEnable" });
+		inputManager.addListener(actionListener, new String[] { "MoveEnable", "RotateEnable", "TEST" });
 		inputManager.addListener(analogListener, new String[] { "MoveX-L", "MoveX-R", "MoveY-U", "MoveY-D", "ZoomIn", "ZoomOut" });
 	}
 
@@ -62,6 +73,9 @@ public class Controls {
 			else if(name.equals("RotateEnable")) {
 				//inputManager.setCursorVisible(!keyPressed);
 				rotateEnable = keyPressed;
+			}
+			else if(name.equals("TEST") && !keyPressed) {
+				System.out.println("TEST");
 			}
 		}
 	};

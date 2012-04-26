@@ -22,6 +22,8 @@ import com.jme3.system.AppSettings;
 import com.jme3.util.SkyFactory;
 import com.jme3.math.ColorRGBA;
 
+import de.lessvoid.nifty.spi.input.InputSystem;
+
 /**
  * Sample 3 - how to load an OBJ model, and OgreXML model, a material/texture,
  * or text.
