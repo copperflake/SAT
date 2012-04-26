@@ -12,7 +12,6 @@ public abstract class Message implements Comparable<Message>, Serializable {
 	private Coordinates coords;
 
 	// Defaults
-
 	private int length = 0;
 
 	// Ces attributs ne seront pas sérialisé pour des raisons de sécurité

@@ -22,4 +22,10 @@ public class Coordinates {
 	public int getZ() {
 		return z;
 	}
+	
+	public boolean equals(Coordinates obj) {
+		if(obj.getX() == this.x && obj.getY() == this.y && obj.getZ() == this.z)
+			return true;
+		return false;
+	}
 }
