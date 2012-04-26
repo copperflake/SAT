@@ -10,6 +10,7 @@ import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.input.event.JoyAxisEvent;
+import com.jme3.input.lwjgl.JInputJoyInput;
 import com.jme3.input.JoyInput;
 import com.jme3.input.Joystick;
 
@@ -42,6 +43,12 @@ public class Controls {
 		
 		// Keyboard
 		// -- empty
+		
+		// Joystick
+		JInputJoyInput j = new JInputJoyInput();
+		Joystick[] joysticks = new Joystick[100];
+		joysticks = j.loadJoysticks(inputManager);
+		System.out.println(joysticks.toString());
 		
 		// Mouse
 		inputManager.addMapping("RotateEnable", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));

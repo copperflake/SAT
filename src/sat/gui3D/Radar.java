@@ -8,6 +8,8 @@ import com.jme3.asset.plugins.FileLocator;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
+import com.jme3.math.Matrix3f;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.CartoonEdgeFilter;
@@ -32,8 +34,8 @@ public class Radar extends SimpleApplication {
 	public static void main(String[] args) {
 		Radar app = new Radar();
 		AppSettings settings = new AppSettings(true);
-		//settings.setResolution(1680, 1050);
 		settings.setResolution(800, 600);
+		settings.setResolution(1680, 1050);
 		settings.setTitle("SAT - Radar");
 		app.setShowSettings(false);
 		app.setDisplayStatView(false);
@@ -47,19 +49,25 @@ public class Radar extends SimpleApplication {
 
 	private long frameNumber = 0;
 	private ArrayList<Aircraft> aircrafts;
-	private Vector3f center;
-	private float moveSpeed, rotSpeed, zoomSpeed;
+	private Vector3f center, camUp;
+	private float moveSpeed, rotSpeed, zoomSpeed, firstPersonRotSpeed;
 	private Controls controls;
+	private boolean camLookAt;
+	private boolean camCenteredOnTower;
 
 	@SuppressWarnings("deprecation")
 	@Override
 	public void simpleInitApp() {
 		boolean cartoon = false;
 		boolean DoF = false;
-		boolean effects = false;
-
+		boolean effects = false; 
+		
+		camUp = cam.getUp();
+		camLookAt = false;
+		camCenteredOnTower = false;
 		moveSpeed = 100f;
 		rotSpeed = 300f;
+		firstPersonRotSpeed = 5f;
 		zoomSpeed = 5f;
 
 		center = new Vector3f(0, 0, 0);
@@ -146,9 +154,9 @@ public class Radar extends SimpleApplication {
 		if(frameNumber == 0) {
 			controls.setupControls();
 		}
-
-		cam.lookAt(center, new Vector3f(0, 1, 0));
-
+		if(camLookAt)
+			cam.lookAt(center, new Vector3f(0, 1, 0));
+		
 		for(int i = 0; i < aircrafts.size(); i++)
 			aircrafts.get(i).update(timer.getTimeInSeconds());
 
@@ -158,19 +166,19 @@ public class Radar extends SimpleApplication {
 	public void moveCamFront(float value) {
 		Vector3f v = cam.getDirection().setY(0).normalize().mult(value * moveSpeed);
 		cam.setLocation(cam.getLocation().add(v));
-		center = center.add(v);
+		// center = center.add(v);
 	}
 
 	public void moveCamY(float value) {
 		Vector3f v = cam.getUp().normalize().mult(value * moveSpeed);
 		cam.setLocation(cam.getLocation().add(v));
-		center = center.add(v);
+		// center = center.add(v);
 	}
 
 	public void moveCamSide(float value) {
 		Vector3f v = cam.getLeft().normalize().mult(value * moveSpeed);
 		cam.setLocation(cam.getLocation().add(v));
-		center = center.add(v);
+		// center = center.add(v);
 	}
 
 	public void zoom(float value) {
@@ -179,12 +187,41 @@ public class Radar extends SimpleApplication {
 	}
 
 	public void rotateCamH(float value) {
-		Vector3f v = cam.getLeft().normalize().mult(value * rotSpeed);
-		cam.setLocation(cam.getLocation().add(v));
+		if(camLookAt) {
+			Vector3f v = cam.getLeft().normalize().mult(value * rotSpeed);
+			cam.setLocation(cam.getLocation().add(v));
+		}
+		else {
+			rotateCamDetached(-value, camUp);
+		}
 	}
 
 	public void rotateCamV(float value) {
-		Vector3f v = cam.getUp().normalize().mult(value * rotSpeed);
-		cam.setLocation(cam.getLocation().add(v));
+		if(this.camLookAt) {
+			Vector3f v = cam.getUp().normalize().mult(value * rotSpeed);
+			cam.setLocation(cam.getLocation().add(v));
+		}
+		else {
+			rotateCamDetached(value, cam.getLeft());
+		}
+	}
+	
+	private void rotateCamDetached(float value, Vector3f axis) {
+		Vector3f up = this.cam.getUp();
+		Vector3f left = this.cam.getLeft();
+		Vector3f dir = this.cam.getDirection();
+		
+		Matrix3f mat = new Matrix3f();
+		mat.fromAngleNormalAxis(firstPersonRotSpeed * value, axis);
+		
+		mat.mult(up, up);
+		mat.mult(left, left);
+		mat.mult(dir, dir);
+		
+		Quaternion q = new Quaternion();
+		q.fromAxes(left, up, dir);
+		q.normalize();
+		
+		this.cam.setAxes(q);
 	}
 }
