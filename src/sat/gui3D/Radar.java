@@ -28,7 +28,7 @@ import com.jme3.math.ColorRGBA;
  * or text.
  */
 public class Radar extends SimpleApplication {
-	public static void main(String[] args) {
+	public static void launch() {
 		Radar app = new Radar();
 		AppSettings settings = new AppSettings(true);
 		settings.setResolution(800, 600);

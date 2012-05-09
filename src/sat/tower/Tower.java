@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Observable;
 
+import sat.gui3D.Radar;
 import sat.radio.RadioID;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.message.Message;
@@ -122,6 +123,10 @@ public class Tower extends Observable {
 	}
 
 	// - - - Main method - - -
+	
+	public void startGui() {
+		Radar.launch();
+	}
 
 	/**
 	 * Main method, appelée quand SAT est executé avec la commande

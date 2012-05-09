@@ -148,6 +148,10 @@ public class TowerCLI extends GlobalCLI {
 
 		tower.listen(engine);
 	}
+	
+	public void gui() {
+		tower.startGui();
+	}
 
 	public void writekey(String path) throws IOException {
 		FileOutputStream fos = new FileOutputStream(path);
