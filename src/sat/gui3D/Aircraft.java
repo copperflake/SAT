@@ -22,11 +22,11 @@ public class Aircraft {
 		simsWrapper = new Node();
 		mainNode = new Node();
 		
-		model = (Geometry) assetManager.loadModel("plane.obj");
-		model.getMaterial().setColor("Ambient", new ColorRGBA(0.2f, 0.2f, 0.2f, 1f));
+		model = (Geometry) assetManager.loadModel("Models/plane.obj");
+		model.getMaterial().setColor("Ambient", new ColorRGBA(0.2f, 0.2f, 1f, 1f));
 		mainNode.attachChild(model);
 		
-		sims = (Geometry) assetManager.loadModel("sims.obj");
+		sims = (Geometry) assetManager.loadModel("Models/sims.obj");
 		sims.getMaterial().setColor("Ambient", new ColorRGBA(0.2f, 0.2f, 0.2f, 1f));
 		sims.scale(0.3f);
 		simsWrapper.attachChild(sims);
@@ -44,20 +44,28 @@ public class Aircraft {
 		path.add(new DatedCoordinates(pos, date));
 	}
 	
-	private void moveTo(FloatCoordinates coords) {
+	private void getNewDestination() {
+		moveTo(path.remove(0));
+	}
+	
+	private void moveTo(DatedCoordinates coords) {
 		//if(...)
-			moveStraightTo(coords);
+			float speed = 1;
+			moveStraightTo(coords.getCoordinates(), speed);
 		//else
 			//moveStraightTo(coords);
 	}
 	
-	private void moveStraightTo(FloatCoordinates coords) {
+	private void moveStraightTo(FloatCoordinates coords, float speed) {
 		
+		getNewDestination();
 	}
 
-	private void moveCircleTo(FloatCoordinates coords) {
+	private void moveCircleTo(FloatCoordinates coords, float speed) {
 		
+		getNewDestination();
 	}
+	
 	public Node getNode() {
 		return mainNode;
 	}
