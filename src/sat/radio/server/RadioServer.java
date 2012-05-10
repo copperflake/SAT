@@ -10,10 +10,8 @@ import sat.radio.RadioID;
 import sat.radio.RadioProtocolException;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerEngineDelegate;
-import sat.radio.message.Message;
-import sat.radio.message.MessageHello;
-import sat.radio.message.MessageKeepalive;
-import sat.radio.message.MessageSendRSAKey;
+import sat.radio.message.*;
+import sat.radio.message.handler.MessageHandler;
 import sat.radio.message.stream.UpgradableMessageInputStream;
 import sat.radio.message.stream.UpgradableMessageOutputStream;
 import sat.radio.socket.RadioSocket;
@@ -392,10 +390,16 @@ public class RadioServer extends Radio {
 			private boolean running = true;
 
 			/**
+			 * Gestionnaire des messages
+			 */
+			private RadioServerMessageHandler messageHandler;
+
+			/**
 			 * Crée un nouveau thread d'écoute d'entrée client.
 			 */
 			public SocketListener() {
 				mis = new UpgradableMessageInputStream(socket.in);
+				messageHandler = new RadioServerMessageHandler();
 			}
 
 			/**
@@ -412,7 +416,7 @@ public class RadioServer extends Radio {
 						}
 
 						// Handle it!
-						handleMessage(message);
+						message.handle(messageHandler);
 					}
 				}
 				catch(EOFException e) {
@@ -438,153 +442,6 @@ public class RadioServer extends Radio {
 			}
 
 			/**
-			 * Gestion du court-circuitage des messages protocolaires. Cette
-			 * méthode s'assure que l'état de la connexion permet la réception
-			 * du message en question, appel la fonction de court-circuitage si
-			 * nécessaire ou place le message dans la file d'attente de messages
-			 * qui seront envoyés à la tour de contrôle.
-			 * 
-			 * @param m
-			 *            Le message reçu. Cette méthode n'utilise que les
-			 *            fonctions génériques d'un message (définie dans la
-			 *            classe <code>Message</code>). Si un message nécessite
-			 *            un traitement particulier, il sera passé à une des
-			 *            méthodes <code>handleMessage</code> spécifiques.
-			 * 
-			 * @throws RadioProtocolException
-			 *             Si le message reçu n'est pas autorisé dans l'état
-			 *             actuel de la connexion.
-			 */
-			private void handleMessage(Message m) throws RadioProtocolException {
-				switch(m.getType()) {
-					case HELLO:
-						// HELLO can be received only when in HANDSHAKE state
-						if(state != RadioSocketState.HANDSHAKE) {
-							throwInvalidState(m);
-						}
-
-						handleMessage((MessageHello) m);
-						break;
-
-					case SENDRSA:
-						// SENDRSA can be received only when in
-						// CIPHER_NEGOCIATION state
-						if(state != RadioSocketState.CIPHER_NEGOCIATION) {
-							throwInvalidState(m);
-						}
-
-						handleMessage((MessageSendRSAKey) m);
-						break;
-
-					case KEEPALIVE:
-						// Keepalive is used to reset socket timeout, handle it.
-						handleMessage((MessageKeepalive) m);
-
-						// But is also used for updating plane position, so tower
-						// must receive it. No break!
-						//break;
-
-					default:
-						// If not in READY state, the message must be a
-						// protocol message.
-						// Since all protocol messages are short-circuited in
-						// this switch, and we are in the default case, it's
-						// obviously not a protocol message.
-						if(state != RadioSocketState.READY) {
-							throwInvalidState(m);
-						}
-
-						// No short circuit, send it to incoming queue
-						incomingMessages.put(m);
-				}
-			}
-
-			/**
-			 * Méthode utilitaire pour lancer les exceptions au protocole
-			 * lorsque le message reçu ne correspond pas à celui attendu par
-			 * rapport à l'état actuel de la connexion.
-			 * 
-			 * @param m
-			 *            Le message reçu. Utilisé pour récupérer son type.
-			 * 
-			 * @throws RadioProtocolException
-			 *             L'exception générée.
-			 */
-			private void throwInvalidState(Message m) throws RadioProtocolException {
-				throw new RadioProtocolException("Cannot receive " + m.getType() + " in state " + state);
-			}
-
-			/**
-			 * Gestion du message Hello. Ce message est totalement cour-circuité
-			 * car il ne présente pas d'intérêt pour la tour de contrôle. Il
-			 * sert à initiliser les informations de l'avion correspondant comme
-			 * son RadioID et son support du chiffrement et du protocole étendu.
-			 * <p>
-			 * Cette méthode envoie automatiquement le message
-			 * <code>MessageHello</code> correspondant à l'avion.
-			 * <p>
-			 * Cette méthode s'assure ensuite de gérer le passage en mode étendu
-			 * et/ou chiffré si l'avion le supporte.
-			 */
-			private void handleMessage(MessageHello m) {
-				// Enable extended protocol if not disabled
-				if(!delegate.getConfig().getBoolean("radio.legacy")) {
-					extended = m.isExtended();
-				}
-
-				// Enable encryption
-				if(delegate.getConfig().getBoolean("radio.ciphered")) {
-					ciphered = m.isCiphered();
-				}
-
-				Coordinates coords = delegate.getLocation();
-				writer.send(new MessageHello(id, coords, ciphered, extended));
-
-				socketID = m.getID();
-
-				if(extended) {
-					// If we use the extended protocol, we can upgrade
-					// components and wait for the extended handshake.
-
-					// TODO: upgrade only listener, writer will be upgraded later
-					SocketManager.this.upgrade();
-				}
-				else if(ciphered) {
-					state = RadioSocketState.CIPHER_NEGOCIATION;
-					socket.in.upgrade(new RSAInputStream(socket.in.getStream(), keyPair));
-				}
-				else {
-					// Socket is ready!
-					SocketManager.this.ready();
-				}
-			}
-
-			/**
-			 * Gestion du message SendRSAKey. Lors de la réception de ce
-			 * message, le flux de sortie est mis à jour afin de supporter le
-			 * chiffrement avec la clé publique de l'avion. Le socket est
-			 * ensuite défini à l'état <code>READY</code> et signalé comme
-			 * nouvelle connexion à la tour.
-			 */
-			public void handleMessage(MessageSendRSAKey m) {
-				// Upgrade the output stream to write encrypted data with the
-				// plane public key.
-				RSAKeyPair planeKey = new RSAKeyPair(m.getKey());
-				socket.out.upgrade(new RSAOutputStream(socket.out.getStream(), planeKey));
-
-				// Socket is ready for general usage.
-				SocketManager.this.ready();
-			}
-
-			/**
-			 * Gestion du message KeepAlive. Remet à zéro le timeout de
-			 * déconnexion de l'avion en cas d'inactivité. [NYI]
-			 */
-			public void handleMessage(MessageKeepalive m) {
-				// Nothing for now
-			}
-
-			/**
 			 * Upgrade le flux de lecture sous-jacent. Le nouveau flux sera de
 			 * type ExtendedMessageInputStream.
 			 * 
@@ -603,6 +460,150 @@ public class RadioServer extends Radio {
 			public void quit() {
 				running = false;
 				this.interrupt();
+			}
+
+			/**
+			 * Gestionnaire des messages (Visitor Pattern)
+			 */
+			private class RadioServerMessageHandler implements MessageHandler {
+				public void handle(MessageHello m) throws RadioProtocolException {
+					// HELLO can be received only when in HANDSHAKE state
+					if(state != RadioSocketState.HANDSHAKE) {
+						throwInvalidState(m);
+					}
+
+					// Enable extended protocol if not disabled
+					if(!delegate.getConfig().getBoolean("radio.legacy")) {
+						extended = m.isExtended();
+					}
+
+					// Enable encryption
+					if(delegate.getConfig().getBoolean("radio.ciphered")) {
+						ciphered = m.isCiphered();
+					}
+
+					Coordinates coords = delegate.getLocation();
+					writer.send(new MessageHello(id, coords, ciphered, extended));
+
+					socketID = m.getID();
+
+					if(extended) {
+						// If we use the extended protocol, we can upgrade
+						// components and wait for the extended handshake.
+
+						// TODO: upgrade only listener, writer will be upgraded later
+						SocketManager.this.upgrade();
+					}
+					else if(ciphered) {
+						state = RadioSocketState.CIPHER_NEGOCIATION;
+						socket.in.upgrade(new RSAInputStream(socket.in.getStream(), keyPair));
+					}
+					else {
+						// Socket is ready!
+						SocketManager.this.ready();
+					}
+				}
+
+				/**
+				 * Gestion du message KeepAlive. Remet à zéro le timeout de
+				 * déconnexion de l'avion en cas d'inactivité. [NYI]
+				 */
+				public void handle(MessageKeepalive m) {
+					// Keepalive is used to reset socket timeout, handle it.
+					// TODO: handle it
+
+					// But is also used for updating plane position, so tower
+					// must receive it.
+					forwardToTower(m);
+				}
+
+				/**
+				 * Gestion du message SendRSAKey. Lors de la réception de ce
+				 * message, le flux de sortie est mis à jour afin de supporter
+				 * le chiffrement avec la clé publique de l'avion. Le socket est
+				 * ensuite défini à l'état <code>READY</code> et signalé comme
+				 * nouvelle connexion à la tour.
+				 */
+				public void handle(MessageSendRSAKey m) throws RadioProtocolException {
+					// Upgrade the output stream to write encrypted data with the
+					// plane public key.
+					RSAKeyPair planeKey = new RSAKeyPair(m.getKey());
+					socket.out.upgrade(new RSAOutputStream(socket.out.getStream(), planeKey));
+
+					// Socket is ready for general usage.
+					SocketManager.this.ready();
+				}
+
+				// Unmanaged messages types
+
+				public void handle(MessageBye m) throws RadioProtocolException {
+					unmanagedMessage(m);
+				}
+
+				public void handle(MessageChoke m) throws RadioProtocolException {
+					unmanagedMessage(m);
+				}
+
+				public void handle(MessageData m) throws RadioProtocolException {
+					unmanagedMessage(m);
+				}
+
+				public void handle(MessageLanding m) throws RadioProtocolException {
+					unmanagedMessage(m);
+				}
+
+				public void handle(MessageMayDay m) throws RadioProtocolException {
+					unmanagedMessage(m);
+				}
+
+				public void handle(MessageRouting m) throws RadioProtocolException {
+					unmanagedMessage(m);
+				}
+
+				public void handle(MessageUnchoke m) throws RadioProtocolException {
+					unmanagedMessage(m);
+				}
+
+				// Helpers
+
+				private void unmanagedMessage(Message m) throws RadioProtocolException {
+					// If not in READY state, the message must be a
+					// protocol message.
+					// Since all protocol messages are short-circuited,
+					// and we are in the default case, it's
+					// obviously not a protocol message.
+					if(state != RadioSocketState.READY) {
+						throwInvalidState(m);
+					}
+
+					// No short circuit, send it to incoming queue
+					forwardToTower(m);
+				}
+
+				/**
+				 * Transmet le message à la tour de contrôle.
+				 * 
+				 * @param m
+				 *            Le message à transmettre
+				 */
+				private void forwardToTower(Message m) {
+					incomingMessages.put(m);
+				}
+
+				/**
+				 * Méthode utilitaire pour lancer les exceptions au protocole
+				 * lorsque le message reçu ne correspond pas à celui attendu par
+				 * rapport à l'état actuel de la connexion.
+				 * 
+				 * @param m
+				 *            Le message reçu. Utilisé pour récupérer son type.
+				 * 
+				 * @throws RadioProtocolException
+				 *             L'exception générée.
+				 */
+				private void throwInvalidState(Message m) throws RadioProtocolException {
+					throw new RadioProtocolException("Cannot receive " + m.getType() + " in state " + state);
+				}
 			}
 		}
 

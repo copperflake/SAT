@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.Date;
 
 import sat.radio.RadioID;
+import sat.radio.RadioProtocolException;
+import sat.radio.message.handler.MessageHandler;
 import sat.utils.geo.Coordinates;
 
 public abstract class Message implements Comparable<Message>, Serializable {
@@ -56,6 +58,10 @@ public abstract class Message implements Comparable<Message>, Serializable {
 	public MessageType getType() {
 		return type;
 	}
+
+	// Visitor pattern
+
+	public abstract void handle(MessageHandler handler) throws RadioProtocolException;
 
 	// Compare tools
 

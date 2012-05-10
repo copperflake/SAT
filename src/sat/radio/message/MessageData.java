@@ -1,6 +1,8 @@
 package sat.radio.message;
 
 import sat.radio.RadioID;
+import sat.radio.RadioProtocolException;
+import sat.radio.message.handler.MessageHandler;
 import sat.utils.geo.Coordinates;
 
 public class MessageData extends Message {
@@ -47,6 +49,10 @@ public class MessageData extends Message {
 
 	public String toString() {
 		return "I'm a FileSegment!";
+	}
+
+	public void handle(MessageHandler handler) throws RadioProtocolException {
+		handler.handle(this);
 	}
 
 	private static final long serialVersionUID = 6788760569267293839L;

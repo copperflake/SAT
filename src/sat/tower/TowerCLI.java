@@ -148,7 +148,7 @@ public class TowerCLI extends GlobalCLI {
 
 		tower.listen(engine);
 	}
-	
+
 	public void gui() {
 		tower.startGui();
 	}
