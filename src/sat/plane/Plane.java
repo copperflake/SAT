@@ -57,15 +57,6 @@ public class Plane {
 		radio.connect(engine);
 	}
 
-	public static void main(String[] args) {
-		System.out.println("I'm a plane !");
-
-		Plane plane = new Plane();
-
-		PlaneCLI cli = new PlaneCLI(plane, System.in, System.out);
-		Thread cliThread = cli.runInNewThread();
-	}
-
 	// - - - Delegate - - -
 
 	private class Delegate implements RadioClientDelegate {

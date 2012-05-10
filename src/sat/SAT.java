@@ -1,7 +1,14 @@
 package sat;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 import sat.plane.Plane;
+import sat.plane.PlaneCLI;
 import sat.tower.Tower;
+import sat.tower.TowerCLI;
 
 /**
  * Classe principale du programme.
@@ -31,16 +38,69 @@ public final class SAT {
 			Lab.lab(args);
 		}
 		else if(args[0].equals("plane")) {
-			Plane.main(args);
+			initPlane(args);
 		}
 		else if(args[0].equals("tower")) {
-			Tower.main(args);
+			initTower(args);
 		}
 		else {
 			// Commande inconnue
 			System.out.println("Unknown command " + args[0] + "...");
 			usage();
 		}
+	}
+
+	/**
+	 * Main method, appelée quand SAT est executé avec la commande
+	 * <code>./sat tower</code>.
+	 * 
+	 * @param args
+	 *            Les paramètres de la ligne de commande. Ces paramètres ne sont
+	 *            pas utilisés.
+	 */
+	public static void initTower(String[] args) {
+		System.out.println("I'm a tower !");
+
+		// Tower is lazily instantiated when starting the CLI (the CLI calls getInstance())
+		//Tower tower = Tower.getInstance();
+
+		TowerCLI cli = new TowerCLI(System.in, System.out);
+
+		if(args.length > 1) {
+			// Run commands provided
+			try {
+				BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(args[1])));
+
+				String line;
+				while((line = reader.readLine()) != null) {
+					cli.eval(line);
+				}
+			}
+			catch(IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		cli.runInNewThread();
+	}
+
+	public static void initPlane(String[] args) {
+		System.out.println("I'm a plane !");
+
+		Plane plane = new Plane();
+
+		PlaneCLI cli = new PlaneCLI(plane, System.in, System.out);
+		cli.runInNewThread();
+	}
+
+	// TODO
+	public static void initPlaneLegacy(String[] args) {
+		System.out.println("I'm a legacy plane !");
+
+		Plane plane = new Plane();
+
+		PlaneCLI cli = new PlaneCLI(plane, System.in, System.out);
+		cli.runInNewThread();
 	}
 
 	/**
