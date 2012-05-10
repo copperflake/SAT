@@ -33,9 +33,9 @@ public class TowerCLI extends GlobalCLI {
 	 * @param out
 	 *            Le flux de sortie du CLI
 	 */
-	public TowerCLI(Tower tower, InputStream in, PrintStream out) {
+	public TowerCLI(InputStream in, PrintStream out) {
 		super(in, out, "Tower> ");
-		this.tower = tower;
+		this.tower = Tower.getInstance();
 	}
 
 	/**

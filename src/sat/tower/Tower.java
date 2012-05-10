@@ -141,7 +141,7 @@ public class Tower extends Observable {
 
 		Tower tower = getInstance();
 
-		TowerCLI cli = new TowerCLI(tower, System.in, System.out);
+		TowerCLI cli = new TowerCLI(System.in, System.out);
 
 		if(args.length > 1) {
 			// Run commands provided
