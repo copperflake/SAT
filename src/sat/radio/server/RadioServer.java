@@ -73,8 +73,8 @@ public class RadioServer extends Radio {
 	 *            Le délégué qui sera chargé de la gestion des événements de la
 	 *            radio.
 	 */
-	public RadioServer(RadioServerDelegate delegate, String label) {
-		super(label, delegate.getConfig().getInt("radio.keylength"), delegate.getConfig().getBoolean("radio.verbose"));
+	public RadioServer(RadioServerDelegate delegate, int keylength, String label) {
+		super(label, keylength);
 
 		this.delegate = delegate;
 
@@ -473,12 +473,12 @@ public class RadioServer extends Radio {
 					}
 
 					// Enable extended protocol if not disabled
-					if(!delegate.getConfig().getBoolean("radio.legacy")) {
+					if(!RadioServer.this.legacy) {
 						extended = m.isExtended();
 					}
 
 					// Enable encryption
-					if(delegate.getConfig().getBoolean("radio.ciphered")) {
+					if(RadioServer.this.ciphered) {
 						ciphered = m.isCiphered();
 					}
 

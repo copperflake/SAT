@@ -26,7 +26,17 @@ public abstract class Radio {
 	/**
 	 * Défini le niveau de verbosité de la radio
 	 */
-	protected boolean verbose;
+	protected boolean verbose = false;
+
+	/**
+	 * Défini si la radio doit utiliser le cryptage
+	 */
+	protected boolean ciphered = true;
+
+	/**
+	 * Défini la radio ne doit pas utiliser le protocole étendu
+	 */
+	protected boolean legacy = false;
 
 	/**
 	 * Crée une nouvelle radio avec un label d'identifiant et une longueur de
@@ -37,7 +47,7 @@ public abstract class Radio {
 	 * @param keyLength
 	 *            La longueur de clé à utiliser pour le chiffrement.
 	 */
-	public Radio(String label, int keyLength, boolean verbose) {
+	public Radio(String label, int keyLength) {
 		id = new RadioID(label);
 		this.verbose = verbose;
 

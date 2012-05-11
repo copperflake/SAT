@@ -56,17 +56,13 @@ public class Plane {
 
 	public void connect(RadioClientEngine engine) throws IOException {
 		if(radio == null)
-			radio = new RadioClient(new Delegate(), "PLN");
+			radio = new RadioClient(new Delegate(), config.getInt("radio.keylength"), "PLN");
 		radio.connect(engine);
 	}
 
 	// - - - Delegate - - -
 
 	private class Delegate implements RadioClientDelegate {
-		public Config getConfig() {
-			return Plane.this.getConfig();
-		}
-
 		public Coordinates getLocation() {
 			return Plane.this.getLocation();
 		}

@@ -1,7 +1,6 @@
 package sat.radio;
 
 import sat.radio.message.Message;
-import sat.utils.cli.Config;
 import sat.utils.geo.Coordinates;
 
 /**
@@ -10,12 +9,6 @@ import sat.utils.geo.Coordinates;
  * <code>RadioClientDelegate</code>.
  */
 public interface RadioDelegate {
-	/**
-	 * Demande au délégué un objet de configuration définissant le comportement
-	 * de la radio.
-	 */
-	public Config getConfig();
-
 	/**
 	 * Demande au délégué sa position.
 	 */

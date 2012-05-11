@@ -1,14 +1,15 @@
 package sat.tower;
 
 import java.io.IOException;
-import java.util.Observable;
 
+import sat.events.EventEmitter;
 import sat.gui3D.Radar;
 import sat.radio.RadioID;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.message.Message;
 import sat.radio.server.RadioServer;
 import sat.radio.server.RadioServerDelegate;
+import sat.tower.events.TowerEventListener;
 import sat.utils.cli.Config;
 import sat.utils.crypto.RSAKeyPair;
 import sat.utils.geo.Coordinates;
@@ -16,7 +17,7 @@ import sat.utils.geo.Coordinates;
 /**
  * Une tour de contrôle. Cette classe est un Singleton.
  */
-public class Tower extends Observable {
+public class Tower extends EventEmitter<TowerEventListener> {
 	// - - - Singleton Tools - - -
 
 	/**
@@ -117,7 +118,7 @@ public class Tower extends Observable {
 
 	private void lazyRadioInit() {
 		if(radio == null)
-			radio = new RadioServer(new Delegate(), "TWR");
+			radio = new RadioServer(new Delegate(), config.getInt("radio.keylength"), "TWR");
 	}
 
 	// - - - Main method - - -
@@ -129,10 +130,6 @@ public class Tower extends Observable {
 	// - - - Delegate - - -
 
 	private class Delegate implements RadioServerDelegate {
-		public Config getConfig() {
-			return Tower.this.getConfig();
-		}
-
 		public Coordinates getLocation() {
 			return Tower.this.getLocation();
 		}

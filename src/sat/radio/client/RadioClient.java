@@ -34,8 +34,8 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 	 * @param delegate
 	 *            Le délégué chargé de la gestion des événements.
 	 */
-	public RadioClient(RadioClientDelegate delegate, String label) {
-		super(label, delegate.getConfig().getInt("radio.keylength"), delegate.getConfig().getBoolean("radio.verbose"));
+	public RadioClient(RadioClientDelegate delegate, int keylength, String label) {
+		super(label, keylength);
 
 		this.delegate = delegate;
 	}

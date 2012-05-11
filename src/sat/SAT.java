@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 
 import sat.plane.Plane;
 import sat.plane.PlaneCLI;
-import sat.tower.Tower;
 import sat.tower.TowerCLI;
 
 /**
