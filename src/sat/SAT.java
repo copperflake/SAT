@@ -90,6 +90,22 @@ public final class SAT {
 		Plane plane = new Plane();
 
 		PlaneCLI cli = new PlaneCLI(plane, System.in, System.out);
+
+		if(args.length > 1) {
+			// Run commands provided
+			try {
+				BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(args[1])));
+
+				String line;
+				while((line = reader.readLine()) != null) {
+					cli.eval(line);
+				}
+			}
+			catch(IOException e) {
+				e.printStackTrace();
+			}
+		}
+
 		cli.runInNewThread();
 	}
 

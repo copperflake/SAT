@@ -24,6 +24,11 @@ public abstract class Radio {
 	protected RSAKeyPair keyPair;
 
 	/**
+	 * Défini le niveau de verbosité de la radio
+	 */
+	protected boolean verbose;
+
+	/**
 	 * Crée une nouvelle radio avec un label d'identifiant et une longueur de
 	 * clé définie.
 	 * 
@@ -32,8 +37,9 @@ public abstract class Radio {
 	 * @param keyLength
 	 *            La longueur de clé à utiliser pour le chiffrement.
 	 */
-	public Radio(String label, int keyLength) {
+	public Radio(String label, int keyLength, boolean verbose) {
 		id = new RadioID(label);
+		this.verbose = verbose;
 
 		// Key generation
 		try {

@@ -74,7 +74,7 @@ public class RadioServer extends Radio {
 	 *            radio.
 	 */
 	public RadioServer(RadioServerDelegate delegate, String label) {
-		super(label, delegate.getConfig().getInt("radio.keylength"));
+		super(label, delegate.getConfig().getInt("radio.keylength"), delegate.getConfig().getBoolean("radio.verbose"));
 
 		this.delegate = delegate;
 

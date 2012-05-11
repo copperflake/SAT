@@ -37,7 +37,10 @@ public class Plane {
 	private static void initDefaults() {
 		defaults = new Config();
 
-		defaults.setProperty("legacy", "no");
+		defaults.setProperty("radio.verbose", "no");
+		defaults.setProperty("radio.ciphered", "yes");
+		defaults.setProperty("radio.legacy", "no");
+		defaults.setProperty("radio.keylength", "1024");
 	}
 
 	/**

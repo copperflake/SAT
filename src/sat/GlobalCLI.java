@@ -37,6 +37,13 @@ public abstract class GlobalCLI extends CLI {
 	}
 
 	/**
+	 * Affiche un message
+	 */
+	public void echo(String arg) {
+		System.out.println(arg);
+	}
+
+	/**
 	 * Stop le CLI et termine la JVM.
 	 */
 	public void exit() {

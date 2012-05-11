@@ -59,5 +59,12 @@ public class Config extends Properties {
 		return key == null ? 0 : Integer.parseInt(getProperty(key));
 	}
 
+	/**
+	 * Indique si un paramètre est défini.
+	 */
+	public boolean defined(String key) {
+		return getProperty(key) != null;
+	}
+
 	private static final long serialVersionUID = -7067941402784421244L;
 }
