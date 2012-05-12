@@ -1,27 +1,22 @@
 package sat.gui3D;
 
 import java.util.ArrayList;
+import java.util.Vector;
+
+import javax.vecmath.Vector3d;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
-import com.jme3.math.Matrix3f;
-import com.jme3.math.Quaternion;
-import com.jme3.math.Vector3f;
+import com.jme3.math.*;
 import com.jme3.post.FilterPostProcessor;
-import com.jme3.post.filters.CartoonEdgeFilter;
-import com.jme3.post.filters.DepthOfFieldFilter;
-import com.jme3.post.filters.GammaCorrectionFilter;
-import com.jme3.post.filters.RadialBlurFilter;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
+import com.jme3.post.filters.*;
+import com.jme3.scene.*;
 import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
 import com.jme3.util.SkyFactory;
-import com.jme3.math.ColorRGBA;
 
 /**
  * Sample 3 - how to load an OBJ model, and OgreXML model, a material/texture,
@@ -32,7 +27,7 @@ public class Radar extends SimpleApplication {
 		Radar app = new Radar();
 		AppSettings settings = new AppSettings(true);
 		settings.setResolution(800, 600);
-		//settings.setResolution(1680, 1050);
+		settings.setResolution(1680, 1050);
 		settings.setTitle("SAT - Radar");
 		app.setShowSettings(false);
 		app.setDisplayStatView(false);
@@ -46,20 +41,20 @@ public class Radar extends SimpleApplication {
 	private float moveSpeed, rotSpeed, zoomSpeed, firstPersonRotSpeed;
 	private Controls controls;
 	private boolean camLookAt;
-	private boolean camCenteredOnTower;
+	private boolean hd;
 	protected Node tower;
 
 	@SuppressWarnings("deprecation")
 	@Override
 	public void simpleInitApp() {
+		hd = false;
 		boolean cartoon = false;
 		boolean DoF = false;
-		boolean blur = false;
-		boolean gamma = true;
+		boolean blur = hd;
+		boolean gamma = hd;
 		
 		camUp = cam.getUp();
 		camLookAt = false;
-		camCenteredOnTower = false;
 		moveSpeed = 70f;
 		rotSpeed = 2f;
 		firstPersonRotSpeed = 5f;
@@ -75,7 +70,7 @@ public class Radar extends SimpleApplication {
 		Spatial zurick = new Geometry("Box", zurickBox);
 		Material mat_zurick = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
 		//mat_zurick.setTexture("ColorMap", assetManager.loadTexture("Images/kloten15.jpg"));
-		mat_zurick.setTexture("ColorMap", assetManager.loadTexture("Images/kloten15low.jpg"));
+		mat_zurick.setTexture("ColorMap", assetManager.loadTexture("Images/kloten15"+((hd) ? "" : "low")+".jpg"));
 		zurick.setMaterial(mat_zurick);
 		zurick.setLocalTranslation(0f, 0f, 0f);
 		rootNode.attachChild(zurick);
@@ -84,7 +79,7 @@ public class Radar extends SimpleApplication {
 		Box soilBox = new Box(Vector3f.ZERO, 1000f, 0f, 1000f);
 		Spatial soil = new Geometry("Box", soilBox);
 		Material mat_soil = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-		mat_zurick.setTexture("ColorMap", assetManager.loadTexture("Images/map.png"));
+		mat_zurick.setTexture("ColorMap", assFilterPostProcessoretManager.loadTexture("Images/map.png"));
 		//mat_soil.setColor("ColorMap", ColorRGBA.DarkGray);
 		soil.setMaterial(mat_zurick);
 		soil.setLocalTranslation(0f, -0.1f, 0f);
@@ -122,12 +117,12 @@ public class Radar extends SimpleApplication {
 		}
 		if(DoF) {
 			DepthOfFieldFilter depth = new DepthOfFieldFilter();
-			depth.setFocusDistance(10f);
+			depth.setFocusDistance(50f);
 			depth.setFocusRange(10f);
 			depth.setBlurScale(1f);
 			fpp.addFilter(depth);
 		}
-		if(blur) {
+		if(hd) {
 			RadialBlurFilter blurFilter = new RadialBlurFilter(1f, 0.7f);
 			fpp.addFilter(blurFilter);
 		}
@@ -137,15 +132,14 @@ public class Radar extends SimpleApplication {
 		}
 		viewPort.addProcessor(fpp);
 
-		for(int i = 0; i < 10; i++)
-			onNewAircraft();
-
+		//for(int i = 0; i < 10; i++)
+			onNewAircraft(new Vector3f(0f, 0f, 1f));
 		cam.setLocation(new Vector3f(0f, 20f, 100f));
 		cam.setFrustumPerspective(45f, (float) cam.getWidth() / cam.getHeight(), 0.01f, 10000f);
 	}
 
-	public void onNewAircraft() {
-		aircrafts.add(new Aircraft(assetManager, rootNode));
+	public void onNewAircraft(Vector3f coords) {
+		aircrafts.add(new Aircraft(assetManager, rootNode, coords));
 	}
 
 	@Override
@@ -169,7 +163,9 @@ public class Radar extends SimpleApplication {
 
 	public void moveCamY(float value) {
 		Vector3f v = cam.getUp().normalize().mult(value * moveSpeed);
-		cam.setLocation(cam.getLocation().add(v));
+		Vector3f loc = cam.getLocation().add(v);
+		if(loc.getY() > 0)
+			cam.setLocation(loc);
 	}
 
 	public void moveCamSide(float value) {
@@ -179,7 +175,9 @@ public class Radar extends SimpleApplication {
 
 	public void zoom(float value) {
 		Vector3f v = cam.getDirection().normalize().mult(value * zoomSpeed);
-		cam.setLocation(cam.getLocation().add(v));
+		Vector3f loc = cam.getLocation().add(v);
+		if(loc.getY() > 0)
+			cam.setLocation(loc);
 	}
 
 	public void rotateCamH(float value) {
@@ -215,8 +213,7 @@ public class Radar extends SimpleApplication {
 		mat.mult(dir, dir);
 		
 		Quaternion q = new Quaternion();
-		q.fromAxes(left, up, dir);
-		q.normalize();
+		q.fromAxes(left, up, dir).normalize();	
 		
 		this.cam.setAxes(q);
 	}

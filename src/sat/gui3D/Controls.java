@@ -40,6 +40,8 @@ public class Controls {
 		inputManager.deleteMapping("FLYCAM_Backward");
 		inputManager.deleteMapping("FLYCAM_Rise");
 		inputManager.deleteMapping("FLYCAM_Lower");
+		inputManager.deleteMapping("FLYCAM_ZoomIn");
+		inputManager.deleteMapping("FLYCAM_ZoomOut");
 		
 		// Keyboard
 		// -- empty
