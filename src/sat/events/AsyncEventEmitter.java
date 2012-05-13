@@ -1,31 +1,56 @@
 package sat.events;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
+import sat.events.schedulers.EventScheduler;
+import sat.events.schedulers.QueueEventScheduler;
 
-public class AsyncEventEmitter<T extends EventListener> extends EventEmitter<T> {
-	private Queue<Runnable> eventsQueue = new ArrayDeque<Runnable>();
-	private Runnable activeEvent;
-	
-	protected synchronized void emit(final Event<T> event) {
-		eventsQueue.offer(new Runnable(){
-			public void run() {
-				try {
-					AsyncEventEmitter.super.emit(event);
-				} finally {
-					emitNext();
-				}
-			}
-		});
-		
+public class AsyncEventEmitter extends EventEmitter {
+	private Event activeEvent;
+	private EventScheduler scheduler;
+
+	public AsyncEventEmitter() {
+		this(null, null);
+	}
+
+	public AsyncEventEmitter(EventEmitterInterface emitter) {
+		this(emitter, null);
+	}
+
+	public AsyncEventEmitter(EventScheduler scheduler) {
+		this(null, scheduler);
+	}
+
+	public AsyncEventEmitter(EventEmitterInterface emitter, EventScheduler scheduler) {
+		super(emitter);
+
+		if(scheduler == null) {
+			scheduler = new QueueEventScheduler();
+		}
+
+		this.scheduler = scheduler;
+	}
+
+	public synchronized void emit(Event event) {
+		scheduler.addEvent(event);
+
 		if(activeEvent == null) {
-			emitNext();
+			nextEvent();
+
+			new Thread() {
+				public void run() {
+					while(activeEvent != null) {
+						try {
+							AsyncEventEmitter.super.emit(activeEvent);
+						}
+						finally {
+							nextEvent();
+						}
+					}
+				}
+			}.start();
 		}
 	}
-	
-	private synchronized void emitNext() {
-		if((activeEvent = eventsQueue.poll()) != null) {
-            new Thread(activeEvent).start();
-        }
+
+	private synchronized void nextEvent() {
+		activeEvent = scheduler.nextEvent();
 	}
 }
