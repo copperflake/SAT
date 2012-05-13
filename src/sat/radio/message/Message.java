@@ -3,12 +3,11 @@ package sat.radio.message;
 import java.io.Serializable;
 import java.util.Date;
 
+import sat.events.Event;
 import sat.radio.RadioID;
-import sat.radio.RadioProtocolException;
-import sat.radio.message.handler.MessageHandler;
 import sat.utils.geo.Coordinates;
 
-public abstract class Message implements Comparable<Message>, Serializable {
+public abstract class Message extends Event implements Serializable, Comparable<Message> {
 	// Global attributes
 	private RadioID id;
 	private Coordinates coords;
@@ -59,10 +58,6 @@ public abstract class Message implements Comparable<Message>, Serializable {
 		return type;
 	}
 
-	// Visitor pattern
-
-	public abstract void handle(MessageHandler handler) throws RadioProtocolException;
-
 	// Compare tools
 
 	public Date getTime() {
@@ -70,19 +65,14 @@ public abstract class Message implements Comparable<Message>, Serializable {
 	}
 
 	public int compareTo(Message msg) {
-		if(priority < msg.getPriority()) {
+		if(priority > msg.getPriority()) {
 			return 1;
 		}
-		else if(priority > msg.getPriority()) {
+		else if(priority < msg.getPriority()) {
 			return -1;
 		}
 		else {
-			if(getTime().compareTo(msg.getTime()) > 0)
-				return 1;
-			else if(getTime().compareTo(msg.getTime()) < 0)
-				return -1;
-			else
-				return 0;
+			return getTime().compareTo(msg.getTime());
 		}
 	}
 

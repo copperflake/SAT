@@ -1,8 +1,7 @@
 package sat.radio;
 
-import java.io.FileNotFoundException;
-
-import sat.radio.message.Message;
+import sat.events.AsyncEventEmitter;
+import sat.events.schedulers.PriorityEventScheduler;
 import sat.utils.crypto.RSAException;
 import sat.utils.crypto.RSAKeyPair;
 
@@ -11,7 +10,7 @@ import sat.utils.crypto.RSAKeyPair;
  * outils communs utilisés à la fois par les serveurs-radio et les
  * client-radios.
  */
-public abstract class Radio {
+public abstract class Radio extends AsyncEventEmitter {
 	/**
 	 * L'identifiant de cette radio. Tous les éléments d'un réseau radio SAT
 	 * possède un identifiant unique l'identifiant sur le réseau.
@@ -48,8 +47,9 @@ public abstract class Radio {
 	 *            La longueur de clé à utiliser pour le chiffrement.
 	 */
 	public Radio(String label, int keyLength) {
+		super(new PriorityEventScheduler());
+
 		id = new RadioID(label);
-		this.verbose = verbose;
 
 		// Key generation
 		try {
@@ -66,19 +66,5 @@ public abstract class Radio {
 	 */
 	public RSAKeyPair getKeyPair() {
 		return keyPair;
-	}
-
-	public void sendFile(String path, String dest) throws FileNotFoundException {
-		//SegmentableFile file = new SegmentableFile(path);
-		int i = 0;
-		//while(file.iterator().hasNext()) {
-		int px = 0;
-		int py = 0;
-		// TODO: do
-		//MessageData message = new MessageData(id, px, py, file.getHash(), i++, file.getFormat(), file.getSize(), file.iterator().next());
-		//}
-	}
-
-	protected void send(Message msg, String dest) {
 	}
 }

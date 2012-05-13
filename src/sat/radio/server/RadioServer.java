@@ -5,13 +5,14 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 
+import sat.events.EventListener;
+import sat.events.UnhandledEventException;
 import sat.radio.Radio;
 import sat.radio.RadioID;
 import sat.radio.RadioProtocolException;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerEngineDelegate;
 import sat.radio.message.*;
-import sat.radio.message.handler.MessageHandler;
 import sat.radio.message.stream.UpgradableMessageInputStream;
 import sat.radio.message.stream.UpgradableMessageOutputStream;
 import sat.radio.socket.RadioSocket;
@@ -47,19 +48,6 @@ public class RadioServer extends Radio {
 	private RadioServerEngine engine;
 
 	/**
-	 * File d'attente des messages entrants. Chaque message entrant sera placé
-	 * dans cette queue qui est lue par l'objet {@link IncomingMessageEmitter}.
-	 */
-	private PriorityBlockingQueue<Message> incomingMessages;
-
-	/**
-	 * Thread de gestion des messages entrants. Surveille la queue de messages
-	 * entrants et se charge d'appeler la méthode <code>onMessage</code> du
-	 * délégué.
-	 */
-	private IncomingMessageEmitter incomingThread;
-
-	/**
 	 * Liste des pairs connectés avec le gestionnaire associé. Chaque Manager a
 	 * la responsabilité de s'ajouter dans cette liste lorsqu'il devient prêt à
 	 * être utilisé.
@@ -79,11 +67,6 @@ public class RadioServer extends Radio {
 		this.delegate = delegate;
 
 		this.managers = new HashMap<RadioID, SocketManager>();
-
-		incomingMessages = new PriorityBlockingQueue<Message>();
-
-		incomingThread = new IncomingMessageEmitter();
-		incomingThread.start();
 	}
 
 	/**
@@ -153,43 +136,6 @@ public class RadioServer extends Radio {
 			// object will not be garbage-collected by Java despite no direct
 			// reference to it (at least until registered when ready)!
 			new SocketManager(socket);
-		}
-	}
-
-	// - - - Event Emitter - - -
-
-	/**
-	 * Gestionnaire de la file d'attente de messages entrants. Ce thread
-	 * surveille la queue incomingMessages et notifie le délégué de la radio de
-	 * l'arrivée de nouveaux messages.
-	 */
-	private class IncomingMessageEmitter extends Thread {
-		/**
-		 * Indicateur d'état. Le thread s'arrête si défini à <code>false</code>.
-		 */
-		private boolean running = true;
-
-		public void run() {
-			while(running) {
-				Message message;
-				try {
-					message = incomingMessages.take(); // Blocking
-					delegate.onMessage(message.getID(), message);
-				}
-				catch(InterruptedException e) {
-					// -> incomingMessage.take() interrupted
-					// nothing to do, loop.
-				}
-			}
-		}
-
-		/**
-		 * Arrête le thread de notification.
-		 */
-		// TODO: cette méthode sera appelée à l'arrêt de la radio [NYI]
-		public void quit() {
-			running = false;
-			this.interrupt();
 		}
 	}
 
@@ -392,14 +338,14 @@ public class RadioServer extends Radio {
 			/**
 			 * Gestionnaire des messages
 			 */
-			private RadioServerMessageHandler messageHandler;
+			private MessageHandler messageHandler;
 
 			/**
 			 * Crée un nouveau thread d'écoute d'entrée client.
 			 */
 			public SocketListener() {
 				mis = new UpgradableMessageInputStream(socket.in);
-				messageHandler = new RadioServerMessageHandler();
+				messageHandler = new MessageHandler();
 			}
 
 			/**
@@ -416,18 +362,12 @@ public class RadioServer extends Radio {
 						}
 
 						// Handle it!
-						message.handle(messageHandler);
+						message.notify(messageHandler);
 					}
 				}
 				catch(EOFException e) {
 					// Connexion closed
 					// TODO: EOF unexpected without BYE!
-					SocketManager.this.quit();
-				}
-				catch(RadioProtocolException e) {
-					// Invalid message for this state, disconnect plane.
-					System.err.println("Protocol Exception from Plane");
-					e.printStackTrace(System.err);
 					SocketManager.this.quit();
 				}
 				catch(IOException e) {
@@ -438,6 +378,11 @@ public class RadioServer extends Radio {
 						e.printStackTrace(System.err);
 						SocketManager.this.quit();
 					}
+				}
+				catch(UnhandledEventException e) {
+					System.err.println("Error handling message");
+					e.printStackTrace(System.err);
+					SocketManager.this.quit();
 				}
 			}
 
@@ -465,11 +410,12 @@ public class RadioServer extends Radio {
 			/**
 			 * Gestionnaire des messages (Visitor Pattern)
 			 */
-			private class RadioServerMessageHandler implements MessageHandler {
-				public void handle(MessageHello m) throws RadioProtocolException {
+			public class MessageHandler implements EventListener {
+				@SuppressWarnings("unused")
+				public void on(MessageHello m) {
 					// HELLO can be received only when in HANDSHAKE state
 					if(state != RadioSocketState.HANDSHAKE) {
-						throwInvalidState(m);
+						invalidState(m);
 					}
 
 					// Enable extended protocol if not disabled
@@ -508,13 +454,14 @@ public class RadioServer extends Radio {
 				 * Gestion du message KeepAlive. Remet à zéro le timeout de
 				 * déconnexion de l'avion en cas d'inactivité. [NYI]
 				 */
-				public void handle(MessageKeepalive m) {
+				@SuppressWarnings("unused")
+				public void on(MessageKeepalive m) {
 					// Keepalive is used to reset socket timeout, handle it.
 					// TODO: handle it
 
 					// But is also used for updating plane position, so tower
 					// must receive it.
-					forwardToTower(m);
+					RadioServer.this.emit(m);
 				}
 
 				/**
@@ -524,7 +471,8 @@ public class RadioServer extends Radio {
 				 * ensuite défini à l'état <code>READY</code> et signalé comme
 				 * nouvelle connexion à la tour.
 				 */
-				public void handle(MessageSendRSAKey m) throws RadioProtocolException {
+				@SuppressWarnings("unused")
+				public void on(MessageSendRSAKey m) {
 					// Upgrade the output stream to write encrypted data with the
 					// plane public key.
 					RSAKeyPair planeKey = new RSAKeyPair(m.getKey());
@@ -534,51 +482,23 @@ public class RadioServer extends Radio {
 					SocketManager.this.ready();
 				}
 
-				// Unmanaged messages types
-
-				public void handle(MessageBye m) throws RadioProtocolException {
-					unmanagedMessage(m);
-				}
-
-				public void handle(MessageChoke m) throws RadioProtocolException {
-					unmanagedMessage(m);
-				}
-
-				public void handle(MessageData m) throws RadioProtocolException {
-					unmanagedMessage(m);
-				}
-
-				public void handle(MessageLanding m) throws RadioProtocolException {
-					unmanagedMessage(m);
-				}
-
-				public void handle(MessageMayDay m) throws RadioProtocolException {
-					unmanagedMessage(m);
-				}
-
-				public void handle(MessageRouting m) throws RadioProtocolException {
-					unmanagedMessage(m);
-				}
-
-				public void handle(MessageUnchoke m) throws RadioProtocolException {
-					unmanagedMessage(m);
-				}
-
-				// Helpers
-
-				private void unmanagedMessage(Message m) throws RadioProtocolException {
+				// Unmanaged messages type
+				@SuppressWarnings("unused")
+				public void on(Message m) {
 					// If not in READY state, the message must be a
 					// protocol message.
 					// Since all protocol messages are short-circuited,
 					// and we are in the default case, it's
 					// obviously not a protocol message.
 					if(state != RadioSocketState.READY) {
-						throwInvalidState(m);
+						invalidState(m);
 					}
 
-					// No short circuit, send it to incoming queue
+					System.out.println("Unmanaged messages types");
 					forwardToTower(m);
 				}
+
+				// Helpers
 
 				/**
 				 * Transmet le message à la tour de contrôle.
@@ -587,7 +507,7 @@ public class RadioServer extends Radio {
 				 *            Le message à transmettre
 				 */
 				private void forwardToTower(Message m) {
-					incomingMessages.put(m);
+					RadioServer.this.emit(m);
 				}
 
 				/**
@@ -601,8 +521,11 @@ public class RadioServer extends Radio {
 				 * @throws RadioProtocolException
 				 *             L'exception générée.
 				 */
-				private void throwInvalidState(Message m) throws RadioProtocolException {
-					throw new RadioProtocolException("Cannot receive " + m.getType() + " in state " + state);
+				private void invalidState(Message m) {
+					// Invalid message for this state, disconnect plane.
+					System.err.println("Protocol Exception from Plane");
+					System.err.println("Cannot receive " + m.getType() + " in state " + state);
+					SocketManager.this.quit();
 				}
 			}
 		}

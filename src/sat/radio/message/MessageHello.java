@@ -1,8 +1,6 @@
 package sat.radio.message;
 
 import sat.radio.RadioID;
-import sat.radio.RadioProtocolException;
-import sat.radio.message.handler.MessageHandler;
 import sat.utils.geo.Coordinates;
 
 public class MessageHello extends Message {
@@ -31,10 +29,6 @@ public class MessageHello extends Message {
 
 	public String toString() {
 		return "I'm a Teapot!";
-	}
-
-	public void handle(MessageHandler handler) throws RadioProtocolException {
-		handler.handle(this);
 	}
 
 	private static final long serialVersionUID = 6638823010239251082L;

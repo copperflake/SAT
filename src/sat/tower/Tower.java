@@ -3,13 +3,13 @@ package sat.tower;
 import java.io.IOException;
 
 import sat.events.EventEmitter;
+import sat.events.EventListener;
 import sat.gui3D.Radar;
 import sat.radio.RadioID;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.message.Message;
 import sat.radio.server.RadioServer;
 import sat.radio.server.RadioServerDelegate;
-import sat.tower.events.TowerEventListener;
 import sat.utils.cli.Config;
 import sat.utils.crypto.RSAKeyPair;
 import sat.utils.geo.Coordinates;
@@ -17,7 +17,7 @@ import sat.utils.geo.Coordinates;
 /**
  * Une tour de contrôle. Cette classe est un Singleton.
  */
-public class Tower extends EventEmitter<TowerEventListener> {
+public class Tower extends EventEmitter implements EventListener {
 	// - - - Singleton Tools - - -
 
 	/**
@@ -117,14 +117,23 @@ public class Tower extends EventEmitter<TowerEventListener> {
 	}
 
 	private void lazyRadioInit() {
-		if(radio == null)
+		if(radio == null) {
 			radio = new RadioServer(new Delegate(), config.getInt("radio.keylength"), "TWR");
+			radio.addListener(this);
+		}
 	}
 
 	// - - - Main method - - -
-	
+
 	public void startGui() {
 		Radar.launch();
+	}
+
+	// - - - Radio Events - - -
+
+	public void on(Message e) {
+		e.emitter().removeListener(this);
+		System.out.println(e);
 	}
 
 	// - - - Delegate - - -
