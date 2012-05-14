@@ -89,13 +89,13 @@ public class Controls {
 	private AnalogListener analogListener = new AnalogListener() {
 		public void onAnalog(String name, float value, float tpf) {
 			if(name.equals("MoveX-L")) {
-				if(moveEnable && !rotateEnable)
+				if(moveEnable)
 					app.moveCamSide(-value);
 				else if(rotateEnable && !moveEnable)
 					app.rotateCamH(-value);
 			}
 			else if(name.equals("MoveX-R")) {
-				if(moveEnable && !rotateEnable)
+				if(moveEnable)
 					app.moveCamSide(value);
 				else if(rotateEnable && !moveEnable)
 					app.rotateCamH(value);

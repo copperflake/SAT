@@ -4,8 +4,12 @@ import java.io.IOException;
 
 import sat.events.EventEmitter;
 import sat.events.EventListener;
+
 import sat.gui3D.Radar;
 import sat.radio.RadioEvent;
+import sat.gui3D.AirportGUI;
+import sat.gui3D.RadarWindow;
+
 import sat.radio.RadioID;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.message.Message;
@@ -122,7 +126,8 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 	// - - - Main method - - -
 
 	public void startGui() {
-		Radar.launch();
+		new RadarWindow();
+		//new AirportGUI();
 	}
 
 	// - - - Radio Delegate - - -

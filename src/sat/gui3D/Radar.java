@@ -12,7 +12,6 @@ import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.*;
 import com.jme3.scene.*;
 import com.jme3.scene.shape.Box;
-import com.jme3.system.AppSettings;
 import com.jme3.util.SkyFactory;
 
 /**
@@ -20,18 +19,6 @@ import com.jme3.util.SkyFactory;
  * or text.
  */
 public class Radar extends SimpleApplication {
-	public static void launch() {
-		Radar app = new Radar();
-		AppSettings settings = new AppSettings(true);
-		settings.setResolution(800, 600);
-		settings.setResolution(1680, 1050);
-		settings.setTitle("SAT - Radar");
-		app.setShowSettings(false);
-		app.setDisplayStatView(false);
-		app.setSettings(settings);
-		app.start();
-	}
-
 	private long frameNumber = 0;
 	private ArrayList<Aircraft> aircrafts;
 	private Vector3f center, camUp;
@@ -44,7 +31,7 @@ public class Radar extends SimpleApplication {
 	@SuppressWarnings("deprecation")
 	@Override
 	public void simpleInitApp() {
-		hd = true;
+		hd = false;
 		boolean gamma = hd;
 		
 		camUp = cam.getUp();
@@ -119,7 +106,7 @@ public class Radar extends SimpleApplication {
 			aircrafts.get(i).update(timer.getTimeInSeconds());
 		
 		// DEV
-		aircrafts.get(0).addDestination(new Vector3f((float) Math.sin(timer.getTimeInSeconds()/10f)*100,(float) Math.cos(timer.getTimeInSeconds()/10f)*100,10f));
+		aircrafts.get(0).addDestination(new Vector3f((float) Math.sin(timer.getTimeInSeconds()/2f)*100,(float) Math.cos(timer.getTimeInSeconds()/2f)*70,10f));
 		
 		frameNumber++;
 	}

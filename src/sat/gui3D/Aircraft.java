@@ -68,7 +68,7 @@ public class Aircraft {
 			
 			// Roll
 			if(path.size()-3 >= 0) {
-				float fac = 20f;
+				float fac = 100f;
 				Vector3f start = path.get(path.size()-3);
 				Vector3f v1 = new Vector3f(mid.getX()-start.getX(), mid.getY()-start.getY(), 0f).normalize();
 				Vector3f v2 = dirYaw;
@@ -130,9 +130,6 @@ public class Aircraft {
 	}
 	
 	private void updateTrace() {
-		//lineMesh.clearBuffer(Type.Position);
-		//lineMesh.clearBuffer(Type.Index);
-
 		Vector3f[] vertices = new Vector3f[path.size()];
 		int[] indexes = new int[path.size()*2];
 		
@@ -152,7 +149,6 @@ public class Aircraft {
 	}
 	
 	public void update(float t) {
-		System.out.println(t);
 		sims.setLocalTranslation(sims.getLocalTranslation().x, (float) (Math.sin(t*2f)+1)*sims.getLocalScale().y*2, sims.getLocalTranslation().z);
 		sims.rotate(0f, 0.01f, 0f);
 		move();
