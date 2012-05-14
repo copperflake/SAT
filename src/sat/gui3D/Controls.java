@@ -83,9 +83,6 @@ public class Controls {
 				//inputManager.setCursorVisible(!keyPressed);
 				rotateEnable = keyPressed;
 			}
-			else if(name.equals("TEST") && !keyPressed) {
-				System.out.println("TEST");
-			}
 		}
 	};
 

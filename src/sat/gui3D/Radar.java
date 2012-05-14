@@ -1,9 +1,6 @@
 package sat.gui3D;
 
 import java.util.ArrayList;
-import java.util.Vector;
-
-import javax.vecmath.Vector3d;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.plugins.FileLocator;
@@ -14,9 +11,11 @@ import com.jme3.math.*;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.*;
 import com.jme3.scene.*;
+import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
 import com.jme3.util.SkyFactory;
+import com.jme3.util.BufferUtils;
 
 /**
  * Sample 3 - how to load an OBJ model, and OgreXML model, a material/texture,
@@ -69,11 +68,11 @@ public class Radar extends SimpleApplication {
 		Box zurickBox = new Box(Vector3f.ZERO, 600f, 0f, 600f);
 		Spatial zurick = new Geometry("Box", zurickBox);
 		Material mat_zurick = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-		//mat_zurick.setTexture("ColorMap", assetManager.loadTexture("Images/kloten15.jpg"));
 		mat_zurick.setTexture("ColorMap", assetManager.loadTexture("Images/kloten15"+((hd) ? "" : "low")+".jpg"));
 		zurick.setMaterial(mat_zurick);
 		zurick.setLocalTranslation(0f, 0f, 0f);
 		rootNode.attachChild(zurick);
+		
 		
 		/*
 		Box soilBox = new Box(Vector3f.ZERO, 1000f, 0f, 1000f);
@@ -104,7 +103,7 @@ public class Radar extends SimpleApplication {
 		al.setColor(ColorRGBA.White);
 		rootNode.addLight(al);
 
-		rootNode.attachChild(SkyFactory.createSky(assetManager, "Textures/Sky/Bright/BrightSky.dds", false));
+		//rootNode.attachChild(SkyFactory.createSky(assetManager, "Textures/Sky/Bright/BrightSky.dds", false));
 
 		// POST PROCESSING
 		FilterPostProcessor fpp = new FilterPostProcessor(assetManager);
@@ -122,7 +121,7 @@ public class Radar extends SimpleApplication {
 			depth.setBlurScale(1f);
 			fpp.addFilter(depth);
 		}
-		if(hd) {
+		if(false) {
 			RadialBlurFilter blurFilter = new RadialBlurFilter(1f, 0.7f);
 			fpp.addFilter(blurFilter);
 		}
@@ -131,11 +130,12 @@ public class Radar extends SimpleApplication {
 			fpp.addFilter(gammaFilter);
 		}
 		viewPort.addProcessor(fpp);
+		
+		onNewAircraft(new Vector3f(10f, 10f, 10f));
+		
+		cam.setFrustumPerspective(45f, (float) cam.getWidth()/cam.getHeight(), 0.01f, 10000f);
 
-		//for(int i = 0; i < 10; i++)
-			onNewAircraft(new Vector3f(0f, 0f, 1f));
 		cam.setLocation(new Vector3f(0f, 20f, 100f));
-		cam.setFrustumPerspective(45f, (float) cam.getWidth() / cam.getHeight(), 0.01f, 10000f);
 	}
 
 	public void onNewAircraft(Vector3f coords) {
@@ -152,7 +152,7 @@ public class Radar extends SimpleApplication {
 		
 		for(int i = 0; i < aircrafts.size(); i++)
 			aircrafts.get(i).update(timer.getTimeInSeconds());
-
+		aircrafts.get(0).addDestination(new Vector3f((float) Math.sin(frameNumber/100f)*100,(float) Math.cos(frameNumber/100f)*100,10f));
 		frameNumber++;
 	}
 	
@@ -164,7 +164,7 @@ public class Radar extends SimpleApplication {
 	public void moveCamY(float value) {
 		Vector3f v = cam.getUp().normalize().mult(value * moveSpeed);
 		Vector3f loc = cam.getLocation().add(v);
-		if(loc.getY() > 0)
+		if(loc.getY() > 1)
 			cam.setLocation(loc);
 	}
 
@@ -176,7 +176,7 @@ public class Radar extends SimpleApplication {
 	public void zoom(float value) {
 		Vector3f v = cam.getDirection().normalize().mult(value * zoomSpeed);
 		Vector3f loc = cam.getLocation().add(v);
-		if(loc.getY() > 0)
+		if(loc.getY() > 1)
 			cam.setLocation(loc);
 	}
 
