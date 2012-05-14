@@ -14,19 +14,21 @@ public class Aircraft {
 	private Node simsWrapper;
 	private Geometry model;
 	private Geometry sims;
-	private Vector3f currentPos;
+	private Vector3f currentPos, initPos;
 	private AssetManager assetManager;
 	private Node parent;
 	private Mesh lineMesh;
 
 	private CircularBuffer<Vector3f> path = new CircularBuffer<Vector3f>(50);
 	
-	public Aircraft(AssetManager assetManager, Node parent, Vector3f initPos) {
+	public Aircraft(AssetManager assetManager, Node parent) {
 		this.assetManager = assetManager;
 		this.parent = parent;
 		simsWrapper = new Node();
 		mainNode = new Node();
 		lineMesh = new Mesh();
+		
+		initPos = new Vector3f(0f, 0f, 0f);
 		currentPos = initPos;
 		drawAircraft(initPos);
 		drawTrace();
@@ -109,6 +111,7 @@ public class Aircraft {
 		simsWrapper.attachChild(sims);
 		
 		simsWrapper.setLocalTranslation(0f, 1f, 0f);
+		mainNode.scale(2f);
 		mainNode.attachChild(simsWrapper);
 		
 		path.add(initPos);
@@ -121,7 +124,7 @@ public class Aircraft {
 		lineMesh.setLineWidth(4f);
 		Geometry lineGeometry = new Geometry("line", lineMesh);
 		Material lineMaterial = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-		lineMaterial.setColor("Color", ColorRGBA.Blue);
+		lineMaterial.setColor("Color", ColorRGBA.Green);
 		lineGeometry.setMaterial(lineMaterial);
 		parent.attachChild(lineGeometry);
 	}
@@ -149,6 +152,7 @@ public class Aircraft {
 	}
 	
 	public void update(float t) {
+		System.out.println(t);
 		sims.setLocalTranslation(sims.getLocalTranslation().x, (float) (Math.sin(t*2f)+1)*sims.getLocalScale().y*2, sims.getLocalTranslation().z);
 		sims.rotate(0f, 0.01f, 0f);
 		move();
