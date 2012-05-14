@@ -3,11 +3,11 @@ package sat.radio.message;
 import java.io.Serializable;
 import java.util.Date;
 
-import sat.events.Event;
+import sat.events.PriorityEvent;
 import sat.radio.RadioID;
 import sat.utils.geo.Coordinates;
 
-public abstract class Message extends Event implements Serializable, Comparable<Message> {
+public abstract class Message extends PriorityEvent<Message> implements Serializable {
 	// Global attributes
 	private RadioID id;
 	private Coordinates coords;

@@ -1,5 +1,6 @@
 package sat.events;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,7 +30,7 @@ public abstract class EventEmitter implements EventEmitterInterface {
 			try {
 				event.notify(listener, emitter);
 			}
-			catch(UnhandledEventException e) {
+			catch(UnhandledEventException | InvocationTargetException e) {
 				// Ignore unhandled exceptions
 			}
 		}

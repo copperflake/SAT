@@ -2,12 +2,14 @@ package sat.radio.server;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import sat.events.EventListener;
 import sat.events.UnhandledEventException;
 import sat.radio.Radio;
+import sat.radio.RadioEvent;
 import sat.radio.RadioID;
 import sat.radio.RadioProtocolException;
 import sat.radio.engine.server.RadioServerEngine;
@@ -197,9 +199,9 @@ public class RadioServer extends Radio {
 			this.socket = socket;
 
 			listener = new SocketListener();
-			listener.start();
-
 			writer = new SocketWriter();
+
+			listener.start();
 			writer.start();
 		}
 
@@ -246,7 +248,7 @@ public class RadioServer extends Radio {
 			}
 
 			state = RadioSocketState.READY;
-			delegate.onPlaneConnected(socketID);
+			RadioServer.this.emit(new RadioEvent.PlaneConnected(socketID));
 		}
 
 		/**
@@ -287,7 +289,7 @@ public class RadioServer extends Radio {
 				if(state == RadioSocketState.READY) {
 					// Disconnect notification
 					// Notification must be the first thing done.
-					delegate.onPlaneDisconnected(socketID);
+					RadioServer.this.emit(new RadioEvent.PlaneDisconnected(socketID));
 
 					synchronized(managers) {
 						managers.remove(socketID);
@@ -382,6 +384,11 @@ public class RadioServer extends Radio {
 				catch(UnhandledEventException e) {
 					System.err.println("Error handling message");
 					e.printStackTrace(System.err);
+					SocketManager.this.quit();
+				}
+				catch(InvocationTargetException e) {
+					System.err.println("Exception while handling message");
+					e.getTargetException().printStackTrace(System.err);
 					SocketManager.this.quit();
 				}
 			}

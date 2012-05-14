@@ -1,6 +1,5 @@
 package sat.radio;
 
-import sat.radio.message.Message;
 import sat.utils.geo.Coordinates;
 
 /**
@@ -22,5 +21,5 @@ public interface RadioDelegate {
 	 * @param message
 	 *            Le message reçu.
 	 */
-	public void onMessage(RadioID sender, Message message);
+	//public void onMessage(RadioID sender, Message message);
 }

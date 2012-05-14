@@ -5,6 +5,7 @@ import java.io.IOException;
 import sat.events.EventEmitter;
 import sat.events.EventListener;
 import sat.gui3D.Radar;
+import sat.radio.RadioEvent;
 import sat.radio.RadioID;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.message.Message;
@@ -132,8 +133,15 @@ public class Tower extends EventEmitter implements EventListener {
 	// - - - Radio Events - - -
 
 	public void on(Message e) {
-		e.emitter().removeListener(this);
 		System.out.println(e);
+	}
+
+	public void on(RadioEvent.PlaneConnected e) {
+		System.out.println("Plane connected " + e.getId());
+	}
+
+	public void on(RadioEvent.PlaneDisconnected e) {
+		System.out.println("Plane disconnected " + e.getId());
 	}
 
 	// - - - Delegate - - -
@@ -141,26 +149,6 @@ public class Tower extends EventEmitter implements EventListener {
 	private class Delegate implements RadioServerDelegate {
 		public Coordinates getLocation() {
 			return Tower.this.getLocation();
-		}
-
-		public void onPlaneConnected(RadioID plane) {
-			System.out.println("Plane " + plane + " connected");
-		}
-
-		public void onPlaneDisconnected(RadioID plane) {
-			System.out.println("Plane " + plane + " disconnected");
-		}
-
-		public void onMessage(RadioID plane, Message message) {
-			switch(message.getType()) {
-				case KEEPALIVE:
-					System.out.println("Tower got keepalive from " + plane);
-					break;
-
-				default:
-					System.out.println("Tower cannot handle message " + message.getType());
-					radio.kick(plane);
-			}
 		}
 	}
 }

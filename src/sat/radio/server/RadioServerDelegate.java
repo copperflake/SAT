@@ -1,7 +1,6 @@
 package sat.radio.server;
 
 import sat.radio.RadioDelegate;
-import sat.radio.RadioID;
 
 /**
  * Interface d'un délégué d'un <code>RadioServer</code>.
@@ -18,7 +17,7 @@ public interface RadioServerDelegate extends RadioDelegate {
 	 * @param plane
 	 *            Le RadioID de l'avion nouvellement connecté.
 	 */
-	public void onPlaneConnected(RadioID plane);
+	//public void onPlaneConnected(RadioID plane);
 
 	/**
 	 * Un avion a été déconnecté de la tour. Cet évenement est envoyé lorsque la
@@ -34,5 +33,5 @@ public interface RadioServerDelegate extends RadioDelegate {
 	 * @param plane
 	 *            Le RadioID de l'avion déconnecté.
 	 */
-	public void onPlaneDisconnected(RadioID plane);
+	//public void onPlaneDisconnected(RadioID plane);
 }
