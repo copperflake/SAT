@@ -6,11 +6,11 @@ import sat.radio.RadioID;
 import sat.radio.client.RadioClient;
 import sat.radio.client.RadioClientDelegate;
 import sat.radio.engine.client.RadioClientEngine;
-import sat.radio.message.Message;
 import sat.utils.cli.Config;
+import sat.utils.crypto.RSAKeyPair;
 import sat.utils.geo.Coordinates;
 
-public class Plane {
+public class Plane implements RadioClientDelegate {
 	/**
 	 * La configuration par défaut d'un avion. Sert de modèle à la contruction
 	 * de la configuration spécifique aux instances d'avions.
@@ -21,6 +21,11 @@ public class Plane {
 	 * La configuration spécifique à une instance d'un avion.
 	 */
 	private Config config;
+
+	/**
+	 * L'identifiant de l'avion.
+	 */
+	private RadioID id;
 
 	private RadioClient radio;
 
@@ -50,25 +55,30 @@ public class Plane {
 		return config;
 	}
 
+	public void connect(RadioClientEngine engine) throws IOException {
+		if(radio == null)
+			radio = new RadioClient(this);
+		radio.connect(engine);
+	}
+
+	// - - - Plane Delegate - - -
+
 	public Coordinates getLocation() {
 		return new Coordinates(0, 0, 0);
 	}
 
-	public void connect(RadioClientEngine engine) throws IOException {
-		if(radio == null)
-			radio = new RadioClient(new Delegate(), config.getInt("radio.keylength"), "PLN");
-		radio.connect(engine);
+	/**
+	 * Retourne l'identifiant utilisé par la radio.
+	 */
+	public RadioID getRadioId() {
+		if(id == null) {
+			id = new RadioID("PLN");
+		}
+
+		return id;
 	}
 
-	// - - - Delegate - - -
-
-	private class Delegate implements RadioClientDelegate {
-		public Coordinates getLocation() {
-			return Plane.this.getLocation();
-		}
-
-		public void onMessage(RadioID tower, Message message) {
-			System.out.println("Plane got message " + message + " from " + message.getID());
-		}
+	public RSAKeyPair getKeyPair() {
+		return null;
 	}
 }

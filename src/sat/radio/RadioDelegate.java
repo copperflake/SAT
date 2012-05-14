@@ -1,5 +1,6 @@
 package sat.radio;
 
+import sat.utils.crypto.RSAKeyPair;
 import sat.utils.geo.Coordinates;
 
 /**
@@ -12,6 +13,16 @@ public interface RadioDelegate {
 	 * Demande au délégué sa position.
 	 */
 	public Coordinates getLocation();
+
+	/**
+	 * Demande au délégué son identifiant radio.
+	 */
+	public RadioID getRadioId();
+
+	/**
+	 * Demande au délégué sa clé de chiffrement
+	 */
+	public RSAKeyPair getKeyPair();
 
 	/**
 	 * Annonce au délégué la réception d'un message.

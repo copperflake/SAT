@@ -63,11 +63,9 @@ public class RadioServer extends Radio {
 	 *            Le délégué qui sera chargé de la gestion des événements de la
 	 *            radio.
 	 */
-	public RadioServer(RadioServerDelegate delegate, int keylength, String label) {
-		super(label, keylength);
-
-		this.delegate = delegate;
-
+	public RadioServer(RadioServerDelegate delegate) {
+		super(delegate);
+		this.delegate = delegate;	// TODO: useful ?
 		this.managers = new HashMap<RadioID, SocketManager>();
 	}
 
@@ -415,7 +413,7 @@ public class RadioServer extends Radio {
 			}
 
 			/**
-			 * Gestionnaire des messages (Visitor Pattern)
+			 * Gestionnaire des messages
 			 */
 			public class MessageHandler implements EventListener {
 				@SuppressWarnings("unused")
@@ -449,7 +447,7 @@ public class RadioServer extends Radio {
 					}
 					else if(ciphered) {
 						state = RadioSocketState.CIPHER_NEGOCIATION;
-						socket.in.upgrade(new RSAInputStream(socket.in.getStream(), keyPair));
+						socket.in.upgrade(new RSAInputStream(socket.in.getStream(), getKeyPair()));
 					}
 					else {
 						// Socket is ready!
@@ -501,7 +499,6 @@ public class RadioServer extends Radio {
 						invalidState(m);
 					}
 
-					System.out.println("Unmanaged messages types");
 					forwardToTower(m);
 				}
 
@@ -543,6 +540,8 @@ public class RadioServer extends Radio {
 		 * Thread de gestion de la liste d'attente des messages sortants. Ce
 		 * thread possède sa propre queue d'envoi de message depuis laquelle il
 		 * récupérera les messages à envoyé à l'avion selon leur priorité.
+		 * 
+		 * TODO: can be built on Events framework
 		 */
 		private class SocketWriter extends Thread {
 			/**

@@ -23,7 +23,7 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 	RadioClientDelegate delegate;
 
 	/**
-	 * Le moteur de communication de la radio.s
+	 * Le moteur de communication de la radios.
 	 */
 	RadioClientEngine engine;
 
@@ -34,9 +34,8 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 	 * @param delegate
 	 *            Le délégué chargé de la gestion des événements.
 	 */
-	public RadioClient(RadioClientDelegate delegate, int keylength, String label) {
-		super(label, keylength);
-
+	public RadioClient(RadioClientDelegate delegate) {
+		super(delegate);
 		this.delegate = delegate;
 	}
 
@@ -56,8 +55,9 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 	 */
 	public void connect(RadioClientEngine engine) throws IOException {
 		// Un client radio ne peut avoir qu'un seul moteur actif.
-		if(this.engine != null)
+		if(this.engine != null) {
 			throw new IOException("This radio already have a registered engine.");
+		}
 
 		try {
 			this.engine = engine;

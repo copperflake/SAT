@@ -12,13 +12,14 @@ import sat.radio.message.Message;
 import sat.radio.server.RadioServer;
 import sat.radio.server.RadioServerDelegate;
 import sat.utils.cli.Config;
+import sat.utils.crypto.RSAException;
 import sat.utils.crypto.RSAKeyPair;
 import sat.utils.geo.Coordinates;
 
 /**
  * Une tour de contrôle. Cette classe est un Singleton.
  */
-public class Tower extends EventEmitter implements EventListener {
+public class Tower extends EventEmitter implements EventListener, RadioServerDelegate {
 	// - - - Singleton Tools - - -
 
 	/**
@@ -60,11 +61,10 @@ public class Tower extends EventEmitter implements EventListener {
 	 * @return L'instance unique de la classe Tower.
 	 */
 	public static Tower getInstance() {
-		if(defaults == null)
+		if(instance == null) {
 			initDefaults();
-
-		if(instance == null)
 			instance = new Tower();
+		}
 
 		return instance;
 	}
@@ -84,17 +84,20 @@ public class Tower extends EventEmitter implements EventListener {
 	private Config config;
 
 	/**
+	 * La clé de cette tour de contrôle.
+	 */
+	private RSAKeyPair keyPair;
+
+	/**
+	 * L'identifiant de la tour.
+	 */
+	private RadioID id;
+
+	/**
 	 * Retourne l'objet de configuration de la tour.
 	 */
 	public Config getConfig() {
 		return config;
-	}
-
-	/**
-	 * Retourne les coordonées de la tour.
-	 */
-	public Coordinates getLocation() {
-		return new Coordinates(0, 0, 0);
 	}
 
 	/**
@@ -108,20 +111,12 @@ public class Tower extends EventEmitter implements EventListener {
 	 *             <code>IOException</code> qui est passée au code appelant.
 	 */
 	public void listen(RadioServerEngine engine) throws IOException {
-		lazyRadioInit();
-		radio.listen(engine);
-	}
-
-	public RSAKeyPair getKeyPair() {
-		lazyRadioInit();
-		return radio.getKeyPair();
-	}
-
-	private void lazyRadioInit() {
 		if(radio == null) {
-			radio = new RadioServer(new Delegate(), config.getInt("radio.keylength"), "TWR");
+			radio = new RadioServer(this);
 			radio.addListener(this);
 		}
+
+		radio.listen(engine);
 	}
 
 	// - - - Main method - - -
@@ -130,8 +125,45 @@ public class Tower extends EventEmitter implements EventListener {
 		Radar.launch();
 	}
 
+	// - - - Radio Delegate - - -
+
+	/**
+	 * Retourne les coordonées de la tour.
+	 */
+	public Coordinates getLocation() {
+		return new Coordinates(0, 0, 0);
+	}
+
+	/**
+	 * Retourne l'identifiant utilisé par la radio.
+	 */
+	public RadioID getRadioId() {
+		if(id == null) {
+			id = new RadioID("TWR");
+		}
+
+		return id;
+	}
+
+	public RSAKeyPair getKeyPair() {
+		if(keyPair == null) {
+			try {
+				keyPair = new RSAKeyPair(config.getInt("radio.keylength"));
+			}
+			catch(RSAException e) {
+				// Invalid key length, ignore given length and use default
+				keyPair = new RSAKeyPair();
+			}
+		}
+
+		return keyPair;
+	}
+
 	// - - - Radio Events - - -
 
+	/**
+	 * Réception d'un message (cas général)
+	 */
 	public void on(Message e) {
 		System.out.println(e);
 	}
@@ -142,13 +174,5 @@ public class Tower extends EventEmitter implements EventListener {
 
 	public void on(RadioEvent.PlaneDisconnected e) {
 		System.out.println("Plane disconnected " + e.getId());
-	}
-
-	// - - - Delegate - - -
-
-	private class Delegate implements RadioServerDelegate {
-		public Coordinates getLocation() {
-			return Tower.this.getLocation();
-		}
 	}
 }

@@ -2,7 +2,6 @@ package sat.radio;
 
 import sat.events.AsyncEventEmitter;
 import sat.events.schedulers.PriorityEventScheduler;
-import sat.utils.crypto.RSAException;
 import sat.utils.crypto.RSAKeyPair;
 
 /**
@@ -18,9 +17,9 @@ public abstract class Radio extends AsyncEventEmitter {
 	protected RadioID id;
 
 	/**
-	 * Les clés RSA utilisées pour crypter les communications de cette radio.
+	 * Le délégué de cette radio.
 	 */
-	protected RSAKeyPair keyPair;
+	protected RadioDelegate delegate;
 
 	/**
 	 * Défini le niveau de verbosité de la radio
@@ -46,25 +45,17 @@ public abstract class Radio extends AsyncEventEmitter {
 	 * @param keyLength
 	 *            La longueur de clé à utiliser pour le chiffrement.
 	 */
-	public Radio(String label, int keyLength) {
+	public Radio(RadioDelegate delegate) {
 		super(new PriorityEventScheduler());
 
-		id = new RadioID(label);
-
-		// Key generation
-		try {
-			keyPair = new RSAKeyPair(keyLength);
-		}
-		catch(RSAException e) {
-			// Invalid key length, ignore given length and use default
-			keyPair = new RSAKeyPair();
-		}
+		this.delegate = delegate;
+		id = delegate.getRadioId();
 	}
 
 	/**
-	 * Retourne la clé utilisée par cette radio.
+	 * Retourne la clé utilisée par cette radio tel que fournie par le délégué.
 	 */
 	public RSAKeyPair getKeyPair() {
-		return keyPair;
+		return delegate.getKeyPair();
 	}
 }
