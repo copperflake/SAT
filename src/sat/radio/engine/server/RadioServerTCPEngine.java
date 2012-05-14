@@ -15,16 +15,16 @@ public class RadioServerTCPEngine extends RadioServerEngine {
 	private Thread serverThread;
 
 	public RadioServerTCPEngine(int port) {
-		this.port = port;
+		this(port, null);
 	}
 
 	public RadioServerTCPEngine(int port, InetAddress iface) {
-		this(port);
+		this.port = port;
 		this.iface = iface;
 	}
 
-	public void init(RadioServerEngineDelegate delegate) throws IOException {
-		setDelegate(delegate);
+	public void init(final RadioServerEngineDelegate delegate) throws IOException {
+		this.delegate = delegate;
 
 		final ServerSocket server = new ServerSocket(port, 50, iface);
 
@@ -33,10 +33,8 @@ public class RadioServerTCPEngine extends RadioServerEngine {
 				while(true) {
 					try {
 						Socket client = server.accept();
-
 						RadioSocket socket = new RadioSocketDirect(client.getInputStream(), client.getOutputStream());
-
-						getDelegate().onNewConnection(socket);
+						delegate.onNewConnection(socket);
 					}
 					catch(IOException e) {
 						// Ignore bad clients !

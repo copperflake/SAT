@@ -54,7 +54,7 @@ public class RadioServer extends Radio {
 	 * la responsabilité de s'ajouter dans cette liste lorsqu'il devient prêt à
 	 * être utilisé.
 	 */
-	private HashMap<RadioID, SocketManager> managers;
+	private HashMap<RadioID, PlaneManager> managers;
 
 	/**
 	 * Crée un nouveau serveur radio qui dépend du délégué spécifié.
@@ -66,7 +66,7 @@ public class RadioServer extends Radio {
 	public RadioServer(RadioServerDelegate delegate) {
 		super(delegate);
 		this.delegate = delegate;	// TODO: useful ?
-		this.managers = new HashMap<RadioID, SocketManager>();
+		this.managers = new HashMap<RadioID, PlaneManager>();
 	}
 
 	/**
@@ -125,7 +125,7 @@ public class RadioServer extends Radio {
 		/**
 		 * Gestion de la connexion d'un nouveau client.
 		 * <p>
-		 * Lors d'une connexion, un nouveau {@link SocketManager} est créé pour
+		 * Lors d'une connexion, un nouveau {@link PlaneManager} est créé pour
 		 * gérer cette connexion.
 		 */
 		public void onNewConnection(RadioSocket socket) {
@@ -135,7 +135,7 @@ public class RadioServer extends Radio {
 			// so they have an implicit reference to their parents. So this
 			// object will not be garbage-collected by Java despite no direct
 			// reference to it (at least until registered when ready)!
-			new SocketManager(socket);
+			new PlaneManager(socket);
 		}
 	}
 
@@ -150,7 +150,7 @@ public class RadioServer extends Radio {
 	 * ...) et s'occupera des messages protocolaires qui n'ont pas d'intérêt
 	 * pour la tour elle-même (court-circuitage).
 	 */
-	private class SocketManager {
+	private class PlaneManager {
 		/**
 		 * Le socket géré par ce gestionnaire.
 		 */
@@ -193,7 +193,7 @@ public class RadioServer extends Radio {
 		 * @param socket
 		 *            Le socket à gérer.
 		 */
-		public SocketManager(RadioSocket socket) {
+		public PlaneManager(RadioSocket socket) {
 			this.socket = socket;
 
 			listener = new SocketListener();
@@ -368,7 +368,7 @@ public class RadioServer extends Radio {
 				catch(EOFException e) {
 					// Connexion closed
 					// TODO: EOF unexpected without BYE!
-					SocketManager.this.quit();
+					PlaneManager.this.quit();
 				}
 				catch(IOException e) {
 					// If socket is closing, it's expected.
@@ -376,18 +376,18 @@ public class RadioServer extends Radio {
 						// Unable to read message, disconnect plane.
 						System.err.println("Cannot read from plane socket");
 						e.printStackTrace(System.err);
-						SocketManager.this.quit();
+						PlaneManager.this.quit();
 					}
 				}
 				catch(UnhandledEventException e) {
 					System.err.println("Error handling message");
 					e.printStackTrace(System.err);
-					SocketManager.this.quit();
+					PlaneManager.this.quit();
 				}
 				catch(InvocationTargetException e) {
 					System.err.println("Exception while handling message");
 					e.getTargetException().printStackTrace(System.err);
-					SocketManager.this.quit();
+					PlaneManager.this.quit();
 				}
 			}
 
@@ -443,7 +443,7 @@ public class RadioServer extends Radio {
 						// components and wait for the extended handshake.
 
 						// TODO: upgrade only listener, writer will be upgraded later
-						SocketManager.this.upgrade();
+						PlaneManager.this.upgrade();
 					}
 					else if(ciphered) {
 						state = RadioSocketState.CIPHER_NEGOCIATION;
@@ -451,7 +451,7 @@ public class RadioServer extends Radio {
 					}
 					else {
 						// Socket is ready!
-						SocketManager.this.ready();
+						PlaneManager.this.ready();
 					}
 				}
 
@@ -484,7 +484,7 @@ public class RadioServer extends Radio {
 					socket.out.upgrade(new RSAOutputStream(socket.out.getStream(), planeKey));
 
 					// Socket is ready for general usage.
-					SocketManager.this.ready();
+					PlaneManager.this.ready();
 				}
 
 				// Unmanaged messages type
@@ -529,7 +529,7 @@ public class RadioServer extends Radio {
 					// Invalid message for this state, disconnect plane.
 					System.err.println("Protocol Exception from Plane");
 					System.err.println("Cannot receive " + m.getType() + " in state " + state);
-					SocketManager.this.quit();
+					PlaneManager.this.quit();
 				}
 			}
 		}
@@ -587,7 +587,7 @@ public class RadioServer extends Radio {
 						e.printStackTrace(System.err);
 
 						// Unable to write message, disconnect plane.
-						SocketManager.this.quit();
+						PlaneManager.this.quit();
 					}
 				}
 			}
