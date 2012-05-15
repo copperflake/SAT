@@ -30,5 +30,9 @@
 	<classpathentry kind="lib" path="lib/stack-alloc.jar"/>
 	<classpathentry kind="lib" path="lib/vecmath.jar"/>
 	<classpathentry kind="lib" path="lib/xmlpull-xpp3.jar"/>
+	<classpathentry kind="lib" path="lib/twitter4j-async-2.2.5.jar"/>
+	<classpathentry kind="lib" path="lib/twitter4j-core-2.2.5.jar"/>
+	<classpathentry kind="lib" path="lib/twitter4j-media-support-2.2.5.jar"/>
+	<classpathentry kind="lib" path="lib/twitter4j-stream-2.2.5.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

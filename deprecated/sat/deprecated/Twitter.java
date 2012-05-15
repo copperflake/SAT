@@ -1,4 +1,4 @@
-package sat.external.twitter;
+package sat.deprecated;
 
 import java.io.BufferedReader;
 import java.io.IOException;
