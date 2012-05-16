@@ -18,8 +18,8 @@ public abstract class Message extends PriorityEvent<Message> implements Serializ
 
 	// Ces attributs ne seront pas sérialisé pour des raisons de sécurité
 	// avec le flux Extended.
-	transient protected int priority;
-	transient protected MessageType type;
+	transient protected int priority = 5;
+	transient protected MessageType type = MessageType.INVALID;
 
 	// Additions
 	protected Date time;
@@ -33,10 +33,7 @@ public abstract class Message extends PriorityEvent<Message> implements Serializ
 		setTypeAndPriority();
 	}
 
-	public void setTypeAndPriority() {
-		priority = 5;
-		type = MessageType.INVALID;
-	}
+	public abstract void setTypeAndPriority();
 
 	public RadioID getID() {
 		return id;

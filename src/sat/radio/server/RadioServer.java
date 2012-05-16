@@ -224,8 +224,7 @@ public class RadioServer extends Radio {
 			}
 			catch(IOException e) {
 				// Failed to upgrade streams
-				System.out.println("Failed to upgrade streams...");
-				e.printStackTrace();
+				RadioServer.this.emit(new RadioEvent.UncaughtException("Failed to upgrade streams...", e));
 				quit();
 			}
 		}
@@ -306,8 +305,7 @@ public class RadioServer extends Radio {
 				socket.close();
 			}
 			catch(IOException e) {
-				System.err.println("Error while closing socket!?");
-				e.printStackTrace(System.err);
+				RadioServer.this.emit(new RadioEvent.UncaughtException("Error while closing socket ?", e));
 			}
 		}
 
@@ -374,19 +372,16 @@ public class RadioServer extends Radio {
 					// If socket is closing, it's expected.
 					if(state != RadioSocketState.CLOSING) {
 						// Unable to read message, disconnect plane.
-						System.err.println("Cannot read from plane socket");
-						e.printStackTrace(System.err);
+						RadioServer.this.emit(new RadioEvent.UncaughtException("Cannot read from plane socket", e));
 						PlaneAgent.this.quit();
 					}
 				}
 				catch(UnhandledEventException e) {
-					System.err.println("Error handling message");
-					e.printStackTrace(System.err);
+					RadioServer.this.emit(new RadioEvent.UncaughtException("Error handling message", e));
 					PlaneAgent.this.quit();
 				}
 				catch(InvocationTargetException e) {
-					System.err.println("Exception while handling message");
-					e.getTargetException().printStackTrace(System.err);
+					RadioServer.this.emit(new RadioEvent.UncaughtException("Exception when handling message", e.getTargetException()));
 					PlaneAgent.this.quit();
 				}
 			}
@@ -583,8 +578,7 @@ public class RadioServer extends Radio {
 						// queue.take interrupted, loop.
 					}
 					catch(IOException e) {
-						System.err.println("Cannot write to plane socket");
-						e.printStackTrace(System.err);
+						RadioServer.this.emit(new RadioEvent.UncaughtException("Cannot write to plane socket", e));
 
 						// Unable to write message, disconnect plane.
 						PlaneAgent.this.quit();

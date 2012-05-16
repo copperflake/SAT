@@ -10,6 +10,8 @@ import java.io.PrintStream;
 import java.net.InetAddress;
 
 import sat.GlobalCLI;
+import sat.events.Event;
+import sat.events.EventListener;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerTCPEngine;
 import sat.utils.crypto.RSAKeyPair;
@@ -28,14 +30,22 @@ public class TowerCLI extends GlobalCLI {
 	 * 
 	 * @param tower
 	 *            La tour de contrôle contrôlée par ce CLI
-	 * @param in
+	 * @param i
 	 *            Le flux d'entrée du CLI
-	 * @param out
+	 * @param o
 	 *            Le flux de sortie du CLI
 	 */
-	public TowerCLI(InputStream in, PrintStream out) {
-		super(in, out, "Tower> ");
-		this.tower = Tower.getInstance();
+	public TowerCLI(InputStream i, PrintStream o) {
+		super(i, o, "Tower> ");
+		tower = Tower.getInstance();
+
+		tower.addListener(new EventListener() {
+			@SuppressWarnings("unused")
+			public void on(Event event) {
+				println("Received unknown event:");
+				out.println(event);
+			}
+		});
 	}
 
 	/**

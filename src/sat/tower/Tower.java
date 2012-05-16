@@ -2,6 +2,7 @@ package sat.tower;
 
 import java.io.IOException;
 
+import sat.events.Event;
 import sat.events.EventEmitter;
 import sat.events.EventListener;
 
@@ -179,5 +180,11 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 
 	public void on(RadioEvent.PlaneDisconnected e) {
 		System.out.println("Plane disconnected " + e.getId());
+	}
+
+	public void on(Event event) {
+		// Unmanaged event, pass it to our own listeners
+		System.out.println(event);
+		emit(event);
 	}
 }

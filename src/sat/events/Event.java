@@ -1,6 +1,7 @@
 package sat.events;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class Event implements Cloneable {
 	private EventEmitterInterface emitter;
@@ -23,7 +24,9 @@ public class Event implements Cloneable {
 
 		while(eventClass != null) {
 			try {
-				listener.getClass().getMethod("on", new Class<?>[] { eventClass }).invoke(listener, event);
+				Method on = listener.getClass().getMethod("on", eventClass);
+				on.setAccessible(true); // Inner-class are otherwise unavailable
+				on.invoke(listener, event);
 				return;
 			}
 			catch(InvocationTargetException e) {

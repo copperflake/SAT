@@ -3,6 +3,27 @@ package sat.radio;
 import sat.events.Event;
 
 public abstract class RadioEvent extends Event {
+
+	public static class UncaughtException extends RadioEvent {
+		private String message;
+		private Throwable exception;
+
+		public UncaughtException(String m, Throwable e) {
+			message = m;
+			exception = e;
+		}
+
+		public String getMessage() {
+			return message;
+		}
+
+		public Throwable getException() {
+			return exception;
+		}
+	}
+
+	// - - - Plane Event - - -
+
 	public static abstract class PlaneEvent extends RadioEvent {
 		RadioID id;
 
