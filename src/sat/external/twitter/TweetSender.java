@@ -1,43 +1,52 @@
 package sat.external.twitter;
 
+import java.io.File;
+
 import twitter4j.*;
 import twitter4j.conf.ConfigurationBuilder;
 
 public class TweetSender {
-	public TweetSender(String tweet) {
-		String consumerKey = "rG8eO3F3qejLGtKC52XG7Q";
-		String consumerSecret = "H3Y5irP7FAgLhIPkYhR7q8xTCC16WWObwnjFPmsz2g";
-		String accessToken = "68448337-IzktDjmTJwoXePsK1pbtTRs7BD6PTaWFj9lUhfaJU";
-		String accessTokenSecret = "qfXAM7XTG4IltakVgdwws5EBbDjY75zZA8ZkqOOo";
-			
+	private Twitter twitter;
+
+	private void init() {
+		String consumerKey = "PgIak9tCFu3ZP7VjN1pRCQ";
+		String consumerSecret = "Dktte6oKunqQcF5fcYYcTzEqayC3oxt3kE4xVFQHY";
+		String accessToken = "582857933-QJRDlFQfyGswckTczz7Qfopi00MQrXyLuifrEkOV";
+		String accessTokenSecret = "GL0wMnXRFkoeN131VyLoyTpNstPp1BUiCEfhwL1VI";
+
 		ConfigurationBuilder cb = new ConfigurationBuilder();
 		cb.setDebugEnabled(true)
 			.setOAuthConsumerKey(consumerKey)
 			.setOAuthConsumerSecret(consumerSecret)
 			.setOAuthAccessToken(accessToken)
-			.setOAuthAccessTokenSecret(accessTokenSecret);
-			
+			.setOAuthAccessTokenSecret(accessTokenSecret)
+			.setDebugEnabled(true);
+
 		TwitterFactory tf = new TwitterFactory(cb.build());
-		//AccessToken accessTokens = new AccessToken(accessToken, accessTokenSecret); 
-		Twitter twitter = tf.getInstance();
-		   
-	    /*RequestToken twitterRequestToken = twitter.getOAuthRequestToken();
-		String token = twitterRequestToken.getToken();
-		String tokenSecret = twitterRequestToken.getTokenSecret();
-		persist(token, tokenSecret);*/
-		
-		Status status;
+		twitter = tf.getInstance();
+	}
+	
+	protected void publish(String tweet, File image, byte[] PlaneID) throws TwitterException {
+		init();
 		try {
-			status = twitter.updateStatus(tweet);
-			System.out.println("Successfully updated the status to [" + status.getText() + "].");
+			StatusUpdate status = new StatusUpdate(new String(PlaneID)+": "+ tweet);
+			status.setMedia(image);
+			twitter.updateStatus(status);
 		}
 		catch(TwitterException e) {
-		// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-
-	public static void main(String[] args) throws TwitterException {
-		new TweetSender("Test");
+	}
+	
+	public TweetSender(String tweet) {
+		init();
+		try {
+			twitter.updateStatus(tweet);
+		}
+		catch(TwitterException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

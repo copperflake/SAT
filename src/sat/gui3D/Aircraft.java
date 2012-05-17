@@ -106,7 +106,7 @@ public class Aircraft {
 		mainNode.attachChild(model);
 		
 		sims = (Geometry) assetManager.loadModel("Models/sims.obj");
-		sims.getMaterial().setColor("Ambient", new ColorRGBA(0.2f, 0.2f, 0.2f, 1f));
+		sims.getMaterial().setColor("Ambient", new ColorRGBA(1f, 0.2f, 0.2f, 1f));
 		sims.scale(0.3f);
 		simsWrapper.attachChild(sims);
 		

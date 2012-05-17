@@ -6,9 +6,7 @@ import sat.events.Event;
 import sat.events.EventEmitter;
 import sat.events.EventListener;
 
-import sat.gui3D.Radar;
 import sat.radio.RadioEvent;
-import sat.gui3D.AirportGUI;
 import sat.gui3D.RadarWindow;
 
 import sat.radio.RadioID;

@@ -11,7 +11,9 @@ import com.jme3.math.*;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.*;
 import com.jme3.scene.*;
+import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.shape.Box;
+import com.jme3.util.BufferUtils;
 import com.jme3.util.SkyFactory;
 
 /**
@@ -24,8 +26,7 @@ public class Radar extends SimpleApplication {
 	private Vector3f center, camUp;
 	private float moveSpeed, moveAltSpeed, rotSpeed, zoomSpeed, firstPersonRotSpeed;
 	private Controls controls;
-	private boolean camLookAt;
-	private boolean hd;
+	private boolean camLookAt, hd;
 	protected Node tower;
 
 	@SuppressWarnings("deprecation")
@@ -48,18 +49,34 @@ public class Radar extends SimpleApplication {
 		assetManager.registerLocator("assets", FileLocator.class.getName());
 
 		// Ground
-		Box zurickBox = new Box(Vector3f.ZERO, 600f, 0f, 600f);
+		Box zurickBox = new Box(Vector3f.ZERO, 900f, 0f, 900f);
 		Spatial zurick = new Geometry("Box", zurickBox);
 		Material mat_zurick = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
 		mat_zurick.setTexture("ColorMap", assetManager.loadTexture("Images/kloten15"+((hd) ? "" : "low")+".jpg"));
 		zurick.setMaterial(mat_zurick);
-		zurick.setLocalTranslation(0f, 0f, 0f);
+		zurick.setLocalTranslation(457f, 0f, 272f);
+		zurick.rotate(0f, (float) (Math.PI*0.508), 0f);
 		rootNode.attachChild(zurick);
-
+		
+		// PISTE (DEV)
+		Box b1 = new Box(Vector3f.ZERO, 0.2f,0.1f,0.2f);
+		Spatial p1 = new Geometry("Box", b1);
+		Material pm = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+		pm.setColor("Color", ColorRGBA.Blue);
+		p1.setMaterial(pm);
+		p1.setLocalTranslation(400f,0f,166f);
+		rootNode.attachChild(p1);
+		
+		Box b2 = new Box(Vector3f.ZERO, 0.2f,0.1f,0.2f);
+		Spatial p2 = new Geometry("Box", b2);
+		p2.setMaterial(pm);
+		p2.setLocalTranslation(533f,0f,437f);
+		rootNode.attachChild(p2);
+		
 		// Tower
 		tower = (Node) assetManager.loadModel("Models/tower.obj");
 		tower.scale(3f);
-		tower.setLocalTranslation(0f, 0f, 0f);
+		tower.setLocalTranslation(457f, 0f, 272f);
 		rootNode.attachChild(tower);
 		
 		// Sun
@@ -83,17 +100,23 @@ public class Radar extends SimpleApplication {
 		}
 		viewPort.addProcessor(fpp);
 		
+		//DEV
 		onNewAircraft();
 		
 		cam.setFrustumPerspective(45f, (float) cam.getWidth()/cam.getHeight(), 0.01f, 10000f);
 
-		cam.setLocation(new Vector3f(0f, 20f, 100f));
+		cam.setLocation(new Vector3f(457f, 200f, 672f));
+		cam.lookAt(new Vector3f(457f, 0f, 272f), cam.getUp());
 	}
 
 	public void onNewAircraft() {
 		aircrafts.add(new Aircraft(assetManager, rootNode));
 	}
-
+	
+	public ArrayList<Aircraft> getAircrafts() {
+		return aircrafts;
+	}
+	
 	@Override
 	public void simpleUpdate(float tpf) {
 		if(frameNumber == 0) {
@@ -106,7 +129,7 @@ public class Radar extends SimpleApplication {
 			aircrafts.get(i).update(timer.getTimeInSeconds());
 		
 		// DEV
-		aircrafts.get(0).addDestination(new Vector3f((float) Math.sin(timer.getTimeInSeconds()/2f)*100,(float) Math.cos(timer.getTimeInSeconds()/2f)*70,10f));
+		aircrafts.get(0).addDestination(new Vector3f((float) Math.sin(timer.getTimeInSeconds()/2f)*100+457f,(float) Math.cos(timer.getTimeInSeconds()/2f)*70,10f));
 		
 		frameNumber++;
 	}
