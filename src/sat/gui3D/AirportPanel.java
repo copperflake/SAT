@@ -18,6 +18,11 @@ import java.util.TimerTask;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
+import sat.events.EventListener;
+import sat.plane.Plane;
+import sat.radio.RadioEvent;
+import sat.radio.RadioID;
+import sat.tower.Tower;
 import sat.utils.geo.CircularBuffer;
 
 /**
@@ -27,16 +32,16 @@ import sat.utils.geo.CircularBuffer;
  * 
  * - It uses the method public static Tower getInstance() of the Tower class to
  *   retrieve the tower singleton object. -
- * - It uses the method public ArrayList<TowerAgent> getPlanes() of the Tower class
+ * - It uses the method public HashMap<RadioID, Plane> getPlanes() of the Tower class
  *   to retrieve a list of planes that are currently connected to the Tower
- * - It uses the methods public int getPosX() and public int getPosY() of the
+ * - It uses the methods public int getLocation().getX() and public int getLocation().getY() of the
  *   TowerAgent class to retrieve the position of the airplanes.
  *   This position is expected to satisfy 0 <= x <= 1109 and 0 <= y <= 751 if the
  *   airplane should be displayed.
  * - It considers a plane crashed when the hasCrashed() method of the class
  *   TowerAgent returns true.
  */
-public class AirportPanel extends JPanel {
+public class AirportPanel extends JPanel implements EventListener {
 
 	private static final long serialVersionUID = 5254715425216686775L;
 	
@@ -62,16 +67,19 @@ public class AirportPanel extends JPanel {
 	
 	// This stores the previous positions of aircrafts, so we can draw nice trails
 	private HashMap<String, CircularBuffer<Point> > previousPositions = new HashMap<String, CircularBuffer<Point> >();
-
+	
+	// This stores planes
+	private HashMap<RadioID, Plane> planes;
+	
 	public AirportPanel() {
 		setLayout(null);
 
 		try {
-			this.imgBack  = ImageIO.read(new File("img/map.png"));
-			this.imgPlane = ImageIO.read(new File("img/plane.png"));
-			this.imgTower = ImageIO.read(new File("img/tower.png"));
-			this.imgKboom = ImageIO.read(new File("img/kboom.png"));
-			this.imgRadar = ImageIO.read(new File("img/radar.png"));
+			this.imgBack  = ImageIO.read(new File("assets/Images/map.png"));
+			this.imgPlane = ImageIO.read(new File("assets/Images/plane.png"));
+			this.imgTower = ImageIO.read(new File("assets/Images/tower.png"));
+			this.imgKboom = ImageIO.read(new File("assets/Images/kboom.png"));
+			this.imgRadar = ImageIO.read(new File("assets/Images/radar.png"));
 		} catch (IOException e) {
 			System.err.println("Cannot read image files: " + e.getMessage());
 			System.exit(1);
@@ -86,6 +94,8 @@ public class AirportPanel extends JPanel {
 				repaint();
 			}
 		}, 0, 1000 / AIRPORT_PANEL_FRAMERATE);
+		
+		Tower.getInstance().addListener(this);
 	}
 
 	public Dimension getBackgroundDimension() {
@@ -119,9 +129,10 @@ public class AirportPanel extends JPanel {
 		g2d.setTransform(AffineTransform.getRotateInstance(0));
 
 		// Store the current position of every plane in the previousPositions buffer
-		for (TowerAgent plane: Tower.getInstance().getPlanes()) {
-			Point p = new Point(plane.getPosX(), plane.getPosY());
-			String planeId = new String(plane.getId());
+		for(RadioID id: planes.keySet()) {
+			Plane plane = planes.get(id);
+			Point p = new Point(plane.getLocation().getX(), plane.getLocation().getY());
+			String planeId = plane.getRadioId().toString();
 			CircularBuffer<Point> cb = previousPositions.get(planeId);
 			if (cb != null) {
 				cb.add(p);
@@ -135,8 +146,9 @@ public class AirportPanel extends JPanel {
 		
 		// Draw trails so we can see the route that the planes have taken
 		g2d.setColor(Color.CYAN);
-		for (TowerAgent plane: Tower.getInstance().getPlanes()) {
-			String planeId = new String(plane.getId());
+		for(RadioID id: planes.keySet()) {
+			Plane plane = planes.get(id);
+			String planeId = plane.getRadioId().toString();
 			CircularBuffer<Point> previousPos = previousPositions.get(planeId);
 			for (int j = 1; j < previousPos.size(); j++) {
 				Point p1 = previousPos.get(j);
@@ -149,29 +161,38 @@ public class AirportPanel extends JPanel {
 		// Draw the planes themselves
 		g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
 		g2d.setColor(Color.GREEN);
-		for (TowerAgent plane: Tower.getInstance().getPlanes()) {
-			String planeId = new String(plane.getId());
+		for(RadioID id: planes.keySet()) {
+			Plane plane = planes.get(id);
+			String planeId = plane.getRadioId().toString();
 			BufferedImage planeImg = plane.hasCrashed() ? imgKboom : imgPlane; 
 
-			g2d.setTransform(AffineTransform.getRotateInstance(0, plane.getPosX(), plane.getPosY()));
-			g2d.drawString(planeId + " (" + plane.getPosX() + ", " + plane.getPosY() + ")",
-					plane.getPosX() + planeImg.getWidth() / 2, plane.getPosY());
+			g2d.setTransform(AffineTransform.getRotateInstance(0, plane.getLocation().getX(), plane.getLocation().getY()));
+			g2d.drawString(planeId + " (" + plane.getLocation().getX() + ", " + plane.getLocation().getY() + ")",
+					plane.getLocation().getX() + planeImg.getWidth() / 2, plane.getLocation().getY());
 
 			// Compute the rotation angle of the plane, and draw it
 			CircularBuffer<Point> previousPos = previousPositions.get(planeId);
 			double dx = previousPos.get(previousPos.size() - 1).getX() - previousPos.get(previousPos.size() - 2).getX();
 			double dy = previousPos.get(previousPos.size() - 1).getY() - previousPos.get(previousPos.size() - 2).getY();
 			double theta = Math.atan2(dy, dx);
-			g2d.setTransform(AffineTransform.getRotateInstance(theta, plane.getPosX(), plane.getPosY()));
+			g2d.setTransform(AffineTransform.getRotateInstance(theta, plane.getLocation().getX(), plane.getLocation().getY()));
 			g2d.drawImage(
 					planeImg,
-					plane.getPosX() - planeImg.getWidth() / 2,
-					plane.getPosY() - planeImg.getHeight() / 2,
+					plane.getLocation().getX() - planeImg.getWidth() / 2,
+					plane.getLocation().getY() - planeImg.getHeight() / 2,
 					null);
 		}
 	}
+	
+	public void on(RadioEvent.PlaneConnected e) {
+		planes.put(e.getId(), e.getPlane());
+	}
+
+	public void on(RadioEvent.PlaneDisconnected e) {
+		planes.remove(e.getId());
+	}
+	
+	public void on(RadioEvent.PlaneMoved e) {
+		planes.get(e.getId()).setLocation(e.getPlane().getLocation());
+	}
 }
-
-
-
-

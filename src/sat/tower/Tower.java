@@ -1,12 +1,17 @@
 package sat.tower;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import sat.events.Event;
 import sat.events.EventEmitter;
 import sat.events.EventListener;
 
+import sat.plane.Plane;
 import sat.radio.RadioEvent;
+import sat.gui3D.AirportGUI;
+import sat.gui3D.AirportPanel;
 import sat.gui3D.RadarWindow;
 
 import sat.radio.RadioID;
@@ -35,7 +40,7 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 	 * de la configuration spécifique aux instances d'une tour.
 	 */
 	private static Config defaults;
-
+	
 	/**
 	 * Initialise la configuration par défaut avec les valeurs appropriées.
 	 */
@@ -126,7 +131,7 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 
 	public void startGui() {
 		new RadarWindow();
-		//new AirportGUI();
+		new AirportGUI();
 	}
 
 	// - - - Radio Delegate - - -
@@ -174,6 +179,7 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 
 	public void on(RadioEvent.PlaneConnected e) {
 		System.out.println("Plane connected " + e.getId());
+		emit(e);
 	}
 
 	public void on(RadioEvent.PlaneDisconnected e) {

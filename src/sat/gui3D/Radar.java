@@ -1,6 +1,14 @@
 package sat.gui3D;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import sat.events.EventListener;
+import sat.plane.Plane;
+import sat.plane.PlaneType;
+import sat.radio.RadioEvent;
+import sat.radio.RadioID;
+import sat.tower.Tower;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.plugins.FileLocator;
@@ -20,7 +28,7 @@ import com.jme3.util.SkyFactory;
  * Sample 3 - how to load an OBJ model, and OgreXML model, a material/texture,
  * or text.
  */
-public class Radar extends SimpleApplication {
+public class Radar extends SimpleApplication implements EventListener {
 	private long frameNumber = 0;
 	private ArrayList<Aircraft> aircrafts;
 	private Vector3f center, camUp;
@@ -28,10 +36,12 @@ public class Radar extends SimpleApplication {
 	private Controls controls;
 	private boolean camLookAt, hd;
 	protected Node tower;
+	private HashMap<RadioID, Plane> planes;
 
 	@SuppressWarnings("deprecation")
 	@Override
 	public void simpleInitApp() {
+		Tower.getInstance().addListener(this);
 		hd = false;
 		boolean gamma = hd;
 		
@@ -100,17 +110,10 @@ public class Radar extends SimpleApplication {
 		}
 		viewPort.addProcessor(fpp);
 		
-		//DEV
-		onNewAircraft();
-		
 		cam.setFrustumPerspective(45f, (float) cam.getWidth()/cam.getHeight(), 0.01f, 10000f);
 
 		cam.setLocation(new Vector3f(457f, 200f, 672f));
 		cam.lookAt(new Vector3f(457f, 0f, 272f), cam.getUp());
-	}
-
-	public void onNewAircraft() {
-		aircrafts.add(new Aircraft(assetManager, rootNode));
 	}
 	
 	public ArrayList<Aircraft> getAircrafts() {
@@ -194,5 +197,18 @@ public class Radar extends SimpleApplication {
 		q.fromAxes(left, up, dir).normalize();	
 		
 		this.cam.setAxes(q);
+	}
+	
+	public void on(RadioEvent.PlaneConnected e) {
+		planes.put(e.getId(), e.getPlane());
+		aircrafts.add(new Aircraft(assetManager, rootNode, e.getPlane().type));
+	}
+
+	public void on(RadioEvent.PlaneDisconnected e) {
+		planes.remove(e.getId());
+	}
+
+	public void on(RadioEvent.PlaneMoved e) {
+		planes.get(e.getId()).setLocation(e.getPlane().getLocation());
 	}
 }

@@ -7,6 +7,8 @@ import com.jme3.scene.*;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.util.BufferUtils;
 
+import sat.plane.Plane;
+import sat.plane.PlaneType;
 import sat.utils.geo.*;
 
 public class Aircraft {
@@ -18,12 +20,14 @@ public class Aircraft {
 	private AssetManager assetManager;
 	private Node parent;
 	private Mesh lineMesh;
+	private PlaneType type;
 
 	private CircularBuffer<Vector3f> path = new CircularBuffer<Vector3f>(50);
 	
-	public Aircraft(AssetManager assetManager, Node parent) {
+	public Aircraft(AssetManager assetManager, Node parent, PlaneType type) {
 		this.assetManager = assetManager;
 		this.parent = parent;
+		this.type = type;
 		simsWrapper = new Node();
 		mainNode = new Node();
 		lineMesh = new Mesh();
@@ -101,7 +105,11 @@ public class Aircraft {
 	}
 	
 	private void drawAircraft(Vector3f initPos) {
-		model = (Geometry) assetManager.loadModel("Models/plane.obj");
+		if(this.type == PlaneType.A320)
+			model = (Geometry) assetManager.loadModel("Models/plane.obj");
+		else
+			model = (Geometry) assetManager.loadModel("Models/plane.obj");
+		
 		model.getMaterial().setColor("Ambient", new ColorRGBA(0.3f, 0.3f, 0.3f, 1f));
 		mainNode.attachChild(model);
 		

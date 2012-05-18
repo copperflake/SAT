@@ -20,7 +20,7 @@ public class AirportGUI extends JFrame {
 		// Create a window. The program will exit when the window is closed.
 		// See http://docs.oracle.com/javase/tutorial/uiswing/components/frame.html
 		super("Airport");
-		setDefaultCloseOperation(EXIT_ON_CLOSE);
+		//setDefaultCloseOperation(EXIT_ON_CLOSE);
 
 		// Create other windows for the journal and the list of downloaded files
 		journalGUI = new JournalGUI();

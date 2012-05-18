@@ -21,6 +21,11 @@ public class Plane implements RadioClientDelegate {
 	 * La configuration spécifique à une instance d'un avion.
 	 */
 	private Config config;
+	
+	/**
+	 * La position de l'avion.
+	 */
+	private Coordinates coords;
 
 	/**
 	 * L'identifiant de l'avion.
@@ -28,8 +33,16 @@ public class Plane implements RadioClientDelegate {
 	private RadioID id;
 
 	private RadioClient radio;
+	
+	/**
+	 * Statut de l'avion.
+	 */
+	private boolean crashed;
 
 	public Plane() {
+		crashed = false;
+		coords = new Coordinates(0, 0, 0);
+		
 		if(defaults == null)
 			initDefaults();
 
@@ -64,7 +77,11 @@ public class Plane implements RadioClientDelegate {
 	// - - - Plane Delegate - - -
 
 	public Coordinates getLocation() {
-		return new Coordinates(0, 0, 0);
+		return coords;
+	}
+	
+	public void setLocation(Coordinates coords) {
+		this.coords = coords;
 	}
 
 	/**
@@ -80,5 +97,9 @@ public class Plane implements RadioClientDelegate {
 
 	public RSAKeyPair getKeyPair() {
 		return null;
+	}
+	
+	public boolean hasCrashed() {
+		return crashed;
 	}
 }

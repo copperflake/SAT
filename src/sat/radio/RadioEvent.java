@@ -47,4 +47,10 @@ public abstract class RadioEvent extends Event {
 			super(id);
 		}
 	}
+	
+	public static class PlaneMoved extends PlaneEvent {
+		public PlaneMoved(RadioID id) {
+			super(id);
+		}
+	}
 }
