@@ -1,11 +1,10 @@
 package sat.radio.server;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
-import java.util.concurrent.PriorityBlockingQueue;
 
+import sat.events.Event;
 import sat.events.EventListener;
 import sat.events.UnhandledEventException;
 import sat.radio.Radio;
@@ -15,8 +14,6 @@ import sat.radio.RadioProtocolException;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerEngineDelegate;
 import sat.radio.message.*;
-import sat.radio.message.stream.UpgradableMessageInputStream;
-import sat.radio.message.stream.UpgradableMessageOutputStream;
 import sat.radio.socket.RadioSocket;
 import sat.radio.socket.RadioSocketState;
 import sat.utils.crypto.RSAInputStream;
@@ -150,31 +147,11 @@ public class RadioServer extends Radio {
 	 * ...) et s'occupera des messages protocolaires qui n'ont pas d'intérêt
 	 * pour la tour elle-même (court-circuitage).
 	 */
-	public class PlaneAgent {
-		/**
-		 * Le socket géré par ce gestionnaire.
-		 */
-		private RadioSocket socket;
-
+	public class PlaneAgent extends SocketManager {
 		/**
 		 * L'id de l'avion auquel correspond ce socket.
 		 */
 		private RadioID socketID;
-
-		/**
-		 * Le thread d'écoute d'entrée.
-		 */
-		private SocketListener listener;
-
-		/**
-		 * Le thread d'écoute de sortie.
-		 */
-		private SocketWriter writer;
-
-		/**
-		 * État de cette connexion avec l'avion.
-		 */
-		private RadioSocketState state = RadioSocketState.HANDSHAKE;
 
 		/**
 		 * Indique si ce manager s'occupe d'un client utilisant le protocole
@@ -188,19 +165,20 @@ public class RadioServer extends Radio {
 		private boolean ciphered = false;
 
 		/**
+		 * Gestionnaire de messages
+		 */
+		private MessageHandler messageHandler;
+
+		/**
 		 * Crée un gestionnaire de socket.
 		 * 
 		 * @param socket
 		 *            Le socket à gérer.
 		 */
 		public PlaneAgent(RadioSocket socket) {
-			this.socket = socket;
+			super(socket);
 
-			listener = new SocketListener();
-			writer = new SocketWriter();
-
-			listener.start();
-			writer.start();
+			messageHandler = new MessageHandler();
 		}
 
 		/**
@@ -211,76 +189,26 @@ public class RadioServer extends Radio {
 			return extended;
 		}
 
-		/**
-		 * Upgrade les flux d'entrée/sortie en les passant en mode Extended
-		 * plutôt que Legacy. Cette méthode execute simplement les méthodes
-		 * <code>upgrade</code> des objets {@link SocketListener} et
-		 * {@link SocketWriter} sous-jacents.
-		 */
-		private void upgrade() {
-			try {
-				listener.upgrade();
-				writer.upgrade();
-			}
-			catch(IOException e) {
-				// Failed to upgrade streams
-				RadioServer.this.emit(new RadioEvent.UncaughtException("Failed to upgrade streams...", e));
-				quit();
-			}
-		}
+		protected void ready() {
+			super.ready();
 
-		/**
-		 * Passe ce SocketManager en état <code>READY</code>.
-		 * <p>
-		 * Il sera désormais possible de l'utiliser pour envoyer des messages
-		 * quelconque et il sera inscrit dans la liste des gestionnaires actifs
-		 * de la radio en utilisant le RadioID obtenu lors du handshake.
-		 * <p>
-		 * L'appel de cette méthode génère également une notification de type
-		 * <code>onPlaneConnected</code> au délégué de la radio.
-		 */
-		private void ready() {
 			synchronized(managers) {
 				managers.put(socketID, this);
 			}
 
-			state = RadioSocketState.READY;
 			RadioServer.this.emit(new RadioEvent.PlaneConnected(socketID));
 		}
 
-		/**
-		 * Déconnecte de force le client associé à ce SocketManager. Cette
-		 * méthode est appelée automatiquement par la méthode <code>kick</code>
-		 * de la classe RadioServer.
-		 * <p>
-		 * Cette méthode appel ensuite quit() pour forcer l'arrêt et la
-		 * déconnexion de ce client.
-		 */
-		private void kick() {
-			// TODO: if extended, send KICK notice
-			quit();
-		}
-
-		/**
-		 * Arrête ce SocketManager et ferme le RadioSocket sous-jacent. Cette
-		 * méthode provoque aussi l'arrêt des threads SocketListener et
-		 * SocketWriter internes.
-		 * <p>
-		 * Cette méthode ne peut être appelée directement depuis l'extérieur.
-		 * Elle est appelée implicitement par la méthode <code>kick</code> ou
-		 * explicitement par les threads de lecture/écriture interne si une
-		 * erreur provoquant la déconnexion du client survient lors de leur
-		 * execution.
-		 * <p>
-		 * La bonne méthode pour déconnecter un client depuis l'extérieur est
-		 * d'utiliser la méthode <code>kick</code>.
-		 */
-		private void quit() {
+		protected void quit() {
 			synchronized(state) {
 				// Prevent multiples calls
 				// quit -> socket.close() -> IOException -> quit
-				if(state == RadioSocketState.CLOSING)
+				if(state == RadioSocketState.CLOSING) {
 					return;
+				}
+
+				// Call super-fail
+				super.quit();
 
 				// Unregister
 				if(state == RadioSocketState.READY) {
@@ -292,337 +220,131 @@ public class RadioServer extends Radio {
 						managers.remove(socketID);
 					}
 				}
-
-				state = RadioSocketState.CLOSING;
-			}
-
-			listener.quit();
-			writer.quit();
-
-			try {
-				// TODO: if we must ensure empty output queue, socket closing
-				// must be handled by Listener / Writer (and decomposed).
-				socket.close();
-			}
-			catch(IOException e) {
-				RadioServer.this.emit(new RadioEvent.UncaughtException("Error while closing socket ?", e));
 			}
 		}
 
-		// - - - Listener - - -
+		protected void handleMessage(Message message) throws InvocationTargetException, UnhandledEventException {
+			message.notify(messageHandler);
+		}
+
+		protected void emitEvent(Event event) {
+			RadioServer.this.emit(event);
+		}
 
 		/**
-		 * Thread de gestion de l'entrée du socket. Ce thread utilise un flux
-		 * d'entrée de messages pour recevoir les messages envoyés par le
-		 * client, il effectue ensuite les traitements nécessaires si le message
-		 * reçu doit être court-circuité (messages protocolaires) ou le place
-		 * dans la liste d'attente des messages à transmettre à la tour.
+		 * Gestionnaire des messages
 		 */
-		private class SocketListener extends Thread {
-			/**
-			 * Flux d'entrée de messages. Ce flux est de type
-			 * UpgradableMessageInputStream pour pouvoir plus tard être
-			 * dynamiquement modifié en flux de type étendu si cette version du
-			 * protocole est supportée par le client.
-			 */
-			private UpgradableMessageInputStream mis;
-
-			/**
-			 * État du thread. Le thread s'arrête si défini à <code>false</code>
-			 * .
-			 */
-			private boolean running = true;
-
-			/**
-			 * Gestionnaire des messages
-			 */
-			private MessageHandler messageHandler;
-
-			/**
-			 * Crée un nouveau thread d'écoute d'entrée client.
-			 */
-			public SocketListener() {
-				mis = new UpgradableMessageInputStream(socket.in);
-				messageHandler = new MessageHandler();
-			}
-
-			/**
-			 * Méthode principale du thread.
-			 */
-			public void run() {
-				try {
-					Message message;
-
-					while(running) {
-						// Read one message from input stream.
-						synchronized(mis) {
-							message = mis.readMessage();
-						}
-
-						// Handle it!
-						message.notify(messageHandler);
-					}
-				}
-				catch(EOFException e) {
-					// Connexion closed
-					// TODO: EOF unexpected without BYE!
-					PlaneAgent.this.quit();
-				}
-				catch(IOException e) {
-					// If socket is closing, it's expected.
-					if(state != RadioSocketState.CLOSING) {
-						// Unable to read message, disconnect plane.
-						RadioServer.this.emit(new RadioEvent.UncaughtException("Cannot read from plane socket", e));
-						PlaneAgent.this.quit();
-					}
-				}
-				catch(UnhandledEventException e) {
-					RadioServer.this.emit(new RadioEvent.UncaughtException("Error handling message", e));
-					PlaneAgent.this.quit();
-				}
-				catch(InvocationTargetException e) {
-					RadioServer.this.emit(new RadioEvent.UncaughtException("Exception when handling message", e.getTargetException()));
-					PlaneAgent.this.quit();
-				}
-			}
-
-			/**
-			 * Upgrade le flux de lecture sous-jacent. Le nouveau flux sera de
-			 * type ExtendedMessageInputStream.
-			 * 
-			 * @throws IOException
-			 *             Si l'upgrade du flux a généré une exception.
-			 */
-			public void upgrade() throws IOException {
-				synchronized(mis) {
-					mis.upgrade();
-				}
-			}
-
-			/**
-			 * Arrête le thread d'écoute.
-			 */
-			public void quit() {
-				running = false;
-				this.interrupt();
-			}
-
-			/**
-			 * Gestionnaire des messages
-			 */
-			public class MessageHandler implements EventListener {
-				@SuppressWarnings("unused")
-				public void on(MessageHello m) {
-					// HELLO can be received only when in HANDSHAKE state
-					if(state != RadioSocketState.HANDSHAKE) {
-						invalidState(m);
-					}
-
-					// Enable extended protocol if not disabled
-					if(!RadioServer.this.legacy) {
-						extended = m.isExtended();
-					}
-
-					// Enable encryption
-					if(RadioServer.this.ciphered) {
-						ciphered = m.isCiphered();
-					}
-
-					Coordinates coords = delegate.getLocation();
-					writer.send(new MessageHello(id, coords, ciphered, extended));
-
-					socketID = m.getID();
-
-					if(extended) {
-						// If we use the extended protocol, we can upgrade
-						// components and wait for the extended handshake.
-
-						// TODO: upgrade only listener, writer will be upgraded later
-						PlaneAgent.this.upgrade();
-					}
-					else if(ciphered) {
-						state = RadioSocketState.CIPHER_NEGOCIATION;
-						socket.in.upgrade(new RSAInputStream(socket.in.getStream(), getKeyPair()));
-					}
-					else {
-						// Socket is ready!
-						PlaneAgent.this.ready();
-					}
+		public class MessageHandler implements EventListener {
+			public void on(MessageHello m) {
+				// HELLO can be received only when in HANDSHAKE state
+				if(state != RadioSocketState.HANDSHAKE) {
+					invalidState(m);
 				}
 
-				/**
-				 * Gestion du message KeepAlive. Remet à zéro le timeout de
-				 * déconnexion de l'avion en cas d'inactivité. [NYI]
-				 */
-				@SuppressWarnings("unused")
-				public void on(MessageKeepalive m) {
-					// Keepalive is used to reset socket timeout, handle it.
-					// TODO: handle it
-
-					// But is also used for updating plane position, so tower
-					// must receive it.
-					RadioServer.this.emit(m);
+				// Enable extended protocol if not disabled
+				if(!RadioServer.this.legacy) {
+					extended = m.isExtended();
 				}
 
-				/**
-				 * Gestion du message SendRSAKey. Lors de la réception de ce
-				 * message, le flux de sortie est mis à jour afin de supporter
-				 * le chiffrement avec la clé publique de l'avion. Le socket est
-				 * ensuite défini à l'état <code>READY</code> et signalé comme
-				 * nouvelle connexion à la tour.
-				 */
-				@SuppressWarnings("unused")
-				public void on(MessageSendRSAKey m) {
-					// Upgrade the output stream to write encrypted data with the
-					// plane public key.
-					RSAKeyPair planeKey = new RSAKeyPair(m.getKey());
-					socket.out.upgrade(new RSAOutputStream(socket.out.getStream(), planeKey));
+				// Enable encryption
+				if(RadioServer.this.ciphered) {
+					ciphered = m.isCiphered();
+				}
 
-					// Socket is ready for general usage.
+				Coordinates coords = delegate.getLocation();
+				writer.send(new MessageHello(id, coords, ciphered, extended));
+
+				socketID = m.getID();
+
+				if(extended) {
+					// If we use the extended protocol, we can upgrade
+					// components and wait for the extended handshake.
+
+					// TODO: upgrade only listener, writer will be upgraded later
+					PlaneAgent.this.upgrade();
+				}
+				else if(ciphered) {
+					state = RadioSocketState.CIPHER_NEGOCIATION;
+					socket.in.upgrade(new RSAInputStream(socket.in.getStream(), getKeyPair()));
+				}
+				else {
+					// Socket is ready!
 					PlaneAgent.this.ready();
 				}
-
-				// Unmanaged messages type
-				@SuppressWarnings("unused")
-				public void on(Message m) {
-					// If not in READY state, the message must be a
-					// protocol message.
-					// Since all protocol messages are short-circuited,
-					// and we are in the default case, it's
-					// obviously not a protocol message.
-					if(state != RadioSocketState.READY) {
-						invalidState(m);
-					}
-
-					forwardToTower(m);
-				}
-
-				// Helpers
-
-				/**
-				 * Transmet le message à la tour de contrôle.
-				 * 
-				 * @param m
-				 *            Le message à transmettre
-				 */
-				private void forwardToTower(Message m) {
-					RadioServer.this.emit(m);
-				}
-
-				/**
-				 * Méthode utilitaire pour lancer les exceptions au protocole
-				 * lorsque le message reçu ne correspond pas à celui attendu par
-				 * rapport à l'état actuel de la connexion.
-				 * 
-				 * @param m
-				 *            Le message reçu. Utilisé pour récupérer son type.
-				 * 
-				 * @throws RadioProtocolException
-				 *             L'exception générée.
-				 */
-				private void invalidState(Message m) {
-					// Invalid message for this state, disconnect plane.
-					System.err.println("Protocol Exception from Plane");
-					System.err.println("Cannot receive " + m.getType() + " in state " + state);
-					PlaneAgent.this.quit();
-				}
-			}
-		}
-
-		// - - - Writer - - -
-
-		/**
-		 * Thread de gestion de la liste d'attente des messages sortants. Ce
-		 * thread possède sa propre queue d'envoi de message depuis laquelle il
-		 * récupérera les messages à envoyé à l'avion selon leur priorité.
-		 * 
-		 * TODO: can be built on Events framework
-		 */
-		private class SocketWriter extends Thread {
-			/**
-			 * Flux de sortie des messages.
-			 */
-			private UpgradableMessageOutputStream mos;
-
-			/**
-			 * La file d'attente de messages à envoyer.
-			 */
-			private PriorityBlockingQueue<Message> queue = new PriorityBlockingQueue<Message>();
-
-			/**
-			 * État du thread.
-			 */
-			private boolean running = true;
-
-			/**
-			 * Crée un nouveau thread d'écriture vers un client. Ce thread
-			 * utilisera le flux de sortie du socket du SocketManager.
-			 */
-			public SocketWriter() {
-				mos = new UpgradableMessageOutputStream(socket.out);
-			}
-
-			public void run() {
-				Message message;
-
-				// TODO: ensure empty queue before quitting
-				// flush all message including BYE before closing socket.
-				while(running) {
-					try {
-						message = queue.take();
-						synchronized(mos) {
-							mos.writeMessage(message);
-						}
-					}
-					catch(InterruptedException e) {
-						// queue.take interrupted, loop.
-					}
-					catch(IOException e) {
-						RadioServer.this.emit(new RadioEvent.UncaughtException("Cannot write to plane socket", e));
-
-						// Unable to write message, disconnect plane.
-						PlaneAgent.this.quit();
-					}
-				}
 			}
 
 			/**
-			 * Envoie un message à l'avion. Le message est placé dans la file
-			 * d'attente d'envoi et son envoi effectif sera différé. Si la file
-			 * d'attente contient plusieurs messages, ceux de la priorité la
-			 * plus élevée seront envoyés en premiers.
+			 * Gestion du message KeepAlive. Remet à zéro le timeout de
+			 * déconnexion de l'avion en cas d'inactivité. [NYI]
+			 */
+			public void on(MessageKeepalive m) {
+				// Keepalive is used to reset socket timeout, handle it.
+				// TODO: handle it
+
+				// But is also used for updating plane position, so tower
+				// must receive it.
+				RadioServer.this.emit(m);
+			}
+
+			/**
+			 * Gestion du message SendRSAKey. Lors de la réception de ce
+			 * message, le flux de sortie est mis à jour afin de supporter le
+			 * chiffrement avec la clé publique de l'avion. Le socket est
+			 * ensuite défini à l'état <code>READY</code> et signalé comme
+			 * nouvelle connexion à la tour.
+			 */
+			public void on(MessageSendRSAKey m) {
+				// Upgrade the output stream to write encrypted data with the
+				// plane public key.
+				RSAKeyPair planeKey = new RSAKeyPair(m.getKey());
+				socket.out.upgrade(new RSAOutputStream(socket.out.getStream(), planeKey));
+
+				// Socket is ready for general usage.
+				PlaneAgent.this.ready();
+			}
+
+			// Unmanaged messages type
+			public void on(Message m) {
+				// If not in READY state, the message must be a
+				// protocol message.
+				// Since all protocol messages are short-circuited,
+				// and we are in the default case, it's
+				// obviously not a protocol message.
+				if(state != RadioSocketState.READY) {
+					invalidState(m);
+				}
+
+				forwardToTower(m);
+			}
+
+			// Helpers
+
+			/**
+			 * Transmet le message à la tour de contrôle.
 			 * 
 			 * @param m
-			 *            Le message à envoyer.
+			 *            Le message à transmettre
 			 */
-			public void send(Message m) {
-				queue.put(m);
+			private void forwardToTower(Message m) {
+				RadioServer.this.emit(m);
 			}
 
 			/**
-			 * Upgrade le flux d'écriture sous-jacent. Le nouveau flux sera de
-			 * type ExtendedMessageOutputStream.
+			 * Méthode utilitaire pour lancer les exceptions au protocole
+			 * lorsque le message reçu ne correspond pas à celui attendu par
+			 * rapport à l'état actuel de la connexion.
 			 * 
-			 * @throws IOException
-			 *             Si l'upgrade du flux a généré une exception.
+			 * @param m
+			 *            Le message reçu. Utilisé pour récupérer son type.
+			 * 
+			 * @throws RadioProtocolException
+			 *             L'exception générée.
 			 */
-			public void upgrade() throws IOException {
-				// Ensure the message output stream is not in use
-				// when upgrading.
-				synchronized(mos) {
-					mos.upgrade();
-				}
-			}
-
-			/**
-			 * Arrête le thread. Cet arrêt détruit tout les messages pas encore
-			 * envoyés et qui sont dans la file d'attente. Néanmoins si un
-			 * message est actuellement en cours d'envoi, son envoi sera terminé
-			 * avant de terminer le thread.
-			 */
-			public void quit() {
-				running = false;
-				this.interrupt();
+			private void invalidState(Message m) {
+				// Invalid message for this state, disconnect plane.
+				System.err.println("Protocol Exception from Plane");
+				System.err.println("Cannot receive " + m.getType() + " in state " + state);
+				PlaneAgent.this.quit();
 			}
 		}
 	}

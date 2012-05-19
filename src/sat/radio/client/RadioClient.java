@@ -1,10 +1,14 @@
 package sat.radio.client;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 
+import sat.events.Event;
+import sat.events.UnhandledEventException;
 import sat.radio.Radio;
 import sat.radio.engine.client.RadioClientEngine;
 import sat.radio.engine.client.RadioClientEngineDelegate;
+import sat.radio.socket.RadioSocket;
 
 /**
  * Un client radio.
@@ -20,12 +24,22 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 	 * Le délégué de la radio. Le délégué reçoit les évenements émis par la
 	 * radio et est chargé de leur gestion.
 	 */
-	RadioClientDelegate delegate;
+	private RadioClientDelegate delegate;
 
 	/**
 	 * Le moteur de communication de la radios.
 	 */
-	RadioClientEngine engine;
+	private RadioClientEngine engine;
+
+	/**
+	 * Le socket de communication vers la tour.
+	 */
+	private RadioSocket socket;
+
+	/**
+	 * Le thread d'écoute d'entrée.
+	 */
+	private TowerSocketManager manager;
 
 	/**
 	 * Crée un client radio utilisant le délégué <code>delegate</code> pour
@@ -61,7 +75,7 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 
 		try {
 			this.engine = engine;
-			this.engine.init(this);
+			socket = this.engine.init(this);
 		}
 		catch(IOException e) {
 			// Reset the engine if initialization was not successful.
@@ -69,6 +83,23 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 
 			// Rethrow exception
 			throw e;
+		}
+
+		manager = new TowerSocketManager(socket);
+	}
+
+	private class TowerSocketManager extends SocketManager {
+		public TowerSocketManager(RadioSocket socket) {
+			super(socket);
+		}
+
+		protected void handleMessage(Message message) throws InvocationTargetException, UnhandledEventException {
+			// TODO: handle
+			System.out.println(message);
+		}
+
+		protected void emitEvent(Event event) {
+			RadioClient.this.emit(event);
 		}
 	}
 }
