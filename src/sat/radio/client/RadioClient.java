@@ -6,6 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 import sat.events.Event;
 import sat.events.UnhandledEventException;
 import sat.radio.Radio;
+import sat.radio.RadioID;
 import sat.radio.engine.client.RadioClientEngine;
 import sat.radio.engine.client.RadioClientEngineDelegate;
 import sat.radio.message.Message;
@@ -50,8 +51,8 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 	 * @param delegate
 	 *            Le délégué chargé de la gestion des événements.
 	 */
-	public RadioClient(RadioClientDelegate delegate) {
-		super(delegate);
+	public RadioClient(RadioClientDelegate delegate, RadioID id) {
+		super(delegate, id);
 		this.delegate = delegate;
 	}
 

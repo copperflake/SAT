@@ -1,3 +1,4 @@
 set radio.verbose yes
+init
 writekey tower.key
 listen

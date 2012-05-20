@@ -34,7 +34,7 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 	 * de la configuration spécifique aux instances d'une tour.
 	 */
 	private static Config defaults;
-	
+
 	/**
 	 * Initialise la configuration par défaut avec les valeurs appropriées.
 	 */
@@ -45,6 +45,8 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 		defaults.setProperty("radio.ciphered", "yes");
 		defaults.setProperty("radio.legacy", "no");
 		defaults.setProperty("radio.keylength", "1024");
+
+		defaults.setProperty("tower.prefix", "TWR");
 	}
 
 	/**
@@ -95,11 +97,26 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 	 */
 	private RadioID id;
 
+	private boolean initDone = false;
+
 	/**
 	 * Retourne l'objet de configuration de la tour.
 	 */
 	public Config getConfig() {
 		return config;
+	}
+
+	public void init() {
+		if(initDone) {
+			return;
+		}
+
+		id = new RadioID(config.getString("tower.prefix"));
+
+		radio = new RadioServer(this, id);
+		radio.addListener(this);
+
+		initDone = true;
 	}
 
 	/**
@@ -113,11 +130,6 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 	 *             <code>IOException</code> qui est passée au code appelant.
 	 */
 	public void listen(RadioServerEngine engine) throws IOException {
-		if(radio == null) {
-			radio = new RadioServer(this);
-			radio.addListener(this);
-		}
-
 		radio.listen(engine);
 	}
 
@@ -128,17 +140,6 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 	 */
 	public Coordinates getLocation() {
 		return new Coordinates(0, 0, 0);
-	}
-
-	/**
-	 * Retourne l'identifiant utilisé par la radio.
-	 */
-	public RadioID getRadioID() {
-		if(id == null) {
-			id = new RadioID("TWR");
-		}
-
-		return id;
 	}
 
 	public RSAKeyPair getKeyPair() {

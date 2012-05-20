@@ -1,2 +1,3 @@
 set radio.verbose yes
+init
 connect

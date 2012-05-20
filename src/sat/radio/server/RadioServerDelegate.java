@@ -1,11 +1,17 @@
 package sat.radio.server;
 
 import sat.radio.RadioDelegate;
+import sat.utils.crypto.RSAKeyPair;
 
 /**
  * Interface d'un délégué d'un <code>RadioServer</code>.
  */
 public interface RadioServerDelegate extends RadioDelegate {
+	/**
+	 * Demande au délégué sa clé de chiffrement
+	 */
+	public RSAKeyPair getKeyPair();
+	
 	/**
 	 * Un avion a terminé sa connexion avec la tour de contrôle. Lors de
 	 * l'emission de cet évenement, l'avion a complétement terminé sa connexion

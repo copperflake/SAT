@@ -22,12 +22,26 @@ public abstract class RadioEvent extends Event {
 		}
 	}
 
-	// - - - Plane Event - - -
+	// - - - Tower Event ( Tower -> Radio ) - - -
 
-	public static abstract class PlaneEvent extends RadioEvent {
+	public static abstract class TowerRadioEvent extends RadioEvent {
+
+	}
+
+	public static class TowerConnected extends TowerRadioEvent {
+
+	}
+
+	public static class TowerDisconnected extends TowerRadioEvent {
+
+	}
+
+	// - - - Plane Event ( Radio -> Tower ) - - -
+
+	public static abstract class PlaneRadioEvent extends RadioEvent {
 		RadioID id;
 
-		public PlaneEvent(RadioID id) {
+		public PlaneRadioEvent(RadioID id) {
 			this.id = id;
 		}
 
@@ -36,19 +50,19 @@ public abstract class RadioEvent extends Event {
 		}
 	}
 
-	public static class PlaneConnected extends PlaneEvent {
+	public static class PlaneConnected extends PlaneRadioEvent {
 		public PlaneConnected(RadioID id) {
 			super(id);
 		}
 	}
 
-	public static class PlaneDisconnected extends PlaneEvent {
+	public static class PlaneDisconnected extends PlaneRadioEvent {
 		public PlaneDisconnected(RadioID id) {
 			super(id);
 		}
 	}
-	
-	public static class PlaneMoved extends PlaneEvent {
+
+	public static class PlaneMoved extends PlaneRadioEvent {
 		public PlaneMoved(RadioID id) {
 			super(id);
 		}

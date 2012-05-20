@@ -2,6 +2,7 @@ package sat.plane;
 
 import java.io.IOException;
 
+import sat.EndOfWorldException;
 import sat.events.EventListener;
 import sat.radio.RadioID;
 import sat.radio.client.RadioClient;
@@ -22,7 +23,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 	 * La configuration spécifique à une instance d'un avion.
 	 */
 	private Config config;
-	
+
 	/**
 	 * La position de l'avion.
 	 */
@@ -33,21 +34,20 @@ public class Plane implements EventListener, RadioClientDelegate {
 	 */
 	private RadioID id;
 
-	private RadioClient radio;
-	
 	private PlaneType type;
-	
+
+	private RadioClient radio;
+
 	private PlaneSimulator simulator;
 
-	public Plane(PlaneType type) {
-		coords = new Coordinates(0, 0, 0);
-		
+	private boolean initDone = false;
+
+	public Plane() {
+
 		if(defaults == null)
 			initDefaults();
 
 		config = new Config(defaults);
-		
-		this.type = type;
 	}
 
 	/**
@@ -59,7 +59,10 @@ public class Plane implements EventListener, RadioClientDelegate {
 		defaults.setProperty("radio.debug", "no");
 		defaults.setProperty("radio.ciphered", "yes");
 		defaults.setProperty("radio.legacy", "no");
-		defaults.setProperty("radio.keylength", "1024");
+
+		defaults.setProperty("plane.coords", "0,0,0");
+		defaults.setProperty("plane.type", "A320");
+		defaults.setProperty("plane.prefix", "PLN");
 	}
 
 	/**
@@ -69,19 +72,36 @@ public class Plane implements EventListener, RadioClientDelegate {
 		return config;
 	}
 
+	public void init() {
+		if(initDone) {
+			return;
+		}
+
+		coords = new Coordinates(0, 0, 0);
+
+		type = PlaneType.getPlaneTypeByName(config.getString("plane.type"));
+		if(type == null) {
+			throw new EndOfWorldException("Invalid plane type");
+		}
+
+		id = new RadioID(config.getString("plane.prefix"));
+
+		initDone = true;
+	}
+
 	public void connect(RadioClientEngine engine) throws IOException {
 		if(radio == null) {
-			radio = new RadioClient(this);
+			radio = new RadioClient(this, id);
 		}
-		
+
 		radio.connect(engine);
 	}
-	
+
 	public void start() {
 		simulator = new PlaneSimulator();
 		simulator.start();
 	}
-	
+
 	// - - - Plane Simulator - - -
 
 	private class PlaneSimulator extends Thread {
@@ -89,29 +109,10 @@ public class Plane implements EventListener, RadioClientDelegate {
 			// TODO
 		}
 	}
-	
+
 	// - - - Plane Delegate - - -
 
 	public Coordinates getLocation() {
 		return coords;
-	}
-	
-	public void setLocation(Coordinates coords) {
-		this.coords = coords;
-	}
-
-	/**
-	 * Retourne l'identifiant utilisé par la radio.
-	 */
-	public RadioID getRadioID() {
-		if(id == null) {
-			id = new RadioID("PLN");
-		}
-
-		return id;
-	}
-
-	public RSAKeyPair getKeyPair() {
-		return null;
 	}
 }

@@ -60,8 +60,8 @@ public class RadioServer extends Radio {
 	 *            Le délégué qui sera chargé de la gestion des événements de la
 	 *            radio.
 	 */
-	public RadioServer(RadioServerDelegate delegate) {
-		super(delegate);
+	public RadioServer(RadioServerDelegate delegate, RadioID id) {
+		super(delegate, id);
 		this.delegate = delegate;	// TODO: useful ?
 		this.managers = new HashMap<RadioID, PlaneAgent>();
 	}
@@ -265,7 +265,7 @@ public class RadioServer extends Radio {
 				}
 				else if(ciphered) {
 					state = RadioSocketState.CIPHER_NEGOCIATION;
-					socket.in.upgrade(new RSAInputStream(socket.in.getStream(), getKeyPair()));
+					socket.in.upgrade(new RSAInputStream(socket.in.getStream(), delegate.getKeyPair()));
 				}
 				else {
 					// Socket is ready!

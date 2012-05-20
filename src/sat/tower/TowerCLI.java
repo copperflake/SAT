@@ -49,6 +49,10 @@ public class TowerCLI extends GlobalCLI {
 		});
 	}
 
+	public void init() {
+		tower.init();
+	}
+
 	/**
 	 * Affiche la configuration actuelle de la tour.
 	 */

@@ -57,18 +57,11 @@ public abstract class Radio extends AsyncEventEmitter {
 	 * @param keyLength
 	 *            La longueur de clé à utiliser pour le chiffrement.
 	 */
-	public Radio(RadioDelegate delegate) {
+	public Radio(RadioDelegate delegate, RadioID id) {
 		super(new PriorityEventScheduler());
 
 		this.delegate = delegate;
-		id = delegate.getRadioID();
-	}
-
-	/**
-	 * Retourne la clé utilisée par cette radio tel que fournie par le délégué.
-	 */
-	public RSAKeyPair getKeyPair() {
-		return delegate.getKeyPair();
+		this.id = id;
 	}
 
 	// - - - Socket Manager - - -
