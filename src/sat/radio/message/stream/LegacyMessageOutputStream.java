@@ -29,8 +29,8 @@ public class LegacyMessageOutputStream extends MessageOutputStream {
 
 		Coordinates c = m.getCoordinates();
 
-		dos.writeInt(c.getX());
-		dos.writeInt(c.getY());
+		dos.writeInt((int) c.getX());
+		dos.writeInt((int) c.getY());
 
 		dos.writeInt(m.getType().ordinal());
 
