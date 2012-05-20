@@ -23,7 +23,6 @@ import com.jme3.scene.shape.Box;
  */
 public class Radar extends SimpleApplication implements EventListener {
 	private long frameNumber = 0;
-	private HashMap<RadioID, Aircraft> aircrafts;
 	private Vector3f camUp;
 	private float moveSpeed, moveAltSpeed, zoomSpeed, rotSpeed;
 	private Controls3D controls;
@@ -47,7 +46,6 @@ public class Radar extends SimpleApplication implements EventListener {
 		rotSpeed = 5f;
 		zoomSpeed = 10f;
 
-		aircrafts = new HashMap<RadioID, Aircraft>();
 		controls = new Controls3D(inputManager, this);
 		assetManager.registerLocator("assets", FileLocator.class.getName());
 
@@ -118,8 +116,8 @@ public class Radar extends SimpleApplication implements EventListener {
 			controls.setupControls();
 		}
 		
-		for(int i = 0; i < aircrafts.size(); i++)
-			aircrafts.get(i).update3D(timer.getTimeInSeconds());
+		for(int i = 0; i < GUI.aircrafts.size(); i++)
+			GUI.aircrafts.get(i).update3D(timer.getTimeInSeconds());
 		
 		frameNumber++;
 	}
@@ -173,25 +171,5 @@ public class Radar extends SimpleApplication implements EventListener {
 		q.fromAxes(left, up, dir).normalize();	
 		
 		this.cam.setAxes(q);
-	}
-
-	public void on(RadioEvent.PlaneConnected e) {
-		// TODO Add listener(aircraft);
-		Aircraft aircraft = new Aircraft();
-		aircraft.init3D(assetManager, rootNode, e.getType());
-		aircrafts.put(e.getID(), aircraft);
-	}
-
-	public void on(RadioEvent.PlaneDisconnected e) {
-		// TODO Remove listener(aircraft);
-		aircrafts.remove(e.getID());
-	}
-	
-	public void on(RadioEvent.PlaneMoved e) {
-		aircrafts.get(e.getID()).addDestination(e.getVector3f());
-	}
-	
-	public void on(RadioEvent.PlaneDistress e) {
-		aircrafts.get(e.getID()).setDistress3D(e.getDistress());
 	}
 }

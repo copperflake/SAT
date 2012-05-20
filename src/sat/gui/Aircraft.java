@@ -1,5 +1,12 @@
 package sat.gui;
 
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+
 import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
 import com.jme3.math.*;
@@ -11,6 +18,7 @@ import sat.events.EventListener;
 import sat.plane.Plane;
 import sat.plane.PlaneType;
 import sat.radio.RadioEvent;
+import sat.radio.RadioID;
 import sat.utils.geo.*;
 
 public class Aircraft implements EventListener {
@@ -21,6 +29,7 @@ public class Aircraft implements EventListener {
 	private Vector3f currentPos, initPos;
 	private Mesh lineMesh;
 	private PlaneType type;
+	private RadioID id;
 
 	private CircularBuffer<Vector3f> path = new CircularBuffer<Vector3f>(50);
 
@@ -59,7 +68,7 @@ public class Aircraft implements EventListener {
 	private void rotate3D() {
 		// According to: http://en.wikipedia.org/wiki/Yaw,_pitch_and_roll
 		float yaw, pitch, roll;
-		
+
 		if(path.size()-2 >= 0) {
 			roll = 0f;
 			Vector3f end = path.get(path.size()-1);
@@ -100,6 +109,30 @@ public class Aircraft implements EventListener {
 
 		mainNode.setLocalRotation(new Quaternion(new float[]{roll, yaw, pitch}));
 	}
+
+	private void drawAircraft2D(Graphics2D g2d) {
+		g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+		g2d.setColor(Color.GREEN);
+
+		Vector3f coords = path.get(path.size()-1);
+		int x = (int) coords.getX();
+		int y = (int) coords.getY();
+		// TODO Find another solution to replace this.
+		// BufferedImage planeImg = plane.hasCrashed() ? imgKboom : imgPlane;
+		BufferedImage planeImg = AirportPanel.getImgPlane();
+		
+		g2d.setTransform(AffineTransform.getRotateInstance(0, x, y));
+		g2d.drawString(id.toString()+" ("+x+", "+y+")", x+planeImg.getWidth()/2, y);
+
+		// Compute the rotation angle of the plane, and draw it
+		if(path.size()-2 >= 0) {
+			double dx = path.get(path.size()-1).getX() - path.get(path.size()-2).getX();
+			double dy = path.get(path.size()-1).getY() - path.get(path.size()-2).getY();
+			double theta = Math.atan2(dy, dx);
+			g2d.setTransform(AffineTransform.getRotateInstance(theta, x, y));
+		}
+		g2d.drawImage(planeImg, x-planeImg.getWidth()/2, y-planeImg.getHeight()/2, null);
+	}
 	
 	private void drawAircraft3D(Vector3f initPos, Node parent, AssetManager assetManager) {
 		if(this.type == PlaneType.A320)
@@ -122,6 +155,16 @@ public class Aircraft implements EventListener {
 		path.add(initPos);
 		
 		parent.attachChild(mainNode);
+	}
+
+	private void drawTrace2D(Graphics2D g2d) {
+		g2d.setColor(Color.CYAN);
+		for(int i=1; i < path.size(); i++) {
+			Point p1 = new Point((int) path.get(i).getX(), (int) path.get(i).getY());
+			Point p2 = new Point((int) path.get(i-1).getX(), (int) path.get(i-1).getY());
+			if(p2.getX() >= 0 && p2.getY() >= 0)
+				g2d.drawLine(p1.x, p1.y, p2.x, p2.y);
+		}
 	}
 	
 	private void drawTrace3D(Node parent, AssetManager assetManager) {
@@ -159,6 +202,11 @@ public class Aircraft implements EventListener {
 	
 	public void addDestination(Vector3f dest) {
 		path.add(dest);
+	}
+
+	public void update2D(Graphics2D g2d) {
+		drawAircraft2D(g2d);
+		drawTrace2D(g2d);
 	}
 	
 	public void update3D(float t) {

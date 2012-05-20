@@ -11,7 +11,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -19,7 +18,6 @@ import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 import sat.events.EventListener;
-import sat.plane.Plane;
 import sat.radio.RadioEvent;
 import sat.radio.RadioID;
 import sat.tower.Tower;
@@ -46,11 +44,11 @@ public class AirportPanel extends JPanel implements EventListener {
 	private static final long serialVersionUID = 5254715425216686775L;
 
 	// The various images used in the GUI
-	private BufferedImage imgBack;
-	private BufferedImage imgPlane;
-	private BufferedImage imgTower;
-	private BufferedImage imgKboom;
-	private BufferedImage imgRadar;
+	private static BufferedImage imgBack;
+	private static BufferedImage imgPlane;
+	private static BufferedImage imgTower;
+	private static BufferedImage imgKboom;
+	private static BufferedImage imgRadar;
 
 	// The position of the tower in the background image
 	private static final int TOWER_X = 625;
@@ -67,6 +65,7 @@ public class AirportPanel extends JPanel implements EventListener {
 
 	public AirportPanel() {
 		try {
+			// We actually use it in Aircraft.
 			this.imgBack = ImageIO.read(new File("assets/Images/map.png"));
 			this.imgPlane = ImageIO.read(new File("assets/Images/plane.png"));
 			this.imgTower = ImageIO.read(new File("assets/Images/tower.png"));
@@ -98,85 +97,43 @@ public class AirportPanel extends JPanel implements EventListener {
 	public void paint(Graphics g) {
 		super.paint(g);
 		g.drawImage(imgBack, 0, 0, imgBack.getWidth(), imgBack.getHeight(), null);
-		g.drawImage(imgTower, TOWER_X - imgTower.getWidth() / 2, TOWER_Y - imgTower.getHeight() / 2, imgTower.getWidth(), imgTower.getHeight(), null);
+		g.drawImage(imgTower, TOWER_X-imgTower.getWidth()/2, TOWER_Y-imgTower.getHeight()/2, imgTower.getWidth(), imgTower.getHeight(), null);
 
 		// Draw the circles around the tower
 		Graphics2D g2d = (Graphics2D) g;
 		g2d.setColor(Color.GREEN);
 		g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
 		g2d.setStroke(new BasicStroke(3F));
-		for(int i = 0; i < 10; i++) {
-			g2d.drawOval(TOWER_X - i * 75, TOWER_Y - i * 75, i * 150, i * 150);
+		for(int i=0; i < 10; i++) {
+			g2d.drawOval(TOWER_X-i*75,TOWER_Y-i*75,i*150,i*150);
 		}
 
 		// Draw the animated radar beam
 		long currentTime = System.currentTimeMillis();
-		double radarAngle = 2 * Math.PI * currentTime / RADAR_PERIOD;
+		double radarAngle = 2*Math.PI*currentTime/RADAR_PERIOD;
 		g2d.setTransform(AffineTransform.getRotateInstance(radarAngle, TOWER_X, TOWER_Y));
 		g2d.drawImage(imgRadar, TOWER_X, TOWER_Y, imgRadar.getWidth(), imgRadar.getHeight(), null);
 		g2d.setTransform(AffineTransform.getRotateInstance(0));
 
-		// Store the current position of every plane in the previousPositions buffer
-		for(RadioID id : planes.keySet()) {
-			Plane plane = planes.get(id);
-			Point p = new Point(plane.getLocation().getX(), plane.getLocation().getY());
-			String planeId = plane.getRadioID().toString();
-			CircularBuffer<Point> cb = previousPositions.get(planeId);
-			if(cb != null) {
-				cb.add(p);
-			}
-			else {
-				cb = new CircularBuffer<Point>(AIRCRAFT_TRAIL_DURATION * AIRPORT_PANEL_FRAMERATE / 1000);
-				cb.add(p);
-				cb.add(p); // Add it twice, so we have at least one line segment
-				previousPositions.put(planeId, cb);
-			}
-		}
-
-		// Draw trails so we can see the route that the planes have taken
-		g2d.setColor(Color.CYAN);
-		for(RadioID id : planes.keySet()) {
-			Plane plane = planes.get(id);
-			String planeId = plane.getRadioID().toString();
-			CircularBuffer<Point> previousPos = previousPositions.get(planeId);
-			for(int j = 1; j < previousPos.size(); j++) {
-				Point p1 = previousPos.get(j);
-				Point p2 = previousPos.get(j - 1);
-				if(p2.getX() >= 0 && p2.getY() >= 0)
-					g2d.drawLine(p1.x, p1.y, p2.x, p2.y);
-			}
-		}
-
-		// Draw the planes themselves
-		g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
-		g2d.setColor(Color.GREEN);
-		for(RadioID id : planes.keySet()) {
-			Plane plane = planes.get(id);
-			String planeId = plane.getRadioID().toString();
-			BufferedImage planeImg = plane.hasCrashed() ? imgKboom : imgPlane;
-
-			g2d.setTransform(AffineTransform.getRotateInstance(0, plane.getLocation().getX(), plane.getLocation().getY()));
-			g2d.drawString(planeId + " (" + plane.getLocation().getX() + ", " + plane.getLocation().getY() + ")", plane.getLocation().getX() + planeImg.getWidth() / 2, plane.getLocation().getY());
-
-			// Compute the rotation angle of the plane, and draw it
-			CircularBuffer<Point> previousPos = previousPositions.get(planeId);
-			double dx = previousPos.get(previousPos.size() - 1).getX() - previousPos.get(previousPos.size() - 2).getX();
-			double dy = previousPos.get(previousPos.size() - 1).getY() - previousPos.get(previousPos.size() - 2).getY();
-			double theta = Math.atan2(dy, dx);
-			g2d.setTransform(AffineTransform.getRotateInstance(theta, plane.getLocation().getX(), plane.getLocation().getY()));
-			g2d.drawImage(planeImg, plane.getLocation().getX() - planeImg.getWidth() / 2, plane.getLocation().getY() - planeImg.getHeight() / 2, null);
+		// Update Aircrafts
+		for(RadioID id : GUI.aircrafts.keySet()) {
+			GUI.aircrafts.get(id).update2D(g2d);
 		}
 	}
 
-	public void on(RadioEvent.PlaneConnected e) {
-		//planes.put(e.getId(), e.getPlane());
+	public static BufferedImage getImgBack() {
+		return imgBack;
 	}
-
-	public void on(RadioEvent.PlaneDisconnected e) {
-		planes.remove(e.getId());
+	public static BufferedImage getImgPlane() {
+		return imgPlane;
 	}
-
-	public void on(RadioEvent.PlaneMoved e) {
-		//planes.get(e.getId()).setLocation(e.getPlane().getLocation());
+	public static BufferedImage getImgTower() {
+		return imgTower;
+	}
+	public static BufferedImage getImgKboom() {
+		return imgKboom;
+	}
+	public static BufferedImage getImgRadar() {
+		return imgRadar;
 	}
 }

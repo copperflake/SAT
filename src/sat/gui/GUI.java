@@ -2,11 +2,16 @@ package sat.gui;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.util.HashMap;
 
 import javax.swing.Box;
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
+
+import sat.events.EventListener;
+import sat.radio.RadioEvent;
+import sat.radio.RadioID;
 
 import com.jme3.system.AppSettings;
 import com.jme3.system.JmeCanvasContext;
@@ -16,14 +21,18 @@ import com.jme3.system.JmeCanvasContext;
  * of an AirportPanel, but also contains the two other windows of the
  * application (The journal and the list of downloaded files).
  */
-public class AirportGUI extends JFrame {
+public class GUI extends JFrame implements EventListener {
 
 	private static final long serialVersionUID = -6319538639673860639L;
+	public static HashMap<RadioID, Aircraft> aircrafts;
+	private Radar radar;
 	
-	public AirportGUI(final boolean hd) {
+	public GUI(final boolean hd) {
 		// Create a window. The program will exit when the window is closed.
 		// See http://docs.oracle.com/javase/tutorial/uiswing/components/frame.html
 		super("Airport");
+		
+		aircrafts = new HashMap<RadioID, Aircraft>();
 		
 		setSize(1500, 1000);
 		// Pop the window in the middle of the screen. (Work correctly on a dual-screen btw.) 
@@ -82,7 +91,7 @@ public class AirportGUI extends JFrame {
 				settings.setSamples(hd?4:0);
 				
 				
-				Radar radar = new Radar(hd);
+				radar = new Radar(hd);
 				radar.setSettings(settings);
 				radar.createCanvas();
 				radar.startCanvas(true);
@@ -95,5 +104,27 @@ public class AirportGUI extends JFrame {
 				tabbedPane.setVisible(true);
 			}
 		});
+	}
+
+	public void on(RadioEvent.PlaneConnected e) {
+		// TODO Add listener(aircraft);
+		Aircraft aircraft = new Aircraft();
+		// TODO S'assurer que radar est instancié.
+		aircraft.init3D(radar.getAssetManager(), radar.getRootNode(), e.getType());
+		aircrafts.put(e.getID(), aircraft);
+	}
+
+	public void on(RadioEvent.PlaneDisconnected e) {
+		// TODO Remove listener(aircraft);
+		aircrafts.remove(e.getID());
+	}
+	
+	public void on(RadioEvent.PlaneMoved e) {
+		aircrafts.get(e.getID()).addDestination(e.getVector3f());
+	}
+	
+	public void on(RadioEvent.PlaneDistress e) {
+		// TODO Will crash if 3D Aircraft is not initialized (for example if there is no 3D GUI).
+		aircrafts.get(e.getID()).setDistress3D(e.getDistress());
 	}
 }

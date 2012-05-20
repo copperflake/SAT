@@ -169,7 +169,7 @@ public class TowerCLI extends GlobalCLI {
 		 * AirportGUI(HD)
 		 * Changez HD en "false" si la vue 3D est trop lente.
 		 */
-		new AirportGUI(true);
+		new GUI(true);
 	}
 
 	public void writekey(String path) throws IOException {
