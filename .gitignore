@@ -3,6 +3,8 @@
 bin
 doc
 tower.key
+liblwjgl.so
+libopenal.so
 liblwjgl64.so
 libopenal64.so
 lwjgl64.dll
