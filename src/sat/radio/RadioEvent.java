@@ -67,4 +67,14 @@ public abstract class RadioEvent extends Event {
 			super(id);
 		}
 	}
+
+	/**
+	 * Cet évenement est utilisé lorsque l'avion envoi un MayDay à la tour de contrôle
+	 * ou enlève son MayDay pour signaler que le problème à été résolu (si cela est possible).
+	 */
+	public static class PlaneDistress extends PlaneRadioEvent {
+		public PlaneDistress(RadioID id) {
+			super(id);
+		}
+	}
 }

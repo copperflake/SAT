@@ -1,4 +1,4 @@
-package sat.gui3D;
+package sat.gui;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
@@ -7,26 +7,27 @@ import com.jme3.scene.*;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.util.BufferUtils;
 
+import sat.events.EventListener;
 import sat.plane.Plane;
 import sat.plane.PlaneType;
+import sat.radio.RadioEvent;
 import sat.utils.geo.*;
 
-public class Aircraft {
+public class Aircraft implements EventListener {
 	private Node mainNode;
 	private Node simsWrapper;
 	private Geometry model;
 	private Geometry sims;
 	private Vector3f currentPos, initPos;
-	private AssetManager assetManager;
-	private Node parent;
 	private Mesh lineMesh;
 	private PlaneType type;
 
 	private CircularBuffer<Vector3f> path = new CircularBuffer<Vector3f>(50);
+
+	public Aircraft() {
+	}
 	
-	public Aircraft(AssetManager assetManager, Node parent, PlaneType type) {
-		this.assetManager = assetManager;
-		this.parent = parent;
+	public void init3D(Node parent, AssetManager assetManager, PlaneType type) {
 		this.type = type;
 		simsWrapper = new Node();
 		mainNode = new Node();
@@ -34,32 +35,28 @@ public class Aircraft {
 		
 		initPos = new Vector3f(0f, 0f, 0f);
 		currentPos = initPos;
-		drawAircraft(initPos);
-		drawTrace();
-		move();
+		drawAircraft3D(initPos, parent, assetManager);
+		drawTrace3D(parent, assetManager);
+		move3D();
 	}
 	
 	public Node getNode() {
 		return mainNode;
 	}
 	
-	public void addDestination(Vector3f pos) {
-		path.add(pos);
-	}
-	
-	public void move() {
+	private void move3D() {
 		if(path.size()-1 >= 0) {
 			Vector3f coords = path.get(path.size()-1);
 			if(!currentPos.equals(coords)) {
 				mainNode.setLocalTranslation(coords.getX(), coords.getZ(), coords.getY()); // Changement de référentiel
-				rotate();
-				updateTrace();
+				rotate3D();
+				updateTrace3D();
 				currentPos = coords;
 			}
 		}
 	}
 	
-	private void rotate() {
+	private void rotate3D() {
 		// According to: http://en.wikipedia.org/wiki/Yaw,_pitch_and_roll
 		float yaw, pitch, roll;
 		
@@ -104,7 +101,7 @@ public class Aircraft {
 		mainNode.setLocalRotation(new Quaternion(new float[]{roll, yaw, pitch}));
 	}
 	
-	private void drawAircraft(Vector3f initPos) {
+	private void drawAircraft3D(Vector3f initPos, Node parent, AssetManager assetManager) {
 		if(this.type == PlaneType.A320)
 			model = (Geometry) assetManager.loadModel("Models/plane.obj");
 		else
@@ -114,7 +111,7 @@ public class Aircraft {
 		mainNode.attachChild(model);
 		
 		sims = (Geometry) assetManager.loadModel("Models/sims.obj");
-		sims.getMaterial().setColor("Ambient", new ColorRGBA(1f, 0.2f, 0.2f, 1f));
+		sims.getMaterial().setColor("Ambient", new ColorRGBA(0.2f, 0.2f, 0.2f, 1f));
 		sims.scale(0.3f);
 		simsWrapper.attachChild(sims);
 		
@@ -127,7 +124,7 @@ public class Aircraft {
 		parent.attachChild(mainNode);
 	}
 	
-	private void drawTrace() {
+	private void drawTrace3D(Node parent, AssetManager assetManager) {
 		lineMesh.setMode(Mesh.Mode.Lines);
 		lineMesh.setLineWidth(4f);
 		Geometry lineGeometry = new Geometry("line", lineMesh);
@@ -137,7 +134,7 @@ public class Aircraft {
 		parent.attachChild(lineGeometry);
 	}
 	
-	private void updateTrace() {
+	private void updateTrace3D() {
 		Vector3f[] vertices = new Vector3f[path.size()];
 		int[] indexes = new int[path.size()*2];
 		
@@ -156,9 +153,17 @@ public class Aircraft {
 		lineMesh.setBuffer(Type.Index,    2, BufferUtils.createIntBuffer(indexes));
 	}
 	
-	public void update(float t) {
+	public void setDistress3D(boolean distress) {
+		sims.getMaterial().setColor("Ambient", new ColorRGBA(distress?1f:0.2f, 0.2f, 0.2f, 1f));
+	}
+	
+	public void addDestination(Vector3f dest) {
+		path.add(dest);
+	}
+	
+	public void update3D(float t) {
 		sims.setLocalTranslation(sims.getLocalTranslation().x, (float) (Math.sin(t*2f)+1)*sims.getLocalScale().y*2, sims.getLocalTranslation().z);
 		sims.rotate(0f, 0.01f, 0f);
-		move();
+		move3D();
 	}
 }

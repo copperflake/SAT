@@ -1,4 +1,4 @@
-package sat.gui3D;
+package sat.gui;
 
 import com.jme3.input.InputManager;
 import com.jme3.input.MouseInput;

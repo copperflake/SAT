@@ -1,14 +1,10 @@
-package sat.gui3D;
+package sat.gui;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import sat.events.EventListener;
-import sat.plane.Plane;
-import sat.plane.PlaneType;
 import sat.radio.RadioEvent;
 import sat.radio.RadioID;
-import sat.tower.Tower;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.plugins.FileLocator;
@@ -27,13 +23,12 @@ import com.jme3.scene.shape.Box;
  */
 public class Radar extends SimpleApplication implements EventListener {
 	private long frameNumber = 0;
-	private ArrayList<Aircraft> aircrafts;
+	private HashMap<RadioID, Aircraft> aircrafts;
 	private Vector3f camUp;
 	private float moveSpeed, moveAltSpeed, zoomSpeed, rotSpeed;
 	private Controls3D controls;
 	private boolean hd;
 	protected Node tower;
-	private HashMap<RadioID, Plane> planes;
 	
 	public Radar(boolean hd) {
 		this.hd = hd;
@@ -44,7 +39,7 @@ public class Radar extends SimpleApplication implements EventListener {
 	
 	@SuppressWarnings("deprecation")
 	public void simpleInitApp() {
-		Tower.getInstance().addListener(this);
+		// TODO Add listener(this)
 		
 		camUp = cam.getUp();
 		moveSpeed = 5f;
@@ -52,11 +47,9 @@ public class Radar extends SimpleApplication implements EventListener {
 		rotSpeed = 5f;
 		zoomSpeed = 10f;
 
-		aircrafts = new ArrayList<Aircraft>();
-		planes = new HashMap<RadioID, Plane>();
+		aircrafts = new HashMap<RadioID, Aircraft>();
 		controls = new Controls3D(inputManager, this);
 		assetManager.registerLocator("assets", FileLocator.class.getName());
-		
 
 		// Ground
 		Box zurickBox = new Box(Vector3f.ZERO, 900f, 0f, 900f);
@@ -92,7 +85,8 @@ public class Radar extends SimpleApplication implements EventListener {
 		// Tower
 		tower = (Node) assetManager.loadModel("Models/tower.obj");
 		tower.scale(3f);
-		tower.setLocalTranslation(457f, 0f, 272f);
+		// TODO Verify position
+		tower.setLocalTranslation(445f, 0f, 625f);
 		rootNode.attachChild(tower);
 		
 		// Sun
@@ -117,11 +111,7 @@ public class Radar extends SimpleApplication implements EventListener {
 		cam.setLocation(new Vector3f(457f, 200f, 672f));
 		cam.lookAt(new Vector3f(457f, 0f, 272f), cam.getUp());
 	}
-	
-	public ArrayList<Aircraft> getAircrafts() {
-		return aircrafts;
-	}
-	
+
 	@Override
 	public void simpleUpdate(float tpf) {
 		if(frameNumber == 0) {
@@ -129,10 +119,7 @@ public class Radar extends SimpleApplication implements EventListener {
 		}
 		
 		for(int i = 0; i < aircrafts.size(); i++)
-			aircrafts.get(i).update(timer.getTimeInSeconds());
-		
-		// DEV
-		//aircrafts.get(0).addDestination(new Vector3f((float) Math.sin(timer.getTimeInSeconds()/2f)*100+457f,(float) Math.cos(timer.getTimeInSeconds()/2f)*70,10f));
+			aircrafts.get(i).update3D(timer.getTimeInSeconds());
 		
 		frameNumber++;
 	}
@@ -187,17 +174,24 @@ public class Radar extends SimpleApplication implements EventListener {
 		
 		this.cam.setAxes(q);
 	}
-	
-	/*public void on(RadioEvent.PlaneConnected e) {
-		planes.put(e.getId(), e.getPlane());
-		aircrafts.add(new Aircraft(assetManager, rootNode, e.getPlane().type));
+
+	public void on(RadioEvent.PlaneConnected e) {
+		// TODO Add listener(aircraft);
+		Aircraft aircraft = new Aircraft();
+		aircraft.init3D(assetManager, rootNode, e.getType());
+		aircrafts.put(e.getID(), aircraft);
 	}
 
 	public void on(RadioEvent.PlaneDisconnected e) {
-		planes.remove(e.getId());
+		// TODO Remove listener(aircraft);
+		aircrafts.remove(e.getID());
 	}
-
+	
 	public void on(RadioEvent.PlaneMoved e) {
-		planes.get(e.getId()).setLocation(e.getPlane().getLocation());
-	}*/
+		aircrafts.get(e.getID()).addDestination(e.getVector3f());
+	}
+	
+	public void on(RadioEvent.PlaneDistress e) {
+		aircrafts.get(e.getID()).setDistress3D(e.getDistress());
+	}
 }

@@ -1,4 +1,4 @@
-package sat.gui3D;
+package sat.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

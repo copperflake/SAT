@@ -165,6 +165,10 @@ public class TowerCLI extends GlobalCLI {
 	}
 
 	public void gui() {
+		/**
+		 * AirportGUI(HD)
+		 * Changez HD en "false" si la vue 3D est trop lente.
+		 */
 		new AirportGUI(true);
 	}
 
