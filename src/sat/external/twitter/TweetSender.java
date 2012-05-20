@@ -2,13 +2,14 @@ package sat.external.twitter;
 
 import java.io.File;
 
+import sat.radio.RadioID;
 import twitter4j.*;
 import twitter4j.conf.ConfigurationBuilder;
 
 public class TweetSender {
-	private Twitter twitter;
+	private static Twitter twitter;
 
-	private void init() {
+	private static void init() {
 		String consumerKey = "PgIak9tCFu3ZP7VjN1pRCQ";
 		String consumerSecret = "Dktte6oKunqQcF5fcYYcTzEqayC3oxt3kE4xVFQHY";
 		String accessToken = "582857933-QJRDlFQfyGswckTczz7Qfopi00MQrXyLuifrEkOV";
@@ -26,10 +27,10 @@ public class TweetSender {
 		twitter = tf.getInstance();
 	}
 	
-	protected void publish(String tweet, File image, byte[] PlaneID) throws TwitterException {
+	public static void tweet(String tweet, File image, RadioID id) throws TwitterException {
 		init();
 		try {
-			StatusUpdate status = new StatusUpdate(new String(PlaneID)+": "+ tweet);
+			StatusUpdate status = new StatusUpdate(id.toString()+": "+ tweet);
 			status.setMedia(image);
 			twitter.updateStatus(status);
 		}
@@ -39,7 +40,7 @@ public class TweetSender {
 		}
 	}
 	
-	public TweetSender(String tweet) {
+	public static void tweet(String tweet) {
 		init();
 		try {
 			twitter.updateStatus(tweet);

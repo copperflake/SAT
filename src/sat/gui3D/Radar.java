@@ -19,10 +19,7 @@ import com.jme3.math.*;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.*;
 import com.jme3.scene.*;
-import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.shape.Box;
-import com.jme3.util.BufferUtils;
-import com.jme3.util.SkyFactory;
 
 /**
  * Sample 3 - how to load an OBJ model, and OgreXML model, a material/texture,
@@ -33,20 +30,23 @@ public class Radar extends SimpleApplication implements EventListener {
 	private ArrayList<Aircraft> aircrafts;
 	private Vector3f center, camUp;
 	private float moveSpeed, moveAltSpeed, rotSpeed, zoomSpeed, firstPersonRotSpeed;
-	private Controls controls;
-	private boolean camLookAt, hd;
+	private Controls3D controls;
+	private boolean hd;
 	protected Node tower;
 	private HashMap<RadioID, Plane> planes;
-
+	
+	public Radar(boolean hd) {
+		this.hd = hd;
+		setShowSettings(false);
+		setDisplayStatView(false);
+		setPauseOnLostFocus(false);
+	}
+	
 	@SuppressWarnings("deprecation")
-	@Override
 	public void simpleInitApp() {
 		Tower.getInstance().addListener(this);
-		hd = false;
-		boolean gamma = hd;
 		
 		camUp = cam.getUp();
-		camLookAt = false;
 		moveSpeed = 5f;
 		moveAltSpeed = 100f;
 		rotSpeed = 6f;
@@ -55,14 +55,22 @@ public class Radar extends SimpleApplication implements EventListener {
 
 		center = new Vector3f(0, 0, 0);
 		aircrafts = new ArrayList<Aircraft>();
-		controls = new Controls(inputManager, this);
+		planes = new HashMap<RadioID, Plane>();
+		controls = new Controls3D(inputManager, this);
 		assetManager.registerLocator("assets", FileLocator.class.getName());
+		
 
 		// Ground
 		Box zurickBox = new Box(Vector3f.ZERO, 900f, 0f, 900f);
 		Spatial zurick = new Geometry("Box", zurickBox);
 		Material mat_zurick = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-		mat_zurick.setTexture("ColorMap", assetManager.loadTexture("Images/kloten15"+((hd) ? "" : "low")+".jpg"));
+		/**
+		 * On ajoute la texture du sol selon le paramètre HD. En effet, deux images de différente dimension peuvent être utilisées.
+		 * assets/Images/kloten15mid: 4000x4000 pixels
+		 * assets/Images/kloten15low: 1000x1000 pixels
+		 * Notez que assets/Images/kloten15 (6144x6144 pixels) existe aussi mais a été retiré du code car son chargement était vraiment trop gourmant. 
+		 */
+		mat_zurick.setTexture("ColorMap", assetManager.loadTexture("Images/kloten15"+((hd) ? "mid" : "low")+".jpg"));
 		zurick.setMaterial(mat_zurick);
 		zurick.setLocalTranslation(457f, 0f, 272f);
 		zurick.rotate(0f, (float) (Math.PI*0.508), 0f);
@@ -99,15 +107,11 @@ public class Radar extends SimpleApplication implements EventListener {
 		AmbientLight al = new AmbientLight();
 		al.setColor(ColorRGBA.White);
 		rootNode.addLight(al);
-
-		//rootNode.attachChild(SkyFactory.createSky(assetManager, "Textures/Sky/Bright/BrightSky.dds", false));
-
+		
 		// POST PROCESSING
 		FilterPostProcessor fpp = new FilterPostProcessor(assetManager);
-		if(gamma) {
-			GammaCorrectionFilter gammaFilter = new GammaCorrectionFilter(0.8f);
-			fpp.addFilter(gammaFilter);
-		}
+		GammaCorrectionFilter gammaFilter = new GammaCorrectionFilter(0.8f);
+		fpp.addFilter(gammaFilter);
 		viewPort.addProcessor(fpp);
 		
 		cam.setFrustumPerspective(45f, (float) cam.getWidth()/cam.getHeight(), 0.01f, 10000f);
@@ -125,14 +129,12 @@ public class Radar extends SimpleApplication implements EventListener {
 		if(frameNumber == 0) {
 			controls.setupControls();
 		}
-		if(camLookAt)
-			cam.lookAt(center, new Vector3f(0, 1, 0));
 		
 		for(int i = 0; i < aircrafts.size(); i++)
 			aircrafts.get(i).update(timer.getTimeInSeconds());
 		
 		// DEV
-		aircrafts.get(0).addDestination(new Vector3f((float) Math.sin(timer.getTimeInSeconds()/2f)*100+457f,(float) Math.cos(timer.getTimeInSeconds()/2f)*70,10f));
+		//aircrafts.get(0).addDestination(new Vector3f((float) Math.sin(timer.getTimeInSeconds()/2f)*100+457f,(float) Math.cos(timer.getTimeInSeconds()/2f)*70,10f));
 		
 		frameNumber++;
 	}
@@ -162,25 +164,14 @@ public class Radar extends SimpleApplication implements EventListener {
 	}
 
 	public void rotateCamH(float value) {
-		if(camLookAt) {
-			Vector3f v = cam.getLeft().normalize().mult(value * rotSpeed);
-			cam.setLocation(cam.getLocation().add(v));
-		}
-		else {
-			rotateCamDetached(-value, camUp);
-		}
+		rotateCamDetached(-value, camUp);
 	}
 	
 	public void rotateCamV(float value) {
-		if(this.camLookAt) {
-			Vector3f v = cam.getUp().normalize().mult(value * rotSpeed);
-			cam.setLocation(cam.getLocation().add(v));
-		}
-		else {
-			rotateCamDetached(value, cam.getLeft());
-		}
+		rotateCamDetached(value, cam.getLeft());
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void rotateCamDetached(float value, Vector3f axis) {
 		Vector3f up = this.cam.getUp();
 		Vector3f left = this.cam.getLeft();
@@ -199,7 +190,7 @@ public class Radar extends SimpleApplication implements EventListener {
 		this.cam.setAxes(q);
 	}
 	
-	public void on(RadioEvent.PlaneConnected e) {
+	/*public void on(RadioEvent.PlaneConnected e) {
 		planes.put(e.getId(), e.getPlane());
 		aircrafts.add(new Aircraft(assetManager, rootNode, e.getPlane().type));
 	}
@@ -210,5 +201,5 @@ public class Radar extends SimpleApplication implements EventListener {
 
 	public void on(RadioEvent.PlaneMoved e) {
 		planes.get(e.getId()).setLocation(e.getPlane().getLocation());
-	}
+	}*/
 }

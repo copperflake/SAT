@@ -72,7 +72,8 @@ public class AirportPanel extends JPanel implements EventListener {
 	private HashMap<RadioID, Plane> planes;
 	
 	public AirportPanel() {
-		setLayout(null);
+		this.planes = new HashMap<RadioID, Plane>();
+		//setLayout(null);
 
 		try {
 			this.imgBack  = ImageIO.read(new File("assets/Images/map.png"));
@@ -94,8 +95,7 @@ public class AirportPanel extends JPanel implements EventListener {
 				repaint();
 			}
 		}, 0, 1000 / AIRPORT_PANEL_FRAMERATE);
-		
-		Tower.getInstance().addListener(this);
+		//Tower.getInstance().addListener(this);
 	}
 
 	public Dimension getBackgroundDimension() {
@@ -185,7 +185,7 @@ public class AirportPanel extends JPanel implements EventListener {
 	}
 	
 	public void on(RadioEvent.PlaneConnected e) {
-		planes.put(e.getId(), e.getPlane());
+		//planes.put(e.getId(), e.getPlane());
 	}
 
 	public void on(RadioEvent.PlaneDisconnected e) {
@@ -193,6 +193,6 @@ public class AirportPanel extends JPanel implements EventListener {
 	}
 	
 	public void on(RadioEvent.PlaneMoved e) {
-		planes.get(e.getId()).setLocation(e.getPlane().getLocation());
+		//planes.get(e.getId()).setLocation(e.getPlane().getLocation());
 	}
 }

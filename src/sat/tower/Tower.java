@@ -12,7 +12,6 @@ import sat.plane.Plane;
 import sat.radio.RadioEvent;
 import sat.gui3D.AirportGUI;
 import sat.gui3D.AirportPanel;
-import sat.gui3D.RadarWindow;
 
 import sat.radio.RadioID;
 import sat.radio.engine.server.RadioServerEngine;
@@ -130,8 +129,7 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 	// - - - Main method - - -
 
 	public void startGui() {
-		new RadarWindow();
-		new AirportGUI();
+		new AirportGUI(true);
 	}
 
 	// - - - Radio Delegate - - -
@@ -179,7 +177,6 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 
 	public void on(RadioEvent.PlaneConnected e) {
 		System.out.println("Plane connected " + e.getId());
-		emit(e);
 	}
 
 	public void on(RadioEvent.PlaneDisconnected e) {
