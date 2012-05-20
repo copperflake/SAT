@@ -28,8 +28,8 @@ import com.jme3.scene.shape.Box;
 public class Radar extends SimpleApplication implements EventListener {
 	private long frameNumber = 0;
 	private ArrayList<Aircraft> aircrafts;
-	private Vector3f center, camUp;
-	private float moveSpeed, moveAltSpeed, rotSpeed, zoomSpeed, firstPersonRotSpeed;
+	private Vector3f camUp;
+	private float moveSpeed, moveAltSpeed, zoomSpeed, rotSpeed;
 	private Controls3D controls;
 	private boolean hd;
 	protected Node tower;
@@ -49,11 +49,9 @@ public class Radar extends SimpleApplication implements EventListener {
 		camUp = cam.getUp();
 		moveSpeed = 5f;
 		moveAltSpeed = 100f;
-		rotSpeed = 6f;
-		firstPersonRotSpeed = 5f;
-		zoomSpeed = 5f;
+		rotSpeed = 5f;
+		zoomSpeed = 10f;
 
-		center = new Vector3f(0, 0, 0);
 		aircrafts = new ArrayList<Aircraft>();
 		planes = new HashMap<RadioID, Plane>();
 		controls = new Controls3D(inputManager, this);
@@ -178,7 +176,7 @@ public class Radar extends SimpleApplication implements EventListener {
 		Vector3f dir = this.cam.getDirection();
 		
 		Matrix3f mat = new Matrix3f();
-		mat.fromAngleNormalAxis(firstPersonRotSpeed * value, axis);
+		mat.fromAngleNormalAxis(rotSpeed * value, axis);
 		
 		mat.mult(up, up);
 		mat.mult(left, left);
