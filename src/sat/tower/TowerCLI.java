@@ -9,10 +9,12 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.InetAddress;
 
+import sat.DebugEvent;
 import sat.GlobalCLI;
 import sat.events.Event;
 import sat.events.EventListener;
 import sat.gui3D.AirportGUI;
+import sat.radio.RadioEvent;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerTCPEngine;
 import sat.utils.crypto.RSAKeyPair;
@@ -42,9 +44,15 @@ public class TowerCLI extends GlobalCLI {
 
 		tower.addListener(new EventListener() {
 			@SuppressWarnings("unused")
-			public void on(Event event) {
-				println("Received unknown event:");
-				out.println(event);
+			public void on(DebugEvent event) {
+				print("[DEBUG] ");
+				println(event.getMessage());
+			}
+
+			@SuppressWarnings("unused")
+			public void on(RadioEvent.UncaughtException event) {
+				print("[EXCEPTION] ");
+				event.getException().printStackTrace(out);
 			}
 		});
 	}

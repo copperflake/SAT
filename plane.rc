@@ -1,3 +1,5 @@
-set radio.verbose yes
+set plane.debug yes
+set radio.legacy yes
+set radio.ciphered yes
 init
 connect

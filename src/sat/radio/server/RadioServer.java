@@ -207,9 +207,6 @@ public class RadioServer extends Radio {
 					return;
 				}
 
-				// Call super-fail
-				super.quit();
-
 				// Unregister
 				if(state == RadioSocketState.READY) {
 					// Disconnect notification
@@ -220,6 +217,9 @@ public class RadioServer extends Radio {
 						managers.remove(socketID);
 					}
 				}
+
+				// Call super-fail
+				super.quit();
 			}
 		}
 
@@ -344,7 +344,7 @@ public class RadioServer extends Radio {
 				// Invalid message for this state, disconnect plane.
 				System.err.println("Protocol Exception from Plane");
 				System.err.println("Cannot receive " + m.getType() + " in state " + state);
-				PlaneAgent.this.quit();
+				quit();
 			}
 		}
 	}

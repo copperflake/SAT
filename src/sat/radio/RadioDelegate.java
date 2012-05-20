@@ -14,7 +14,11 @@ public interface RadioDelegate {
 	 */
 	public Coordinates getLocation();
 
-	
+	/**
+	 * Demande au délégué sa clé de chiffrement
+	 */
+	public RSAKeyPair getKeyPair();
+
 	/**
 	 * Annonce au délégué la réception d'un message.
 	 * 

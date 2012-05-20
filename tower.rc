@@ -1,4 +1,4 @@
-set radio.verbose yes
+set tower.debug yes
 init
 writekey tower.key
 listen

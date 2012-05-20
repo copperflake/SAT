@@ -316,6 +316,10 @@ public abstract class CLI implements Runnable {
 		out.println(s);
 	}
 
+	public void print(String s) {
+		out.print(s);
+	}
+
 	/**
 	 * Termine le CLI.
 	 */

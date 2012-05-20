@@ -1,16 +1,25 @@
 package sat.plane;
 
+import java.io.DataInputStream;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.math.BigInteger;
 
 import sat.EndOfWorldException;
+import sat.events.Event;
 import sat.events.EventListener;
 import sat.radio.RadioID;
 import sat.radio.client.RadioClient;
 import sat.radio.client.RadioClientDelegate;
 import sat.radio.engine.client.RadioClientEngine;
 import sat.utils.cli.Config;
+import sat.utils.crypto.RSAException;
+import sat.utils.crypto.RSAKey;
 import sat.utils.crypto.RSAKeyPair;
 import sat.utils.geo.Coordinates;
+import sun.security.util.BigInt;
 
 public class Plane implements EventListener, RadioClientDelegate {
 	/**
@@ -23,6 +32,11 @@ public class Plane implements EventListener, RadioClientDelegate {
 	 * La configuration spécifique à une instance d'un avion.
 	 */
 	private Config config;
+
+	/**
+	 * La clé de cet avion.
+	 */
+	private RSAKeyPair keyPair;
 
 	/**
 	 * La position de l'avion.
@@ -56,13 +70,16 @@ public class Plane implements EventListener, RadioClientDelegate {
 	private static void initDefaults() {
 		defaults = new Config();
 
-		defaults.setProperty("radio.debug", "no");
-		defaults.setProperty("radio.ciphered", "yes");
-		defaults.setProperty("radio.legacy", "no");
-
+		defaults.setProperty("plane.debug", "no");
 		defaults.setProperty("plane.coords", "0,0,0");
 		defaults.setProperty("plane.type", "A320");
 		defaults.setProperty("plane.prefix", "PLN");
+
+		defaults.setProperty("legacy.towerkey", "tower.key");
+
+		defaults.setProperty("radio.ciphered", "yes");
+		defaults.setProperty("radio.legacy", "no");
+		defaults.setProperty("radio.keylength", "1024");
 	}
 
 	/**
@@ -77,23 +94,30 @@ public class Plane implements EventListener, RadioClientDelegate {
 			return;
 		}
 
+		// Coords
+		// TODO: read from config
 		coords = new Coordinates(0, 0, 0);
 
+		// Plane Type
 		type = PlaneType.getPlaneTypeByName(config.getString("plane.type"));
-		if(type == null) {
+		if(type == null) { // getPlaneTypeByName return null for unknown types
 			throw new EndOfWorldException("Invalid plane type");
 		}
 
+		// ID
 		id = new RadioID(config.getString("plane.prefix"));
+
+		// Radio
+		radio = new RadioClient(this, id);
+		radio.addListener(this);
+
+		radio.setCiphered(config.getBoolean("radio.ciphered"));
+		radio.setLegacy(config.getBoolean("radio.legacy"));
 
 		initDone = true;
 	}
 
 	public void connect(RadioClientEngine engine) throws IOException {
-		if(radio == null) {
-			radio = new RadioClient(this, id);
-		}
-
 		radio.connect(engine);
 	}
 
@@ -102,9 +126,20 @@ public class Plane implements EventListener, RadioClientDelegate {
 		simulator.start();
 	}
 
+	// - - - Events - - -
+
+	public void on(Event event) {
+		System.out.println(event);
+	}
+
 	// - - - Plane Simulator - - -
 
 	private class PlaneSimulator extends Thread {
+
+		public PlaneSimulator() {
+
+		}
+
 		public void run() {
 			// TODO temp param
 			long time = 1000;
@@ -191,5 +226,51 @@ public class Plane implements EventListener, RadioClientDelegate {
 
 	public Coordinates getLocation() {
 		return coords;
+	}
+
+	public RSAKeyPair getKeyPair() {
+		if(keyPair == null) {
+			try {
+				keyPair = new RSAKeyPair(config.getInt("radio.keylength"));
+			}
+			catch(RSAException e) {
+				// Invalid key length, ignore given length and use default
+				keyPair = new RSAKeyPair();
+			}
+		}
+
+		return keyPair;
+	}
+
+	public RSAKeyPair getLegacyTowerKey() {
+		try {
+			FileInputStream fis = new FileInputStream(config.getString("legacy.towerkey"));
+			DataInputStream dis = new DataInputStream(fis);
+
+			@SuppressWarnings("unused")
+			int keyLenght = dis.readInt();
+
+			int modulusLength = dis.readInt();
+			byte[] modulusBuffer = new byte[modulusLength];
+			dis.readFully(modulusBuffer);
+			BigInteger modulus = new BigInteger(modulusBuffer);
+
+			int exponentLength = dis.readInt();
+			byte[] exponentBuffer = new byte[exponentLength];
+			dis.readFully(exponentBuffer);
+			BigInteger exponent = new BigInteger(exponentBuffer);
+
+			RSAKey publicKey = new RSAKey(exponent, modulus);
+			RSAKeyPair keyPair = new RSAKeyPair(publicKey);
+
+			return keyPair;
+		}
+		catch(IOException e) {
+			System.out.println("Error reading legacy tower key");
+			e.printStackTrace();
+		}
+
+		// TODO: something better ?
+		return null;
 	}
 }

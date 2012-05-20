@@ -2,6 +2,7 @@ package sat.tower;
 
 import java.io.IOException;
 
+import sat.DebugEvent;
 import sat.events.Event;
 import sat.events.EventEmitter;
 import sat.events.EventListener;
@@ -41,12 +42,12 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 	private static void initDefaults() {
 		defaults = new Config();
 
-		defaults.setProperty("radio.debug", "no");
+		defaults.setProperty("tower.debug", "no");
+		defaults.setProperty("tower.prefix", "TWR");
+
 		defaults.setProperty("radio.ciphered", "yes");
 		defaults.setProperty("radio.legacy", "no");
 		defaults.setProperty("radio.keylength", "1024");
-
-		defaults.setProperty("tower.prefix", "TWR");
 	}
 
 	/**
@@ -111,10 +112,15 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 			return;
 		}
 
+		// ID
 		id = new RadioID(config.getString("tower.prefix"));
 
+		// Radio
 		radio = new RadioServer(this, id);
 		radio.addListener(this);
+
+		radio.setCiphered(config.getBoolean("radio.ciphered"));
+		radio.setLegacy(config.getBoolean("radio.legacy"));
 
 		initDone = true;
 	}
@@ -166,16 +172,26 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 	}
 
 	public void on(RadioEvent.PlaneConnected e) {
-		System.out.println("Plane connected " + e.getId());
+		emitDebug("Plane connected " + e.getId());
 	}
 
 	public void on(RadioEvent.PlaneDisconnected e) {
-		System.out.println("Plane disconnected " + e.getId());
+		emitDebug("Plane disconnected " + e.getId());
 	}
 
 	public void on(Event event) {
 		// Unmanaged event, pass it to our own listeners
-		System.out.println(event);
+		//System.out.println(event);
 		emit(event);
+	}
+
+	private void emitDebug(String msg) {
+		emitDebug(new DebugEvent(msg));
+	}
+
+	private void emitDebug(DebugEvent event) {
+		if(config.getBoolean("tower.debug")) {
+			emit(event);
+		}
 	}
 }

@@ -34,11 +34,6 @@ public abstract class Radio extends AsyncEventEmitter {
 	protected RadioDelegate delegate;
 
 	/**
-	 * Défini le niveau de verbosité de la radio
-	 */
-	protected boolean verbose = false;
-
-	/**
 	 * Défini si la radio doit utiliser le cryptage
 	 */
 	protected boolean ciphered = true;
@@ -65,6 +60,22 @@ public abstract class Radio extends AsyncEventEmitter {
 	}
 
 	// - - - Socket Manager - - -
+
+	public boolean isCiphered() {
+		return ciphered;
+	}
+
+	public void setCiphered(boolean ciphered) {
+		this.ciphered = ciphered;
+	}
+
+	public boolean isLegacy() {
+		return legacy;
+	}
+
+	public void setLegacy(boolean legacy) {
+		this.legacy = legacy;
+	}
 
 	protected abstract class SocketManager {
 		/**
