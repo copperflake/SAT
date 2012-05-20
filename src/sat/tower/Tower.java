@@ -1,17 +1,12 @@
 package sat.tower;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 import sat.events.Event;
 import sat.events.EventEmitter;
 import sat.events.EventListener;
 
-import sat.plane.Plane;
 import sat.radio.RadioEvent;
-import sat.gui3D.AirportGUI;
-import sat.gui3D.AirportPanel;
 
 import sat.radio.RadioID;
 import sat.radio.engine.server.RadioServerEngine;
@@ -46,7 +41,7 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 	private static void initDefaults() {
 		defaults = new Config();
 
-		defaults.setProperty("radio.verbose", "no");
+		defaults.setProperty("radio.debug", "no");
 		defaults.setProperty("radio.ciphered", "yes");
 		defaults.setProperty("radio.legacy", "no");
 		defaults.setProperty("radio.keylength", "1024");
@@ -126,12 +121,6 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 		radio.listen(engine);
 	}
 
-	// - - - Main method - - -
-
-	public void startGui() {
-		new AirportGUI(true);
-	}
-
 	// - - - Radio Delegate - - -
 
 	/**
@@ -144,7 +133,7 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 	/**
 	 * Retourne l'identifiant utilisé par la radio.
 	 */
-	public RadioID getRadioId() {
+	public RadioID getRadioID() {
 		if(id == null) {
 			id = new RadioID("TWR");
 		}

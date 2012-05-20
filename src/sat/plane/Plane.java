@@ -2,6 +2,7 @@ package sat.plane;
 
 import java.io.IOException;
 
+import sat.events.EventListener;
 import sat.radio.RadioID;
 import sat.radio.client.RadioClient;
 import sat.radio.client.RadioClientDelegate;
@@ -10,7 +11,7 @@ import sat.utils.cli.Config;
 import sat.utils.crypto.RSAKeyPair;
 import sat.utils.geo.Coordinates;
 
-public class Plane implements RadioClientDelegate {
+public class Plane implements EventListener, RadioClientDelegate {
 	/**
 	 * La configuration par défaut d'un avion. Sert de modèle à la contruction
 	 * de la configuration spécifique aux instances d'avions.
@@ -34,19 +35,19 @@ public class Plane implements RadioClientDelegate {
 
 	private RadioClient radio;
 	
-	/**
-	 * Statut de l'avion.
-	 */
-	private boolean crashed;
+	private PlaneType type;
+	
+	private PlaneSimulator simulator;
 
-	public Plane() {
-		crashed = false;
+	public Plane(PlaneType type) {
 		coords = new Coordinates(0, 0, 0);
 		
 		if(defaults == null)
 			initDefaults();
 
 		config = new Config(defaults);
+		
+		this.type = type;
 	}
 
 	/**
@@ -55,7 +56,7 @@ public class Plane implements RadioClientDelegate {
 	private static void initDefaults() {
 		defaults = new Config();
 
-		defaults.setProperty("radio.verbose", "no");
+		defaults.setProperty("radio.debug", "no");
 		defaults.setProperty("radio.ciphered", "yes");
 		defaults.setProperty("radio.legacy", "no");
 		defaults.setProperty("radio.keylength", "1024");
@@ -69,11 +70,26 @@ public class Plane implements RadioClientDelegate {
 	}
 
 	public void connect(RadioClientEngine engine) throws IOException {
-		if(radio == null)
+		if(radio == null) {
 			radio = new RadioClient(this);
+		}
+		
 		radio.connect(engine);
 	}
+	
+	public void start() {
+		simulator = new PlaneSimulator();
+		simulator.start();
+	}
+	
+	// - - - Plane Simulator - - -
 
+	private class PlaneSimulator extends Thread {
+		public void run() {
+			// TODO
+		}
+	}
+	
 	// - - - Plane Delegate - - -
 
 	public Coordinates getLocation() {
@@ -87,7 +103,7 @@ public class Plane implements RadioClientDelegate {
 	/**
 	 * Retourne l'identifiant utilisé par la radio.
 	 */
-	public RadioID getRadioId() {
+	public RadioID getRadioID() {
 		if(id == null) {
 			id = new RadioID("PLN");
 		}
@@ -97,9 +113,5 @@ public class Plane implements RadioClientDelegate {
 
 	public RSAKeyPair getKeyPair() {
 		return null;
-	}
-	
-	public boolean hasCrashed() {
-		return crashed;
 	}
 }

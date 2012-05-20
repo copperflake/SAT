@@ -17,13 +17,14 @@ public interface RadioDelegate {
 	/**
 	 * Demande au délégué son identifiant radio.
 	 */
-	public RadioID getRadioId();
+	public RadioID getRadioID();
 
 	/**
 	 * Demande au délégué sa clé de chiffrement
 	 */
 	public RSAKeyPair getKeyPair();
 
+	
 	/**
 	 * Annonce au délégué la réception d'un message.
 	 * 

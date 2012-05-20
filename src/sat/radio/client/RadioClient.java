@@ -8,6 +8,8 @@ import sat.events.UnhandledEventException;
 import sat.radio.Radio;
 import sat.radio.engine.client.RadioClientEngine;
 import sat.radio.engine.client.RadioClientEngineDelegate;
+import sat.radio.message.Message;
+import sat.radio.message.MessageHello;
 import sat.radio.socket.RadioSocket;
 
 /**
@@ -53,6 +55,10 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 		this.delegate = delegate;
 	}
 
+	public void send(Message message) {
+
+	}
+
 	/**
 	 * Connecte le client radio à un serveur radio en utilisant le moteur de
 	 * communcation <code>engine</code> spécifié. Le moteur passé en paramètre
@@ -86,6 +92,8 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 		}
 
 		manager = new TowerSocketManager(socket);
+
+		manager.send(new MessageHello(id, null, false, false));
 	}
 
 	private class TowerSocketManager extends SocketManager {

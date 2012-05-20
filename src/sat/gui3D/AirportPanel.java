@@ -132,7 +132,7 @@ public class AirportPanel extends JPanel implements EventListener {
 		for(RadioID id: planes.keySet()) {
 			Plane plane = planes.get(id);
 			Point p = new Point(plane.getLocation().getX(), plane.getLocation().getY());
-			String planeId = plane.getRadioId().toString();
+			String planeId = plane.getRadioID().toString();
 			CircularBuffer<Point> cb = previousPositions.get(planeId);
 			if (cb != null) {
 				cb.add(p);
@@ -148,7 +148,7 @@ public class AirportPanel extends JPanel implements EventListener {
 		g2d.setColor(Color.CYAN);
 		for(RadioID id: planes.keySet()) {
 			Plane plane = planes.get(id);
-			String planeId = plane.getRadioId().toString();
+			String planeId = plane.getRadioID().toString();
 			CircularBuffer<Point> previousPos = previousPositions.get(planeId);
 			for (int j = 1; j < previousPos.size(); j++) {
 				Point p1 = previousPos.get(j);
@@ -163,7 +163,7 @@ public class AirportPanel extends JPanel implements EventListener {
 		g2d.setColor(Color.GREEN);
 		for(RadioID id: planes.keySet()) {
 			Plane plane = planes.get(id);
-			String planeId = plane.getRadioId().toString();
+			String planeId = plane.getRadioID().toString();
 			BufferedImage planeImg = plane.hasCrashed() ? imgKboom : imgPlane; 
 
 			g2d.setTransform(AffineTransform.getRotateInstance(0, plane.getLocation().getX(), plane.getLocation().getY()));

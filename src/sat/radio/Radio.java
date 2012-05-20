@@ -61,7 +61,7 @@ public abstract class Radio extends AsyncEventEmitter {
 		super(new PriorityEventScheduler());
 
 		this.delegate = delegate;
-		id = delegate.getRadioId();
+		id = delegate.getRadioID();
 	}
 
 	/**
