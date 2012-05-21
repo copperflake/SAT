@@ -22,6 +22,8 @@ public class MessageInputStream extends FilterInputStream {
 	 */
 	private DataInputStream dis;
 
+	private boolean extended = false;
+
 	/**
 	 * Crée un nouveau flux d'entrée de message ITP-compliant.
 	 * 
@@ -40,7 +42,7 @@ public class MessageInputStream extends FilterInputStream {
 	 * Lis un message depuis le flux d'entrée
 	 */
 	@SuppressWarnings("unused")
-	public Message readMessage() throws IOException {
+	public synchronized Message readMessage() throws IOException {
 		// Lecture des paramètres communs à tous les messages.
 		// Attention, l'ordre de lecture est important ! (obviously)
 		RadioID id = new RadioID(fill(new byte[8])); // PlaneID
@@ -160,5 +162,13 @@ public class MessageInputStream extends FilterInputStream {
 	private byte[] fill(byte[] buffer) throws IOException {
 		dis.readFully(buffer);
 		return buffer;
+	}
+
+	public boolean isExtended() {
+		return extended;
+	}
+
+	public synchronized void setExtended(boolean extended) {
+		this.extended = extended;
 	}
 }

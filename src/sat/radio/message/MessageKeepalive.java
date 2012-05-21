@@ -6,9 +6,7 @@ import sat.utils.geo.Coordinates;
 public class MessageKeepalive extends Message {
 	public MessageKeepalive(RadioID id, Coordinates c) {
 		super(id, c);
-	}
 
-	public void setTypeAndPriority() {
 		type = MessageType.KEEPALIVE;
 		priority = 3;
 	}

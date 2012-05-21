@@ -10,12 +10,10 @@ public class MessageSendRSAKey extends Message {
 	public MessageSendRSAKey(RadioID id, Coordinates c, RSAKey key) {
 		super(id, c);
 
-		this.key = key;
-	}
-
-	public void setTypeAndPriority() {
 		type = MessageType.SENDRSA;
 		priority = 2;
+
+		this.key = key;
 	}
 
 	public String toString() {

@@ -6,11 +6,9 @@ import sat.utils.geo.Coordinates;
 public class MessageBye extends Message {
 	public MessageBye(RadioID id, Coordinates c) {
 		super(id, c);
-	}
 
-	public void setTypeAndPriority() {
 		type = MessageType.BYE;
-		priority = 4;
+		priority = 3;
 	}
 
 	public String toString() {

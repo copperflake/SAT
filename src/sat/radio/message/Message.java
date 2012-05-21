@@ -7,7 +7,7 @@ import sat.events.PriorityEvent;
 import sat.radio.RadioID;
 import sat.utils.geo.Coordinates;
 
-public abstract class Message extends PriorityEvent<Message> implements Serializable {
+public abstract class Message extends PriorityEvent<Message> {
 	// Global attributes
 	private RadioID id;
 	private Coordinates coords;
@@ -16,10 +16,8 @@ public abstract class Message extends PriorityEvent<Message> implements Serializ
 
 	private int length = 0;
 
-	// Ces attributs ne seront pas sérialisé pour des raisons de sécurité
-	// avec le flux Extended.
-	transient protected int priority = 5;
-	transient protected MessageType type = MessageType.INVALID;
+	protected int priority = 5;
+	protected MessageType type = MessageType.INVALID;
 
 	// Additions
 	protected Date time;
@@ -29,11 +27,7 @@ public abstract class Message extends PriorityEvent<Message> implements Serializ
 		coords = c;
 
 		time = new Date();
-
-		setTypeAndPriority();
 	}
-
-	public abstract void setTypeAndPriority();
 
 	public RadioID getID() {
 		return id;

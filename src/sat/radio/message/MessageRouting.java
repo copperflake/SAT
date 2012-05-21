@@ -7,9 +7,7 @@ public class MessageRouting extends Message {
 
 	public MessageRouting(RadioID id, Coordinates c) {
 		super(id, c);
-	}
 
-	public void setTypeAndPriority() {
 		type = MessageType.ROUTING;
 		priority = 2;
 	}

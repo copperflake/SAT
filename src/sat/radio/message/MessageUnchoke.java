@@ -6,9 +6,7 @@ import sat.utils.geo.Coordinates;
 public class MessageUnchoke extends Message {
 	public MessageUnchoke(RadioID id, Coordinates c) {
 		super(id, c);
-	}
 
-	public void setTypeAndPriority() {
 		type = MessageType.UNCHOKE;
 		priority = 4;
 	}

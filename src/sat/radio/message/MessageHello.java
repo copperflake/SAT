@@ -10,13 +10,11 @@ public class MessageHello extends Message {
 	public MessageHello(RadioID id, Coordinates c, boolean ciphered, boolean extended) {
 		super(id, c);
 
-		this.ciphered = ciphered;
-		this.extended = extended;
-	}
-
-	public void setTypeAndPriority() {
 		type = MessageType.HELLO;
 		priority = 1;
+
+		this.ciphered = ciphered;
+		this.extended = extended;
 	}
 
 	public boolean isCiphered() {

@@ -9,12 +9,10 @@ public class MessageMayDay extends Message {
 	public MessageMayDay(RadioID id, Coordinates c, String cause) {
 		super(id, c);
 
-		this.cause = cause;
-	}
-
-	public void setTypeAndPriority() {
 		type = MessageType.MAYDAY;
 		priority = 0;
+
+		this.cause = cause;
 	}
 
 	public String getCause() {

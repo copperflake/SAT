@@ -14,6 +14,8 @@ public class MessageOutputStream extends FilterOutputStream {
 	private ByteArrayOutputStream baos;
 	private DataOutputStream dos;
 
+	private boolean extended = false;
+
 	public MessageOutputStream(OutputStream out) {
 		super(out);
 
@@ -111,5 +113,13 @@ public class MessageOutputStream extends FilterOutputStream {
 
 	private void writeMessageAttributes(MessageRouting m) throws IOException {
 		// TODO
+	}
+
+	public boolean isExtended() {
+		return extended;
+	}
+
+	public synchronized void setExtended(boolean extended) {
+		this.extended = extended;
 	}
 }

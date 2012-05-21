@@ -1,9 +1,10 @@
 package sat.events;
 
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-public class Event implements Cloneable {
+public class Event implements Cloneable, Serializable {
 	private EventEmitterInterface emitter;
 
 	public EventEmitterInterface getEmitter() {
@@ -54,4 +55,6 @@ public class Event implements Cloneable {
 			return this;
 		}
 	}
+
+	private static final long serialVersionUID = -6882392750878581169L;
 }

@@ -6,9 +6,7 @@ import sat.utils.geo.Coordinates;
 public class MessageLanding extends Message {
 	public MessageLanding(RadioID id, Coordinates c) {
 		super(id, c);
-	}
 
-	public void setTypeAndPriority() {
 		type = MessageType.LANDINGREQUEST;
 		priority = 2;
 	}
