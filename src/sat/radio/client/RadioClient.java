@@ -15,11 +15,13 @@ import sat.radio.engine.client.RadioClientEngineDelegate;
 import sat.radio.message.Message;
 import sat.radio.message.MessageHello;
 import sat.radio.message.MessageSendRSAKey;
+import sat.radio.message.MessageUpgrade;
 import sat.radio.server.RadioServer;
 import sat.radio.server.RadioServer.PlaneAgent;
 import sat.radio.socket.RadioSocket;
 import sat.radio.socket.RadioSocketState;
 import sat.utils.crypto.RSAInputStream;
+import sat.utils.crypto.RSAKey;
 import sat.utils.crypto.RSAKeyPair;
 import sat.utils.crypto.RSAOutputStream;
 import sat.utils.geo.Coordinates;
@@ -149,21 +151,35 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 				}
 
 				// Extended use a specific handshake
-				/*if(m.isExtended()) {
-					// TODO
-				}*/
+				if(m.isExtended()) {
+					listener.upgrade();
+					writer.upgrade();
 
-				if(m.isCiphered()) {
-					RSAKeyPair planeKey = delegate.getKeyPair();
-					RSAKeyPair towerKey = delegate.getLegacyTowerKey();
-
-					socket.in.upgrade(new RSAInputStream(socket.in.getStream(), planeKey));
-					socket.out.upgrade(new RSAOutputStream(socket.out.getStream(), towerKey));
+					state = RadioSocketState.EXTENDED_HANDSHAKE;
 
 					Coordinates coords = delegate.getLocation();
-					writer.send(new MessageSendRSAKey(id, coords, delegate.getKeyPair().getPublicKey()));
+					writer.send(new MessageUpgrade(id, coords));
+
+					if(!m.isCiphered()) {
+						ready();
+					}
+
+					return;
 				}
 
+				if(m.isCiphered()) {
+					upgradeCipher(delegate.getLegacyTowerKey().getPublicKey());
+				}
+
+				ready();
+			}
+
+			public void on(MessageSendRSAKey m) {
+				if(state != RadioSocketState.EXTENDED_HANDSHAKE) {
+					invalidState(m);
+				}
+
+				upgradeCipher(m.getKey());
 				ready();
 			}
 
@@ -180,6 +196,17 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 
 				forwardToPlane(m);
 			}
+		}
+
+		private void upgradeCipher(RSAKey towerPubKey) {
+			RSAKeyPair planeKey = delegate.getKeyPair();
+			RSAKeyPair towerKey = new RSAKeyPair(towerPubKey);
+
+			socket.in.upgrade(new RSAInputStream(socket.in.getStream(), planeKey));
+			socket.out.upgrade(new RSAOutputStream(socket.out.getStream(), towerKey));
+
+			Coordinates coords = delegate.getLocation();
+			writer.send(new MessageSendRSAKey(id, coords, delegate.getKeyPair().getPublicKey()));
 		}
 
 		private void forwardToPlane(Message m) {

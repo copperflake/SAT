@@ -45,7 +45,16 @@ public class MessageInputStream extends FilterInputStream {
 	public synchronized Message readMessage() throws IOException {
 		// Lecture des paramètres communs à tous les messages.
 		// Attention, l'ordre de lecture est important ! (obviously)
-		RadioID id = new RadioID(fill(new byte[8])); // PlaneID
+
+		 // PlaneID
+		RadioID id;
+		if(extended) {
+			int idLength = dis.readInt();
+			id = (RadioID) Serializer.deserialize(fill(new byte[idLength]));
+		}
+		else {
+			id = new RadioID(fill(new byte[8]));
+		}
 
 		int length = dis.readInt();
 		int priority = dis.readInt(); // Not used...
@@ -135,6 +144,10 @@ public class MessageInputStream extends FilterInputStream {
 
 			case LANDINGREQUEST:
 				message = new MessageLanding(id, c);
+				break;
+
+			case UPGRADE:
+				message = new MessageUpgrade(id, c);
 				break;
 		}
 

@@ -2,6 +2,7 @@ package sat;
 
 import sat.events.Event;
 
+@SuppressWarnings("serial")
 public class DebugEvent extends Event {
 	public String message;
 	

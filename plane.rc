@@ -1,5 +1,5 @@
 set plane.debug yes
-set radio.legacy yes
+set radio.legacy no
 set radio.ciphered yes
 init
 connect

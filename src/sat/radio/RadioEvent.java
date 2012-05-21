@@ -2,6 +2,7 @@ package sat.radio;
 
 import sat.events.Event;
 
+@SuppressWarnings("serial")
 public abstract class RadioEvent extends Event {
 
 	public static class UncaughtException extends RadioEvent {

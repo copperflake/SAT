@@ -17,6 +17,7 @@ import sat.radio.message.*;
 import sat.radio.socket.RadioSocket;
 import sat.radio.socket.RadioSocketState;
 import sat.utils.crypto.RSAInputStream;
+import sat.utils.crypto.RSAKey;
 import sat.utils.crypto.RSAKeyPair;
 import sat.utils.crypto.RSAOutputStream;
 import sat.utils.geo.Coordinates;
@@ -256,19 +257,41 @@ public class RadioServer extends Radio {
 
 				socketID = m.getID();
 
-				/*if(extended) {
-					// If we use the extended protocol, we can upgrade
-					// components and wait for the extended handshake.
-
-					// TODO
+				if(extended) {
+					state = RadioSocketState.EXTENDED_HANDSHAKE;
+					listener.upgrade();
+					// Then wait for Upgrade message...
 				}
-				else*/ if(ciphered) {
+				else if(ciphered) {
 					state = RadioSocketState.CIPHER_NEGOCIATION;
 					socket.in.upgrade(new RSAInputStream(socket.in.getStream(), delegate.getKeyPair()));
 				}
 				else {
 					// Socket is ready!
-					PlaneAgent.this.ready();
+					ready();
+				}
+			}
+
+			public void on(MessageUpgrade m) {
+				// HELLO can be received only when in EXTENDED_HANDSHAKE state
+				if(state != RadioSocketState.EXTENDED_HANDSHAKE) {
+					invalidState(m);
+				}
+
+				socketID = m.getID();
+				writer.upgrade();
+
+				if(ciphered) {
+					Coordinates coords = delegate.getLocation();
+					RSAKey key = delegate.getKeyPair().getPublicKey();
+					writer.send(new MessageSendRSAKey(id, coords, key));
+
+					socket.in.upgrade(new RSAInputStream(socket.in.getStream(), delegate.getKeyPair()));
+					state = RadioSocketState.CIPHER_NEGOCIATION;
+				}
+				else {
+					// Socket is ready!
+					ready();
 				}
 			}
 
@@ -299,7 +322,7 @@ public class RadioServer extends Radio {
 				socket.out.upgrade(new RSAOutputStream(socket.out.getStream(), planeKey));
 
 				// Socket is ready for general usage.
-				PlaneAgent.this.ready();
+				ready();
 			}
 
 			// Unmanaged messages type

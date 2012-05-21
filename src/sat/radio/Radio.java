@@ -226,6 +226,10 @@ public abstract class Radio extends AsyncEventEmitter {
 				}
 			}
 
+			public void upgrade() {
+				mis.setExtended(true);
+			}
+
 			/**
 			 * Arrête le thread d'écoute.
 			 */
@@ -294,6 +298,10 @@ public abstract class Radio extends AsyncEventEmitter {
 			 */
 			public void send(Message m) {
 				queue.put(m);
+			}
+
+			public void upgrade() {
+				mos.setExtended(true);
 			}
 
 			/**

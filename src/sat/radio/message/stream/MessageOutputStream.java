@@ -23,10 +23,18 @@ public class MessageOutputStream extends FilterOutputStream {
 		dos = new DataOutputStream(baos);
 	}
 
-	public void writeMessage(Message m) throws IOException {
+	public synchronized void writeMessage(Message m) throws IOException {
 		baos.reset();
 
-		dos.write(m.getID().toLegacyID());
+		if(extended) {
+			byte[] id = Serializer.serialize(m.getID());
+			dos.writeInt(id.length);
+			dos.write(id);
+		}
+		else {
+			dos.write(m.getID().toLegacyID());
+		}
+
 		dos.writeInt(m.getLength());
 		dos.writeInt(m.getPriority());
 
@@ -63,6 +71,7 @@ public class MessageOutputStream extends FilterOutputStream {
 			case BYE:
 			case KEEPALIVE:
 			case LANDINGREQUEST:
+			case UPGRADE:
 				// No additionnal data
 				break;
 

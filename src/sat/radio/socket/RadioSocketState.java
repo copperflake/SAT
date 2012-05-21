@@ -11,6 +11,11 @@ public enum RadioSocketState {
 	HANDSHAKE,
 
 	/**
+	 * Handshake étendu.
+	 */
+	EXTENDED_HANDSHAKE,
+
+	/**
 	 * Étape supplémentaire nécessaire à la mise en place d'une connexion
 	 * chiffrée.
 	 */
