@@ -256,14 +256,13 @@ public class RadioServer extends Radio {
 
 				socketID = m.getID();
 
-				if(extended) {
+				/*if(extended) {
 					// If we use the extended protocol, we can upgrade
 					// components and wait for the extended handshake.
 
-					// TODO: upgrade only listener, writer will be upgraded later
-					PlaneAgent.this.upgrade();
+					// TODO
 				}
-				else if(ciphered) {
+				else*/ if(ciphered) {
 					state = RadioSocketState.CIPHER_NEGOCIATION;
 					socket.in.upgrade(new RSAInputStream(socket.in.getStream(), delegate.getKeyPair()));
 				}

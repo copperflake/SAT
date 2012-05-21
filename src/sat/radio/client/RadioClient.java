@@ -149,11 +149,9 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 				}
 
 				// Extended use a specific handshake
-				if(m.isExtended()) {
+				/*if(m.isExtended()) {
 					// TODO
-					upgrade();
-					return;
-				}
+				}*/
 
 				if(m.isCiphered()) {
 					RSAKeyPair planeKey = delegate.getKeyPair();

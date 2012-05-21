@@ -10,8 +10,8 @@ import sat.events.Event;
 import sat.events.UnhandledEventException;
 import sat.events.schedulers.PriorityEventScheduler;
 import sat.radio.message.Message;
-import sat.radio.message.stream.UpgradableMessageInputStream;
-import sat.radio.message.stream.UpgradableMessageOutputStream;
+import sat.radio.message.stream.MessageInputStream;
+import sat.radio.message.stream.MessageOutputStream;
 import sat.radio.socket.RadioSocket;
 import sat.radio.socket.RadioSocketState;
 import sat.utils.crypto.RSAKeyPair;
@@ -127,24 +127,6 @@ public abstract class Radio extends AsyncEventEmitter {
 		}
 
 		/**
-		 * Upgrade les flux d'entrée/sortie en les passant en mode Extended
-		 * plutôt que Legacy. Cette méthode execute simplement les méthodes
-		 * <code>upgrade</code> des objets {@link SocketListener} et
-		 * {@link SocketWriter} sous-jacents.
-		 */
-		protected void upgrade() {
-			try {
-				listener.upgrade();
-				writer.upgrade();
-			}
-			catch(IOException e) {
-				// Failed to upgrade streams
-				emitEvent(new RadioEvent.UncaughtException("Failed to upgrade streams...", e));
-				quit();
-			}
-		}
-
-		/**
 		 * Déconnecte de force le client associé à ce SocketManager.
 		 * <p>
 		 * Cette méthode appel ensuite quit() pour forcer l'arrêt et la
@@ -196,7 +178,7 @@ public abstract class Radio extends AsyncEventEmitter {
 			 * dynamiquement modifié en flux de type étendu si cette version du
 			 * protocole est supportée par le client.
 			 */
-			private UpgradableMessageInputStream mis;
+			private MessageInputStream mis;
 
 			/**
 			 * État du thread.
@@ -204,7 +186,7 @@ public abstract class Radio extends AsyncEventEmitter {
 			private boolean running = true;
 
 			public SocketListener() {
-				mis = new UpgradableMessageInputStream(socket.in);
+				mis = new MessageInputStream(socket.in);
 			}
 
 			public void run() {
@@ -245,19 +227,6 @@ public abstract class Radio extends AsyncEventEmitter {
 			}
 
 			/**
-			 * Upgrade le flux de lecture sous-jacent. Le nouveau flux sera de
-			 * type ExtendedMessageInputStream.
-			 * 
-			 * @throws IOException
-			 *             Si l'upgrade du flux a généré une exception.
-			 */
-			public void upgrade() throws IOException {
-				synchronized(mis) {
-					mis.upgrade();
-				}
-			}
-
-			/**
 			 * Arrête le thread d'écoute.
 			 */
 			public void quit() {
@@ -270,7 +239,7 @@ public abstract class Radio extends AsyncEventEmitter {
 			/**
 			 * Flux de sortie des messages.
 			 */
-			private UpgradableMessageOutputStream mos;
+			private MessageOutputStream mos;
 
 			/**
 			 * La file d'attente de messages à envoyer.
@@ -287,7 +256,7 @@ public abstract class Radio extends AsyncEventEmitter {
 			 * utilisera le flux de sortie du socket du SocketManager.
 			 */
 			public SocketWriter() {
-				mos = new UpgradableMessageOutputStream(socket.out);
+				mos = new MessageOutputStream(socket.out);
 			}
 
 			public void run() {
@@ -325,21 +294,6 @@ public abstract class Radio extends AsyncEventEmitter {
 			 */
 			public void send(Message m) {
 				queue.put(m);
-			}
-
-			/**
-			 * Upgrade le flux d'écriture sous-jacent. Le nouveau flux sera de
-			 * type ExtendedMessageOutputStream.
-			 * 
-			 * @throws IOException
-			 *             Si l'upgrade du flux a généré une exception.
-			 */
-			public void upgrade() throws IOException {
-				// TODO: Ensure the message output stream is not in use
-				// when upgrading.
-				synchronized(mos) {
-					mos.upgrade();
-				}
 			}
 
 			/**

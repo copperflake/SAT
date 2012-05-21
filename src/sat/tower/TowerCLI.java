@@ -13,7 +13,7 @@ import sat.DebugEvent;
 import sat.GlobalCLI;
 import sat.events.Event;
 import sat.events.EventListener;
-import sat.gui3D.AirportGUI;
+import sat.gui.GUI;
 import sat.radio.RadioEvent;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerTCPEngine;
