@@ -16,8 +16,9 @@ public abstract class EventEmitter implements EventEmitterInterface {
 	}
 
 	public void addListener(EventListener listener) {
-		if(listener != null)
+		if(listener != null) {
 			listeners.add(listener);
+		}
 	}
 
 	public void removeListener(EventListener listener) {

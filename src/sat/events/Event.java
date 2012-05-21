@@ -5,7 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public class Event implements Cloneable, Serializable {
-	private EventEmitterInterface emitter;
+	transient private EventEmitterInterface emitter;
 
 	public EventEmitterInterface getEmitter() {
 		return emitter;
