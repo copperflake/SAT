@@ -182,7 +182,12 @@ public class TowerCLI extends GlobalCLI {
 	}
 
 	public void agentserver() {
-		AgentServer.start();
+		if(AgentServer.isRunning()) {
+			println("AgentServer is already running");
+		} else {
+			AgentServer.start();
+			println("AgentServer started");
+		}
 	}
 
 	public void writekey(String path) throws IOException {
