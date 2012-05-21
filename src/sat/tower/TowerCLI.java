@@ -17,6 +17,7 @@ import sat.gui.GUI;
 import sat.radio.RadioEvent;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerTCPEngine;
+import sat.tower.agent.AgentServer;
 import sat.utils.crypto.RSAKeyPair;
 
 /**
@@ -178,6 +179,10 @@ public class TowerCLI extends GlobalCLI {
 		 * Changez HD en "false" si la vue 3D est trop lente.
 		 */
 		new GUI(true);
+	}
+
+	public void agentserver() {
+		AgentServer.start();
 	}
 
 	public void writekey(String path) throws IOException {

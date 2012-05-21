@@ -4,10 +4,14 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.UnknownHostException;
 
+import sat.events.Event;
+import sat.events.EventListener;
 import sat.plane.Plane;
 import sat.plane.PlaneCLI;
 import sat.tower.TowerCLI;
+import sat.tower.agent.RemoteTowerAgent;
 
 /**
  * Classe principale du programme.
@@ -41,6 +45,20 @@ public final class SAT {
 		}
 		else if(args[0].equals("tower")) {
 			initTower(args);
+		}
+		else if(args[0].equals("remote")) {
+			try {
+				RemoteTowerAgent remote = new RemoteTowerAgent();
+				remote.addListener(new EventListener() {
+					@SuppressWarnings("unused")
+					public void on(Event event) {
+						System.out.println("Got event: " + event);
+					}
+				});
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
 		}
 		else {
 			// Commande inconnue
