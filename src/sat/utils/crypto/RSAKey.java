@@ -1,11 +1,13 @@
 package sat.utils.crypto;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 
 /**
  * Clé de chiffrement RSA.
  */
-public class RSAKey {
+@SuppressWarnings("serial")
+public class RSAKey implements Serializable {
 	/**
 	 * Exposant de la clé.
 	 */

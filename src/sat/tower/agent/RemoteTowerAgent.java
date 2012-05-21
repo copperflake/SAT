@@ -25,7 +25,7 @@ public class RemoteTowerAgent extends TowerAgent {
 				try {
 					while(true) {
 						Event event = (Event) ois.readObject();
-						emit(event);
+						event.notify(RemoteTowerAgent.this);
 					}
 				}
 				catch(Exception e) {
@@ -38,11 +38,20 @@ public class RemoteTowerAgent extends TowerAgent {
 
 	public void execute(AgentRequest req) {
 		try {
+			req.setRemoteRequest(true);
 			oos.writeObject(req);
 		}
 		catch(IOException e) {
 			e.printStackTrace();
 			throw new EndOfWorldException("Error writing remote agent stream");
 		}
+	}
+
+	public void on(AgentResult ev) {
+		handleResult(ev);
+	}
+
+	public boolean isRemote() {
+		return true;
 	}
 }

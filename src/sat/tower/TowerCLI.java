@@ -17,17 +17,25 @@ import sat.gui.GUI;
 import sat.radio.RadioEvent;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerTCPEngine;
+import sat.tower.agent.AgentResult;
+import sat.tower.agent.AgentRequest;
 import sat.tower.agent.AgentServer;
+import sat.tower.agent.TowerAgent;
+import sat.utils.crypto.RSAKey;
 import sat.utils.crypto.RSAKeyPair;
 
 /**
  * Interface CLI de la tour de contrôle.
  */
-public class TowerCLI extends GlobalCLI {
+public class TowerCLI extends GlobalCLI implements EventListener {
 	/**
-	 * La tour controlée par cette instance de TowerCLI
+	 * L'agent de la tour controlée par cette instance de TowerCLI
 	 */
-	private Tower tower;
+	private TowerAgent agent;
+
+	public TowerCLI(InputStream i, PrintStream o) {
+		this(i, o, new TowerAgent());
+	}
 
 	/**
 	 * Crée un nouveau CLI de tour de contrôle.
@@ -39,11 +47,13 @@ public class TowerCLI extends GlobalCLI {
 	 * @param o
 	 *            Le flux de sortie du CLI
 	 */
-	public TowerCLI(InputStream i, PrintStream o) {
+	public TowerCLI(InputStream i, PrintStream o, TowerAgent agent) {
 		super(i, o, "Tower> ");
-		tower = Tower.getInstance();
 
-		tower.addListener(new EventListener() {
+		this.agent = agent;
+		agent.addListener(this);
+
+		this.agent.addListener(new EventListener() {
 			@SuppressWarnings("unused")
 			public void on(DebugEvent event) {
 				print("[DEBUG] ");
@@ -58,15 +68,30 @@ public class TowerCLI extends GlobalCLI {
 		});
 	}
 
+	private Tower getTower() {
+		if(agent.isRemote()) {
+			throw new RuntimeException("This command cannot be used in a remote CLI");
+		}
+
+		return Tower.getInstance();
+	}
+
 	public void init() {
-		tower.init();
+		agent.requestInit();
 	}
 
 	/**
 	 * Affiche la configuration actuelle de la tour.
 	 */
 	public void config() {
-		tower.getConfig().list(out);
+		setPaused(true); // MUST BE HERE, LOCAL REQUESTS ARE SYNCHRONOUS
+		agent.requestConfig(new EventListener() {
+			@SuppressWarnings("unused")
+			public void on(AgentResult.ConfigResult ev) {
+				ev.getConfig().list(out);
+				setPaused(false);
+			}
+		});
 	}
 
 	/**
@@ -76,7 +101,14 @@ public class TowerCLI extends GlobalCLI {
 	 *            Le paramètre de configuration à afficher.
 	 */
 	public void get(String key) {
-		out.println(tower.getConfig().getProperty(key));
+		setPaused(true);
+		agent.requestGetConfig(key, new EventListener() {
+			@SuppressWarnings("unused")
+			public void on(AgentResult.ConfigGetKeyResult ev) {
+				println(ev.getValue());
+				setPaused(false);
+			}
+		});
 	}
 
 	/**
@@ -88,7 +120,7 @@ public class TowerCLI extends GlobalCLI {
 	 *            La valeur du paramètre.
 	 */
 	public void set(String key, String value) {
-		tower.getConfig().setProperty(key, value);
+		agent.requestSetConfig(key, value);
 	}
 
 	/**
@@ -101,7 +133,7 @@ public class TowerCLI extends GlobalCLI {
 	 * @throws IOException
 	 */
 	public void store(String path) throws FileNotFoundException, IOException {
-		tower.getConfig().store(new FileOutputStream(path), null);
+		getTower().getConfig().store(new FileOutputStream(path), null);
 	}
 
 	/**
@@ -115,7 +147,7 @@ public class TowerCLI extends GlobalCLI {
 	 * @throws IOException
 	 */
 	public void load(String path) throws FileNotFoundException, IOException {
-		tower.getConfig().load(new FileInputStream(path));
+		getTower().getConfig().load(new FileInputStream(path));
 	}
 
 	/**
@@ -145,6 +177,8 @@ public class TowerCLI extends GlobalCLI {
 	 *             exception est passée au code appelant.
 	 */
 	public void listen(String engineType, String arg1, String arg2) throws IOException {
+		Tower tower = getTower();
+
 		RadioServerEngine engine;
 
 		// Moteur par défaut
@@ -175,33 +209,47 @@ public class TowerCLI extends GlobalCLI {
 
 	public void gui() {
 		/**
-		 * AirportGUI(HD)
-		 * Changez HD en "false" si la vue 3D est trop lente.
+		 * AirportGUI(HD) Changez HD en "false" si la vue 3D est trop lente.
 		 */
+		// TODO: start GUI with CLI's agent
 		new GUI(true);
 	}
 
 	public void agentserver() {
+		if(agent.isRemote()) {
+			println("You cannot start an AgentServer from a remote CLI");
+			return;
+		}
+
 		if(AgentServer.isRunning()) {
 			println("AgentServer is already running");
-		} else {
+		}
+		else {
 			AgentServer.start();
 			println("AgentServer started");
 		}
 	}
 
-	public void writekey(String path) throws IOException {
-		FileOutputStream fos = new FileOutputStream(path);
-		DataOutputStream dos = new DataOutputStream(fos);
+	public void writekey(final String path) {
+		agent.requestTowerKey(new EventListener() {
+			@SuppressWarnings("unused")
+			public void on(AgentResult.TowerKeyResult ev) throws IOException {
+				RSAKey key = ev.getKey();
 
-		RSAKeyPair keyPair = tower.getKeyPair().makePublic();
+				FileOutputStream fos = new FileOutputStream(path);
+				DataOutputStream dos = new DataOutputStream(fos);
 
-		dos.writeInt(keyPair.keyLength());
+				dos.writeInt(key.getLength());
 
-		dos.writeInt(keyPair.getPublicKey().getModulus().toByteArray().length);
-		dos.write(keyPair.getPublicKey().getModulus().toByteArray());
+				dos.writeInt(key.getModulus().toByteArray().length);
+				dos.write(key.getModulus().toByteArray());
 
-		dos.writeInt(keyPair.getPublicKey().getExponent().toByteArray().length);
-		dos.write(keyPair.getPublicKey().getExponent().toByteArray());
+				dos.writeInt(key.getExponent().toByteArray().length);
+				dos.write(key.getExponent().toByteArray());
+
+				dos.close();
+				fos.close();
+			}
+		});
 	}
 }

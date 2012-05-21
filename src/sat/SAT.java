@@ -46,6 +46,17 @@ public final class SAT {
 		else if(args[0].equals("tower")) {
 			initTower(args);
 		}
+		else if(args[0].equals("cli")) {
+			// Remote CLI
+			try {
+				RemoteTowerAgent remote = new RemoteTowerAgent();
+				TowerCLI cli = new TowerCLI(System.in, System.out, remote);
+				cli.runInNewThread();
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
 		else if(args[0].equals("remote")) {
 			try {
 				RemoteTowerAgent remote = new RemoteTowerAgent();

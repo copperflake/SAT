@@ -8,6 +8,7 @@ import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Framework de gestion de l'interface en ligne de commande.
@@ -63,6 +64,8 @@ public abstract class CLI implements Runnable {
 	 * bouclera pas après l'execution de la commande.
 	 */
 	private boolean exit = false;
+
+	private AtomicBoolean paused = new AtomicBoolean(false);
 
 	/**
 	 * Construit un nouveau CLI écoutant et écrivant sur des flux spécifiques et
@@ -131,13 +134,23 @@ public abstract class CLI implements Runnable {
 	 */
 	public void run() {
 		while(!exit) {
-			out.print(prompt);
+			printPrompt();
 
 			if(!in.hasNextLine())
 				break;
 
 			String line = in.nextLine();
 			eval(line);
+
+			synchronized(paused) {
+				while(paused.get()) {
+					try {
+						paused.wait();
+					}
+					catch(InterruptedException e) {
+					}
+				}
+			}
 		}
 	}
 
@@ -320,11 +333,25 @@ public abstract class CLI implements Runnable {
 		out.print(s);
 	}
 
+	public void printPrompt() {
+		out.print(prompt);
+	}
+
 	/**
 	 * Termine le CLI.
 	 */
 	public void exit() {
 		exit = true;
 		in.close();
+	}
+
+	public void setPaused(boolean paused) {
+		synchronized(this.paused) {
+			this.paused.set(paused);
+
+			if(!paused) {
+				this.paused.notifyAll();
+			}
+		}
 	}
 }

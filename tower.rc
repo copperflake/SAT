@@ -1,4 +1,5 @@
 set tower.debug yes
 init
 writekey tower.key
+agentserver
 listen

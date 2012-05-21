@@ -9,7 +9,6 @@ import java.net.Socket;
 
 import sat.events.Event;
 import sat.events.EventListener;
-import sat.tower.Tower;
 
 public class AgentServer implements Runnable {
 	private static final int PORT = 4242;
