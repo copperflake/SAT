@@ -17,36 +17,40 @@ public class TweetSender {
 
 		ConfigurationBuilder cb = new ConfigurationBuilder();
 		cb.setDebugEnabled(true)
-			.setOAuthConsumerKey(consumerKey)
-			.setOAuthConsumerSecret(consumerSecret)
-			.setOAuthAccessToken(accessToken)
-			.setOAuthAccessTokenSecret(accessTokenSecret)
-			.setDebugEnabled(true);
+		  .setOAuthConsumerKey(consumerKey)
+		  .setOAuthConsumerSecret(consumerSecret)
+		  .setOAuthAccessToken(accessToken)
+		  .setOAuthAccessTokenSecret(accessTokenSecret)
+		  .setDebugEnabled(true);
 
 		TwitterFactory tf = new TwitterFactory(cb.build());
 		twitter = tf.getInstance();
 	}
-	
+
 	public static void tweet(String tweet, File image, RadioID id) throws TwitterException {
-		init();
+		if(twitter == null) {
+			init();
+		}
+
 		try {
-			StatusUpdate status = new StatusUpdate(id.toString()+": "+ tweet);
+			StatusUpdate status = new StatusUpdate(id.toString() + ": " + tweet);
 			status.setMedia(image);
 			twitter.updateStatus(status);
 		}
 		catch(TwitterException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void tweet(String tweet) {
-		init();
+		if(twitter == null) {
+			init();
+		}
+
 		try {
 			twitter.updateStatus(tweet);
 		}
 		catch(TwitterException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
