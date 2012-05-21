@@ -8,19 +8,27 @@ public enum PlaneType {
 	GRIPEN		( 2.00f,	45000,	200,	1	);
 	
 	public static PlaneType getPlaneTypeByName(String name) {
-		if(name.equals("A320") || name.equals("a320")) {
+		name = name.toLowerCase();
+
+		if(name.equals("a320")) {
 			return A320;
-		} else if(name.equals("A320") || name.equals("a320")) {
+		}
+		else if(name.equals("a320")) {
 			return A320;
-		} else if(name.equals("A380") || name.equals("a380")) {
+		}
+		else if(name.equals("a380")) {
 			return A380;
-		} else if(name.equals("B787") || name.equals("b787")) {
+		}
+		else if(name.equals("b787")) {
 			return B787;
-		} else if(name.equals("CONCORDE") || name.equals("Concorde") || name.equals("concorde")) {
+		}
+		else if(name.equals("concorde")) {
 			return CONCORDE;
-		} else if(name.equals("GRIPEN") || name.equals("Gripen") || name.equals("gripen")) {
+		}
+		else if(name.equals("gripen")) {
 			return GRIPEN;
-		} else {
+		}
+		else {
 			return null;
 		}
 	}
