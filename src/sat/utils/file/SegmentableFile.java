@@ -4,42 +4,66 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Iterator;
 
-public class SegmentableFile implements Iterable<FileSegment> {
+/**
+ * Un fichier segmentable pour l'envoi par la radio.
+ */
+public class SegmentableFile implements Iterable<byte[]> {
+	/**
+	 * Nombre de partie à ce fichier.
+	 */
 	private int segmentsCount = 0;
+	
+	/**
+	 * Chemin vers le fichier d'origine.
+	 */
 	private String pathname;
+	
+	/**
+	 * Le flux d'entrée du fichier.
+	 */
 	private RandomAccessFile file;
-	private byte[] hash;
+	
+	/**
+	 * La taille maximale d'un segment de fichier.
+	 */
 	public static final int SEGMENT_SIZE = 1024;
 
-	public SegmentableFile(String pathname) throws IOException {
+	public SegmentableFile(String pathname) throws IOException, NoSuchAlgorithmException {
 		this.pathname = pathname;
-		this.file = new RandomAccessFile(this.pathname, "rw");
-		try {
-			this.calculateHash();
-		}
-		catch(NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	
+		file = new RandomAccessFile(this.pathname, "rw");
+		segmentsCount = (int) (((float)getSize())/(float)SEGMENT_SIZE);
 	}
 
-	public Iterator<FileSegment> iterator() {
-		return new Iterator<FileSegment>() {
+	/**
+	 * Retourne un itéreateur pour parcourir ce fichier morceau par morceau.
+	 */
+	public Iterator<byte[]> iterator() {
+		return new Iterator<byte[]>() {
+			/**
+			 * La position actuelle dans le fichier.
+			 */
 			private int currentSegment = 0;
 
+			/**
+			 * Indique s'il y a un prochain morceau.
+			 */
 			public boolean hasNext() {
-				return currentSegment <= segmentsCount;
+				return currentSegment < segmentsCount;
 			}
 
-			public FileSegment next() {
+			/**
+			 * Retourne le prochain morceau de ce fichier.
+			 */
+			public byte[] next() {
 				try {
 					return getSegment(currentSegment++);
 				}
 				catch(IOException e) {
 					e.printStackTrace();
-					// TODO blah
 					return null;
 				}
 			}
@@ -50,19 +74,27 @@ public class SegmentableFile implements Iterable<FileSegment> {
 		};
 	}
 
-	public FileSegment getSegment(int offset) throws IOException {
-		byte[] bytes = null;
-		file.read(bytes, offset * SEGMENT_SIZE, SEGMENT_SIZE);
-		return new FileSegment(bytes);
+	public byte[] getSegment(int offset) throws IOException {
+		byte[] bytes = new byte[SEGMENT_SIZE];
+		int bytesRead = file.read(bytes, offset * SEGMENT_SIZE, SEGMENT_SIZE);
+		
+		// Truncate array if we havent read a full block of data
+		if(bytesRead < SEGMENT_SIZE) {
+			bytes = Arrays.copyOfRange(bytes, 0, bytesRead);
+		}
+		
+		return bytes;
+	}
+	
+	public void writeSegment(int offset, byte[] data) throws IOException {
+		file.write(data, offset * SEGMENT_SIZE, data.length);
 	}
 
-	public void writeSegment(int offset, FileSegment data) throws IOException {
-		file.write(data.getData(), offset * SEGMENT_SIZE, SEGMENT_SIZE);
-	}
-
-	public byte[] calculateHash() throws NoSuchAlgorithmException, IOException {
+	public byte[] getHash() throws NoSuchAlgorithmException, IOException {
 		MessageDigest digest = MessageDigest.getInstance("MD5");
 
+		file.seek(0);
+		
 		byte[] buffer = new byte[1024];
 		int numRead;
 
@@ -75,10 +107,6 @@ public class SegmentableFile implements Iterable<FileSegment> {
 		while(numRead != -1);
 
 		return digest.digest();
-	}
-
-	public byte[] getHash() {
-		return this.hash;
 	}
 
 	public String getFormat() {
