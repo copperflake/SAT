@@ -357,6 +357,10 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 			
 			return sb.toString();
 		}
+		
+		public byte[] asBytes() {
+			return hash;
+		}
 	}
 
 	private class FileTransferAgentDispatcher {
@@ -393,12 +397,19 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 				}
 			}
 		}
+		
+		public synchronized void deleteAgent(FileTransferHash hash) {
+			agents.remove(hash);
+		}
 	}
 
 	private class FileTransferAgent {
 		private FileTransferHash hash;
+		
 		private int segmentCount;
+		private int segmentReceived = 0;
 
+		private String path;
 		private DataFile file;
 
 		private FileTransferAgent(FileTransferHash hash, RadioID sender, String format, int size) throws NoSuchAlgorithmException, IOException {
@@ -408,7 +419,7 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 
 			String filename = sender + "-" + hash.asHex() + "." + format;
 			filename = filename.replaceAll("[:/\\\\]", "_");
-			String path = config.getString("tower.downloads") + filename;
+			path = config.getString("tower.downloads") + filename;
 
 			emitDebug("Started receiving file: " + path);
 
@@ -416,14 +427,46 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 
 			// TODO: implements timeouts
 		}
+		
+		public void exit() throws IOException {
+			dataDispatcher.deleteAgent(hash);
+			file.close();
+		}
 
 		public void abort() throws IOException {
-			file.close();
+			exit();
 			file.delete();
 		}
 
 		private void gotMessage(MessageData m) throws IOException {
 			file.writeSegment(m.getContinuation(), m.getPayload());
+			
+			if(++segmentReceived >= segmentCount) {
+				// TODO: better "file received management"
+				
+				try {
+					FileTransferHash receivedHash = new FileTransferHash(file.getHash()); 
+					
+					System.out.println(hash.asHex());
+					System.out.println(receivedHash.asHex());
+					
+					if(!receivedHash.equals(hash)) {
+						emitDebug("File corrupted: " + path);
+						
+						abort();
+						return;
+					}
+				}
+				catch(NoSuchAlgorithmException e) {
+					emitDebug("Error while hashing: " + path);
+					
+					abort();
+					return;
+				}
+				
+				emitDebug("File successfully received: " + path);
+				exit();
+			}
 		}
 	}
 }

@@ -94,7 +94,7 @@ public class DataFile extends File implements Iterable<byte[]> {
 	}
 
 	public byte[] getHash() throws NoSuchAlgorithmException, IOException {
-		MessageDigest digest = MessageDigest.getInstance("MD5");
+		MessageDigest digest = MessageDigest.getInstance("SHA1");
 
 		file.seek(0);
 		
