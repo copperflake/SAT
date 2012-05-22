@@ -1,6 +1,12 @@
 package sat.tower;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import sat.DebugEvent;
 import sat.events.AsyncEventEmitter;
@@ -19,6 +25,9 @@ import sat.utils.cli.Config;
 import sat.utils.crypto.RSAException;
 import sat.utils.crypto.RSAKeyPair;
 import sat.utils.geo.Coordinates;
+import sat.utils.routes.MoveType;
+import sat.utils.routes.Route;
+import sat.utils.routes.Waypoint;
 
 /**
  * Une tour de contrôle. Cette classe est un Singleton.
@@ -73,6 +82,87 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		}
 
 		return instance;
+	}
+	
+	/**
+	 * Liste des routes (circuits d'attente et piste d'atterissage)
+	 */
+	private ArrayList<Route> routes;
+
+	/**
+	 * Charge un fichier de route, le lit, le parse et ajoute une route à <code>routes</code>.
+	 * @param path
+	 * @param capacity
+	 * @throws IOException
+	 */
+	public void loadRoute(String path, int capacity) throws IOException {
+		StringBuffer fileData = new StringBuffer();
+		BufferedReader reader = new BufferedReader(new FileReader(path));
+		
+		char[] buf = new char[1024];
+		int numRead = 0;
+		
+		while((numRead = reader.read(buf)) > 0) {
+			String readData = String.valueOf(buf, 0, numRead);
+			fileData.append(readData);
+		}
+		
+		reader.close();
+		String data = fileData.toString();
+
+		Route route = new Route(capacity);
+		
+		for(String instruction : data.split(";")) {
+			if(instruction.isEmpty()) {
+				continue;
+			}
+
+			char t = instruction.toUpperCase().charAt(0);
+			String[] coords = instruction.substring(1).split(",");
+			float[] floatCoords = new float[coords.length];
+
+			for(int i = 0; i < coords.length; i++) {
+				floatCoords[i] = Float.parseFloat(coords[i]);
+			}
+			
+			MoveType type;
+			float[] args;
+			
+			switch(t) {
+				case 'S':
+					type = MoveType.STRAIGHT;
+					args = new float[]{floatCoords[0], floatCoords[1], -1};
+					break;
+					
+				case 'C':
+					type = MoveType.CIRCULAR;
+					args = new float[]{floatCoords[0], floatCoords[1], -1, floatCoords[2]};
+					break;
+
+				case 'L':
+					type = MoveType.LANDING;
+					args = new float[]{floatCoords[0], floatCoords[1], -1};
+					route.setLanding();
+					break;
+					
+				case 'N':
+					type = MoveType.NONE;
+					args = new float[]{};
+					break;
+
+				case 'D':
+					type = MoveType.DESTRUCTION;
+					args = new float[]{floatCoords[0], floatCoords[1], -1};
+					break;
+
+				default:
+					continue;
+			}
+			
+			route.add(new Waypoint(type, args));
+		}
+		
+		routes.add(route);
 	}
 
 	// - - - Class methods - - -
