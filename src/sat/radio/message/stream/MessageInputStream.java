@@ -46,7 +46,7 @@ public class MessageInputStream extends FilterInputStream {
 		// Lecture des paramètres communs à tous les messages.
 		// Attention, l'ordre de lecture est important ! (obviously)
 
-		 // PlaneID
+		// PlaneID
 		RadioID id;
 		if(extended) {
 			int idLength = dis.readInt();
@@ -99,11 +99,20 @@ public class MessageInputStream extends FilterInputStream {
 			case DATA:
 				byte[] hash = fill(new byte[20]);
 				int continuation = dis.readInt();
-				byte[] format = fill(new byte[4]);
+
+				String format;
+				if(this.extended) {
+					int formatLength = dis.readInt();
+					format = (String) Serializer.deserialize(fill(new byte[formatLength]));
+				}
+				else {
+					format = new String(fill(new byte[4]));
+				}
+				
 				int fileSize = dis.readInt();
 				byte[] payload = fill(new byte[length]);
 
-				message = new MessageData(id, c, hash, continuation, String.valueOf(format), fileSize, payload);
+				message = new MessageData(id, c, hash, continuation, format, fileSize, payload);
 				break;
 
 			case MAYDAY:

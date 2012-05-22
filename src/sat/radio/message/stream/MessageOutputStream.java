@@ -104,7 +104,15 @@ public class MessageOutputStream extends FilterOutputStream {
 	private void writeMessageAttributes(MessageData m) throws IOException {
 		dos.write(m.getHash());
 		dos.writeInt(m.getContinuation());
-		dos.write(m.getFormat());
+		
+		if(extended) {
+			byte[] serializedString = Serializer.serialize(m.getFormat());
+			dos.writeInt(serializedString.length);
+			dos.write(serializedString);
+		} else {
+			dos.writeBytes(m.getFormat().substring(1, 5));
+		}
+		
 		dos.writeInt(m.getFileSize());
 		dos.write(m.getPayload());
 	}

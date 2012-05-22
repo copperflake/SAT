@@ -1,5 +1,6 @@
 package sat.utils.file;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.security.MessageDigest;
@@ -10,7 +11,7 @@ import java.util.Iterator;
 /**
  * Un fichier segmentable pour l'envoi par la radio.
  */
-public class SegmentableFile implements Iterable<byte[]> {
+public class DataFile extends File implements Iterable<byte[]> {
 	/**
 	 * Nombre de partie à ce fichier.
 	 */
@@ -31,11 +32,10 @@ public class SegmentableFile implements Iterable<byte[]> {
 	 */
 	public static final int SEGMENT_SIZE = 1024;
 
-	public SegmentableFile(String pathname) throws IOException, NoSuchAlgorithmException {
-		this.pathname = pathname;
-	
-		file = new RandomAccessFile(this.pathname, "rw");
-		segmentsCount = (int) (((float)getSize())/(float)SEGMENT_SIZE);
+	public DataFile(String path) throws IOException, NoSuchAlgorithmException {
+		super(path);
+		file = new RandomAccessFile(this, "rw");
+		segmentsCount = segmentsCountForSize((int) file.length());
 	}
 
 	/**
@@ -139,5 +139,9 @@ public class SegmentableFile implements Iterable<byte[]> {
 	
 	public void close() throws IOException {
 		file.close();
+	}
+	
+	public static int segmentsCountForSize(int size) {
+		return (int) (Math.ceil( ((float) size) / ((float) DataFile.SEGMENT_SIZE) ));
 	}
 }

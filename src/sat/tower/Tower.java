@@ -6,7 +6,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 
 import sat.DebugEvent;
 import sat.events.AsyncEventEmitter;
@@ -18,12 +21,14 @@ import sat.radio.RadioEvent;
 import sat.radio.RadioID;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.message.Message;
+import sat.radio.message.MessageData;
 import sat.radio.message.MessageKeepalive;
 import sat.radio.server.RadioServer;
 import sat.radio.server.RadioServerDelegate;
 import sat.utils.cli.Config;
 import sat.utils.crypto.RSAException;
 import sat.utils.crypto.RSAKeyPair;
+import sat.utils.file.DataFile;
 import sat.utils.geo.Coordinates;
 import sat.utils.routes.MoveType;
 import sat.utils.routes.Route;
@@ -54,6 +59,7 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 
 		defaults.setProperty("tower.debug", "no");
 		defaults.setProperty("tower.prefix", "TWR");
+		defaults.setProperty("tower.downloads", "downloads/");
 
 		defaults.setProperty("radio.ciphered", "yes");
 		defaults.setProperty("radio.legacy", "no");
@@ -67,6 +73,7 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	 */
 	private Tower() {
 		config = new Config(defaults);
+		dataDispatcher = new FileTransferAgentDispatcher();
 	}
 
 	/**
@@ -83,14 +90,16 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 
 		return instance;
 	}
-	
+
 	/**
 	 * Liste des routes (circuits d'attente et piste d'atterissage)
 	 */
 	private ArrayList<Route> routes;
 
 	/**
-	 * Charge un fichier de route, le lit, le parse et ajoute une route à <code>routes</code>.
+	 * Charge un fichier de route, le lit, le parse et ajoute une route à
+	 * <code>routes</code>.
+	 * 
 	 * @param path
 	 * @param capacity
 	 * @throws IOException
@@ -98,20 +107,20 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	public void loadRoute(String path, int capacity) throws IOException {
 		StringBuffer fileData = new StringBuffer();
 		BufferedReader reader = new BufferedReader(new FileReader(path));
-		
+
 		char[] buf = new char[1024];
 		int numRead = 0;
-		
+
 		while((numRead = reader.read(buf)) > 0) {
 			String readData = String.valueOf(buf, 0, numRead);
 			fileData.append(readData);
 		}
-		
+
 		reader.close();
 		String data = fileData.toString();
 
 		Route route = new Route(capacity);
-		
+
 		for(String instruction : data.split(";")) {
 			if(instruction.isEmpty()) {
 				continue;
@@ -124,44 +133,44 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 			for(int i = 0; i < coords.length; i++) {
 				floatCoords[i] = Float.parseFloat(coords[i]);
 			}
-			
+
 			MoveType type;
 			float[] args;
-			
+
 			switch(t) {
 				case 'S':
 					type = MoveType.STRAIGHT;
-					args = new float[]{floatCoords[0], floatCoords[1], -1};
+					args = new float[] { floatCoords[0], floatCoords[1], -1 };
 					break;
-					
+
 				case 'C':
 					type = MoveType.CIRCULAR;
-					args = new float[]{floatCoords[0], floatCoords[1], -1, floatCoords[2]};
+					args = new float[] { floatCoords[0], floatCoords[1], -1, floatCoords[2] };
 					break;
 
 				case 'L':
 					type = MoveType.LANDING;
-					args = new float[]{floatCoords[0], floatCoords[1], -1};
+					args = new float[] { floatCoords[0], floatCoords[1], -1 };
 					route.setLanding();
 					break;
-					
+
 				case 'N':
 					type = MoveType.NONE;
-					args = new float[]{};
+					args = new float[] {};
 					break;
 
 				case 'D':
 					type = MoveType.DESTRUCTION;
-					args = new float[]{floatCoords[0], floatCoords[1], -1};
+					args = new float[] { floatCoords[0], floatCoords[1], -1 };
 					break;
 
 				default:
 					continue;
 			}
-			
+
 			route.add(new Waypoint(type, args));
 		}
-		
+
 		routes.add(route);
 	}
 
@@ -190,6 +199,11 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	private RadioID id;
 
 	private boolean initDone = false;
+
+	/**
+	 * Le gestionnaire de dispatch des messages de données.
+	 */
+	private FileTransferAgentDispatcher dataDispatcher;
 
 	/**
 	 * Retourne l'objet de configuration de la tour.
@@ -259,7 +273,12 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		emit(new TowerEvent.PlaneMoved(m.getID(), m.getCoordinates()));
 		emit(m);
 	}
-	
+
+	public void on(MessageData m) {
+		dataDispatcher.dispatchMessageToAgent(m);
+		emit(m);
+	}
+
 	/**
 	 * Réception d'un message (cas général)
 	 */
@@ -290,6 +309,119 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	private void emitDebug(DebugEvent event) {
 		if(config.getBoolean("tower.debug")) {
 			emit(event);
+		}
+	}
+
+	// - - - FileTransferAgent - - -
+
+	/**
+	 * Classe wrapper permettant d'utiliser des hashs comme clés.
+	 */
+	private class FileTransferHash {
+		private byte[] hash;
+
+		public FileTransferHash(byte[] hash) {
+			this.hash = hash;
+		}
+		
+		public boolean equals(Object o) {
+			// Obvious equality
+			if(this == o)
+				return true;
+
+			// Obvious inequality
+			if((o == null) || (o.getClass() != this.getClass()))
+				return false;
+
+			FileTransferHash h = (FileTransferHash) o;
+
+			return Arrays.equals(hash, h.hash);
+		}
+
+		public int hashCode() {
+			return Arrays.hashCode(hash);
+		}
+		
+		public String asHex() {
+			StringBuffer sb = new StringBuffer();
+			
+			for(byte b : hash) {
+				String h = String.format("%x", b);
+				if(h.length() != 2) {
+					sb.append("0");
+				}
+				sb.append(h);
+			}
+			
+			return sb.toString();
+		}
+	}
+
+	private class FileTransferAgentDispatcher {
+		private HashMap<FileTransferHash, FileTransferAgent> agents = new HashMap<FileTransferHash, FileTransferAgent>();
+
+		public synchronized void dispatchMessageToAgent(MessageData m) {
+			FileTransferHash hash = new FileTransferHash(m.getHash());
+
+			FileTransferAgent agent = agents.get(hash);
+
+			if(agent == null) {
+				try {
+					agent = new FileTransferAgent(hash, m.getID(), m.getFormat(), m.getFileSize());
+				}
+				catch(Exception e) {
+					e.printStackTrace();
+					return;
+				}
+
+				agents.put(hash, agent);
+			}
+
+			try {
+				agent.gotMessage(m);
+			}
+			catch(IOException e) {
+				emit(new DebugEvent("Failed to write data block from " + m.getID() + " file transfer aborted"));
+				try {
+					agent.abort();
+					agents.remove(hash);
+				}
+				catch(IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+		}
+	}
+
+	private class FileTransferAgent {
+		private FileTransferHash hash;
+		private int segmentCount;
+
+		private DataFile file;
+
+		private FileTransferAgent(FileTransferHash hash, RadioID sender, String format, int size) throws NoSuchAlgorithmException, IOException {
+			this.hash = hash;
+
+			segmentCount = DataFile.segmentsCountForSize(size);
+
+			String filename = sender + "-" + hash.asHex() + "." + format;
+			filename = filename.replaceAll("[:/\\\\]", "_");
+			String path = config.getString("tower.downloads") + filename;
+
+			emitDebug("Started receiving file: " + path);
+
+			file = new DataFile(path);
+
+			// TODO: implements timeouts
+		}
+
+		public void abort() throws IOException {
+			file.close();
+			file.delete();
+		}
+
+		private void gotMessage(MessageData m) throws IOException {
+			file.writeSegment(m.getContinuation(), m.getPayload());
 		}
 	}
 }
