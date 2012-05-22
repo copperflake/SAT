@@ -1,12 +1,10 @@
 package sat.tower.agent;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 
 import sat.events.Event;
 import sat.events.EventEmitter;
 import sat.events.EventListener;
-import sat.events.UnhandledEventException;
 import sat.tower.Tower;
 
 public class TowerAgent extends EventEmitter implements EventListener {
@@ -91,11 +89,11 @@ public class TowerAgent extends EventEmitter implements EventListener {
 		execute(new AgentRequest.Config(), handler);
 	}
 
-	public void requestGetConfig(String key, EventListener handler) {
+	public void requestConfigGetKey(String key, EventListener handler) {
 		execute(new AgentRequest.ConfigGetKey(key), handler);
 	}
 
-	public void requestSetConfig(String key, String value) {
+	public void requestConfigSetKey(String key, String value) {
 		execute(new AgentRequest.ConfigSetKey(key, value), null);
 	}
 

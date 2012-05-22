@@ -102,7 +102,7 @@ public class TowerCLI extends GlobalCLI implements EventListener {
 	 */
 	public void get(String key) {
 		setPaused(true);
-		agent.requestGetConfig(key, new EventListener() {
+		agent.requestConfigGetKey(key, new EventListener() {
 			@SuppressWarnings("unused")
 			public void on(AgentResult.ConfigGetKeyResult ev) {
 				println(ev.getValue());
@@ -120,7 +120,7 @@ public class TowerCLI extends GlobalCLI implements EventListener {
 	 *            La valeur du paramètre.
 	 */
 	public void set(String key, String value) {
-		agent.requestSetConfig(key, value);
+		agent.requestConfigSetKey(key, value);
 	}
 
 	/**
