@@ -103,7 +103,7 @@ public class MessageInputStream extends FilterInputStream {
 				int fileSize = dis.readInt();
 				byte[] payload = fill(new byte[length]);
 
-				message = new MessageData(id, c, hash, continuation, format, fileSize, payload);
+				message = new MessageData(id, c, hash, continuation, String.valueOf(format), fileSize, payload);
 				break;
 
 			case MAYDAY:

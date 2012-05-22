@@ -6,11 +6,11 @@ import sat.utils.geo.Coordinates;
 public class MessageData extends Message {
 	private byte[] hash;
 	int continuation;
-	private byte[] format;
+	private String format;
 	private int fileSize;
 	private byte[] payload;
 
-	public MessageData(RadioID id, Coordinates c, byte[] hash, int continuation, byte[] format, int fileSize, byte[] payload) {
+	public MessageData(RadioID id, Coordinates c, byte[] hash, int continuation, String format, int fileSize, byte[] payload) {
 		super(id, c);
 
 		type = MessageType.DATA;
@@ -31,7 +31,7 @@ public class MessageData extends Message {
 		return continuation;
 	}
 
-	public byte[] getFormat() {
+	public String getFormat() {
 		return format;
 	}
 
