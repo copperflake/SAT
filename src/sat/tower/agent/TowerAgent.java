@@ -34,7 +34,7 @@ public class TowerAgent extends EventEmitter implements EventListener {
 
 	public void execute(AgentRequest req) {
 		try {
-			req.notify(executor);
+			req.trigger(executor);
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -47,7 +47,7 @@ public class TowerAgent extends EventEmitter implements EventListener {
 			if(pendingRequests.containsKey(id)) {
 				EventListener handler = pendingRequests.remove(id);
 				try {
-					ev.notify(handler);
+					ev.trigger(handler);
 				}
 				catch(Exception e) {
 					e.printStackTrace();
@@ -103,7 +103,7 @@ public class TowerAgent extends EventEmitter implements EventListener {
 
 	// - - - Executor - - -
 
-	public class TowerAgentExecutor extends EventEmitter implements EventListener {
+	public class TowerAgentExecutor implements EventListener {
 		private Tower tower;
 
 		public TowerAgentExecutor() {
@@ -135,7 +135,7 @@ public class TowerAgent extends EventEmitter implements EventListener {
 			ev.setRemoteRequest(req.isRemoteRequest());
 
 			try {
-				ev.notify(TowerAgent.this);
+				ev.trigger(TowerAgent.this);
 			}
 			catch(Exception e) {
 				e.printStackTrace();

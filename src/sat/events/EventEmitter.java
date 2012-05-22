@@ -28,7 +28,7 @@ public abstract class EventEmitter implements EventEmitterInterface {
 	public void emit(Event event) {
 		for(EventListener listener : listeners) {
 			try {
-				event.notify(listener, emitter);
+				event.trigger(listener, emitter);
 			}
 			catch(Exception e) {
 				// Ignore exceptions when emitting events

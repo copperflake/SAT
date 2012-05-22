@@ -25,7 +25,7 @@ public class RemoteTowerAgent extends TowerAgent {
 				try {
 					while(true) {
 						Event event = (Event) ois.readObject();
-						event.notify(RemoteTowerAgent.this);
+						event.trigger(RemoteTowerAgent.this);
 					}
 				}
 				catch(Exception e) {

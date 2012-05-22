@@ -1,6 +1,9 @@
 package sat.utils.geo;
 
-public class Coordinates {
+import java.io.Serializable;
+
+@SuppressWarnings("serial")
+public class Coordinates implements Serializable {
 	private float x;
 	private float y;
 	private float z;

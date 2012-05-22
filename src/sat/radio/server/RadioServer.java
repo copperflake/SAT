@@ -225,7 +225,7 @@ public class RadioServer extends Radio {
 		}
 
 		protected void handleMessage(Message message) throws InvocationTargetException, UnhandledEventException {
-			message.notify(messageHandler);
+			message.trigger(messageHandler);
 		}
 
 		protected void emitEvent(Event event) {

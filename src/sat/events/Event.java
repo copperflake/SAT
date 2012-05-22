@@ -11,11 +11,11 @@ public class Event implements Cloneable, Serializable {
 		return emitter;
 	}
 
-	public final void notify(EventListener listener) throws UnhandledEventException, InvocationTargetException {
-		notify(listener, null);
+	public final void trigger(EventListener listener) throws UnhandledEventException, InvocationTargetException {
+		trigger(listener, null);
 	}
 
-	public final void notify(EventListener listener, EventEmitterInterface emitter) throws UnhandledEventException, InvocationTargetException {
+	public final void trigger(EventListener listener, EventEmitterInterface emitter) throws UnhandledEventException, InvocationTargetException {
 		Event event = (Event) this.clone();
 		event.emitter = emitter;
 

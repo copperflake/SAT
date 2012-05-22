@@ -62,13 +62,7 @@ public abstract class RadioEvent extends Event {
 			super(id);
 		}
 	}
-
-	public static class PlaneMoved extends PlaneRadioEvent {
-		public PlaneMoved(RadioID id) {
-			super(id);
-		}
-	}
-
+	
 	/**
 	 * Cet évenement est utilisé lorsque l'avion envoi un MayDay à la tour de contrôle
 	 * ou enlève son MayDay pour signaler que le problème à été résolu (si cela est possible).

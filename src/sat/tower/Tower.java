@@ -3,8 +3,8 @@ package sat.tower;
 import java.io.IOException;
 
 import sat.DebugEvent;
+import sat.events.AsyncEventEmitter;
 import sat.events.Event;
-import sat.events.EventEmitter;
 import sat.events.EventListener;
 
 import sat.radio.RadioEvent;
@@ -12,6 +12,7 @@ import sat.radio.RadioEvent;
 import sat.radio.RadioID;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.message.Message;
+import sat.radio.message.MessageKeepalive;
 import sat.radio.server.RadioServer;
 import sat.radio.server.RadioServerDelegate;
 import sat.utils.cli.Config;
@@ -22,7 +23,7 @@ import sat.utils.geo.Coordinates;
 /**
  * Une tour de contrôle. Cette classe est un Singleton.
  */
-public class Tower extends EventEmitter implements EventListener, RadioServerDelegate {
+public class Tower extends AsyncEventEmitter implements EventListener, RadioServerDelegate {
 	// - - - Singleton Tools - - -
 
 	/**
@@ -164,25 +165,32 @@ public class Tower extends EventEmitter implements EventListener, RadioServerDel
 
 	// - - - Radio Events - - -
 
+	public void on(MessageKeepalive m) {
+		emit(new TowerEvent.PlaneMoved(m.getID(), m.getCoordinates()));
+		emit(m);
+	}
+	
 	/**
 	 * Réception d'un message (cas général)
 	 */
-	public void on(Message e) {
-		System.out.println(e);
+	public void on(Message m) {
+		System.out.println(m);
+		emit(m); // reemit
 	}
 
 	public void on(RadioEvent.PlaneConnected e) {
-		emitDebug("Plane connected " + e.getId());
+		// Plane connected
+		emit(e); // reemit
 	}
 
 	public void on(RadioEvent.PlaneDisconnected e) {
-		emitDebug("Plane disconnected " + e.getId());
+		// Plane disconnected
+		emit(e); // reemit
 	}
 
-	public void on(Event event) {
+	public void on(Event e) {
 		// Unmanaged event, pass it to our own listeners
-		//System.out.println(event);
-		emit(event);
+		emit(e);
 	}
 
 	private void emitDebug(String msg) {
