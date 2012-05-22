@@ -1,11 +1,5 @@
 package sat.gui;
 
-import java.util.HashMap;
-
-import sat.events.EventListener;
-import sat.radio.RadioEvent;
-import sat.radio.RadioID;
-
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.light.AmbientLight;
@@ -21,7 +15,7 @@ import com.jme3.scene.shape.Box;
  * Sample 3 - how to load an OBJ model, and OgreXML model, a material/texture,
  * or text.
  */
-public class Radar extends SimpleApplication implements EventListener {
+public class Radar extends SimpleApplication {
 	private long frameNumber = 0;
 	private Vector3f camUp;
 	private float moveSpeed, moveAltSpeed, zoomSpeed, rotSpeed;

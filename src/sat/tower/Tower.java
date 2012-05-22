@@ -101,7 +101,9 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	 * <code>routes</code>.
 	 * 
 	 * @param path
+	 *            Le fichier contenant la route.
 	 * @param capacity
+	 *            Le nombre d'avion maximum sur la route.
 	 * @throws IOException
 	 */
 	public void loadRoute(String path, int capacity) throws IOException {
@@ -278,7 +280,7 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		dataDispatcher.dispatchMessageToAgent(m);
 		emit(m);
 	}
-
+	
 	/**
 	 * Réception d'un message (cas général)
 	 */

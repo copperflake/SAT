@@ -22,14 +22,13 @@ import sat.radio.RadioID;
 import sat.utils.geo.*;
 
 public class Aircraft implements EventListener {
-	private Node mainNode;
-	private Node simsWrapper;
-	private Geometry model;
-	private Geometry sims;
+	private Node mainNode, simsWrapper, parent;
+	private Geometry model, sims;
 	private Vector3f currentPos, initPos;
 	private Mesh lineMesh;
 	private PlaneType type;
 	private RadioID id;
+	private AssetManager assetManager;
 
 	private CircularBuffer<Vector3f> path = new CircularBuffer<Vector3f>(50);
 
@@ -38,6 +37,8 @@ public class Aircraft implements EventListener {
 	
 	public void init3D(Node parent, AssetManager assetManager, PlaneType type) {
 		this.type = type;
+		this.assetManager = assetManager;
+		this.parent = parent;
 		simsWrapper = new Node();
 		mainNode = new Node();
 		lineMesh = new Mesh();
@@ -134,11 +135,8 @@ public class Aircraft implements EventListener {
 		g2d.drawImage(planeImg, x-planeImg.getWidth()/2, y-planeImg.getHeight()/2, null);
 	}
 	
-	private void drawAircraft3D(Vector3f initPos, Node parent, AssetManager assetManager) {
-		if(this.type == PlaneType.A320)
-			model = (Geometry) assetManager.loadModel("Models/plane.obj");
-		else
-			model = (Geometry) assetManager.loadModel("Models/plane.obj");
+	private void drawAircraft3D(Vector3f initPos) {
+		model = (Geometry) assetManager.loadModel("Models/default.obj");
 		
 		model.getMaterial().setColor("Ambient", new ColorRGBA(0.3f, 0.3f, 0.3f, 1f));
 		mainNode.attachChild(model);
@@ -156,7 +154,34 @@ public class Aircraft implements EventListener {
 		
 		parent.attachChild(mainNode);
 	}
-
+	
+	private void changeType(PlaneType type) {
+		this.type = type;
+		changeModel3D(type);
+	}
+	
+	private void changeModel3D(PlaneType type) {
+		model.removeFromParent();
+		
+		if(this.type == PlaneType.A320) {
+			model = (Geometry) assetManager.loadModel("Models/plane.obj");
+			model.scale(1f);
+		}
+		else if(this.type == PlaneType.GRIPEN) {
+			model = (Geometry) assetManager.loadModel("Models/gripen.obj");
+			model.scale(0.5f);
+		}
+		else if(this.type == PlaneType.CONCORDE) {
+			model = (Geometry) assetManager.loadModel("Models/concorde.obj");
+			model.scale(0.5f);
+		}
+		else {
+			model = (Geometry) assetManager.loadModel("Models/plane.obj");
+			model.scale(1f);
+		}
+		mainNode.attachChild(model);
+	}
+	
 	private void drawTrace2D(Graphics2D g2d) {
 		g2d.setColor(Color.CYAN);
 		for(int i=1; i < path.size(); i++) {
@@ -167,7 +192,7 @@ public class Aircraft implements EventListener {
 		}
 	}
 	
-	private void drawTrace3D(Node parent, AssetManager assetManager) {
+	private void drawTrace3D() {
 		lineMesh.setMode(Mesh.Mode.Lines);
 		lineMesh.setLineWidth(4f);
 		Geometry lineGeometry = new Geometry("line", lineMesh);

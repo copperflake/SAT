@@ -21,7 +21,7 @@ public class Waypoint implements Serializable {
 		return new Coordinates(args[0], args[1], args[2]);
 	}
 	
-	public float getRadius() {
+	public float getAngle() {
 		return args[3];
 	}
 }

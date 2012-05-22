@@ -151,6 +151,20 @@ public class TowerCLI extends GlobalCLI implements EventListener {
 	}
 
 	/**
+	 * Charge une route.
+	 * 
+	 * @param path
+	 *            Le fichier contenant la route.
+	 * @param capacity
+	 *            Le nombre d'avion maximum sur la route.
+	 * @throws NumberFormatException
+	 * @throws IOException
+	 */
+	public void loadroute(String path, String capacity) throws NumberFormatException, IOException {
+		getTower().loadRoute(path, Integer.parseInt(capacity));
+	}
+
+	/**
 	 * Ajoute un moteur à la radio de la tour.
 	 * <p>
 	 * Moteurs disponibles:

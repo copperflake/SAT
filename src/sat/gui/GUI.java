@@ -33,7 +33,6 @@ public class GUI extends JFrame implements EventListener {
 		super("Airport");
 		
 		aircrafts = new HashMap<RadioID, Aircraft>();
-		
 		setSize(1500, 1000);
 		// Pop the window in the middle of the screen. (Work correctly on a dual-screen btw.) 
 		//setLocationRelativeTo(null);

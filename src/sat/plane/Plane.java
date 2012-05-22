@@ -18,6 +18,9 @@ import sat.utils.crypto.RSAException;
 import sat.utils.crypto.RSAKey;
 import sat.utils.crypto.RSAKeyPair;
 import sat.utils.geo.Coordinates;
+import sat.utils.routes.MoveType;
+import sat.utils.routes.Route;
+import sat.utils.routes.Waypoint;
 
 public class Plane implements EventListener, RadioClientDelegate {
 	/**
@@ -40,11 +43,18 @@ public class Plane implements EventListener, RadioClientDelegate {
 	 * La position de l'avion.
 	 */
 	private Coordinates coords;
+	
+	/**
+	 * La vitesse de l'avion. (en pixel/s)
+	 */
+	private float speed;
 
 	/**
 	 * L'identifiant de l'avion.
 	 */
 	private RadioID id;
+	
+	private Route route;
 
 	private PlaneType type;
 
@@ -69,7 +79,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 		defaults = new Config();
 
 		defaults.setProperty("plane.debug", "no");
-		defaults.setProperty("plane.coords", "0,0,0");
+		defaults.setProperty("plane.coords", "0,0,-1");
 		defaults.setProperty("plane.type", "A320");
 		defaults.setProperty("plane.prefix", "PLN");
 
@@ -156,19 +166,74 @@ public class Plane implements EventListener, RadioClientDelegate {
 				}
 			}
 		}
-
+		
 		// ROUTING
-		//private void moveInStraightLine(double deltaTimeSeconds, RoadInstruction instruction) {
-			// TODO
-		//}
-
-		//private void moveInCircle(double deltaTimeSeconds, RoadInstruction current) {
-			// TODO
-		//}
-
-		//private double computeTheta(double px, double py, double cx, double cy) {
-		//	return Math.atan2(py - cy, px - cx);
-		//}
+		// deltaTimeSeconds = interval entre chaque mouvement?
+		private void moveInStraightLine(double deltaTimeSeconds, Waypoint instruction) {
+			// Compute the normalized direction vector (dx, dy)
+			double dx = instruction.getCoordiates().getX() - coords.getX();
+			double dy = instruction.getCoordiates().getY() - coords.getY();
+			double length = Math.sqrt(dy * dy + dx * dx);
+			
+			if(length > 0) {
+				dx = dx / length;
+				dy = dy / length;
+			}
+			
+			// How much time will it take us to get there?
+			double timeNeeded = length / speed;
+			double timeTraveled = (timeNeeded > deltaTimeSeconds) ? deltaTimeSeconds : timeNeeded;
+			
+			// Move the plane.
+			double newX = coords.getX() + dx * timeTraveled * speed;
+			double newY = coords.getY() + dy * timeTraveled * speed;
+			float alt = 0f;
+			coords = new Coordinates((float) newX, (float) newY, coords.getZ());
+			
+			// If we arrived, continue with the next road instruction
+			if(timeTraveled == timeNeeded) {
+				System.out.println("Plane " + id + " arrived atwaypoint (" + instruction.getCoordiates().getX() + ", " + instruction.getCoordiates().getY() + ").");
+				route.remove(0);
+				// TODO movePlane(1000*(deltaTimeSeconds - timeTraveled));
+			}
+		}
+		
+		private void moveInCircle(double deltaTimeSeconds, Waypoint instruction) {
+			
+			//Moves the plane in circle around the given center, with an objective of given angle.
+			double modX = coords.getX() - instruction.getCoordiates().getX();
+			double modY = coords.getY() - instruction.getCoordiates().getY();
+			double instructionAngle = Math.toRadians(instruction.getAngle());
+			double instructionAngleSign = Math.signum(instructionAngle);
+			double r = Math.sqrt(modX * modX + modY * modY);
+			double theta = computeTheta(modX, modY, 0, 0);
+			double rotSpeed = speed / r;
+			double deltaTheta = rotSpeed * deltaTimeSeconds;
+			if(deltaTheta < Math.abs(instructionAngle)) {
+				theta = theta + instructionAngleSign * deltaTheta;
+				route.remove(0);
+				route.add(new Waypoint(MoveType.CIRCULAR, new float[]{instruction.getCoordiates().getX(), instruction.getCoordiates().getY(), (float) Math.toDegrees(instructionAngle - instructionAngleSign * deltaTheta)}));
+				modX = r * Math.cos(theta) + instruction.getCoordiates().getX();
+				modY = r * Math.sin(theta) + instruction.getCoordiates().getY();
+				coords = new Coordinates((float) modX, (float) modY, coords.getZ());
+			}
+			else {
+				theta = theta + instructionAngle;
+				route.remove(0);
+				modX = (int) (r * Math.cos(theta) + instruction.getCoordiates().getX());
+				modY = (int) (r * Math.sin(theta) + instruction.getCoordiates().getY());
+				coords = new Coordinates((float) modX, (float) modY, coords.getZ());
+				System.out.println("Plane " + id + " arrived atwaypoint (" + modX + ", " + modY + ").");
+				if(deltaTheta > Math.abs(instructionAngle)) {
+					double neededTime = Math.abs(instructionAngle) / rotSpeed;
+					// TODO movePlane(1000*(deltaTimeSeconds - neededTime));
+				}
+			}
+		}
+		
+		private double computeTheta(double px, double py, double cx, double cy) {
+			return Math.atan2(py - cy, px - cx);
+		}
 	}
 
 	// - - - Plane Delegate - - -
@@ -219,7 +284,6 @@ public class Plane implements EventListener, RadioClientDelegate {
 			e.printStackTrace();
 		}
 
-		// TODO: something better ?
 		return null;
 	}
 }
