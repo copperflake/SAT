@@ -7,6 +7,10 @@ public class Coordinates implements Serializable {
 	private float x;
 	private float y;
 	private float z;
+	
+	public Coordinates(float x, float y) {
+		this(x, y, -1f);
+	}
 
 	public Coordinates(float x, float y, float z) {
 		this.x = x;

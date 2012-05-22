@@ -59,10 +59,19 @@ public class MessageInputStream extends FilterInputStream {
 		int length = dis.readInt();
 		int priority = dis.readInt(); // Not used...
 
-		int px = dis.readInt();	// PosX
-		int py = dis.readInt();	// PoxY
+		float px, py, pz;
+		if(extended) {
+			px = dis.readFloat();
+			py = dis.readFloat();
+			pz = dis.readFloat();
+		}
+		else {
+			px = dis.readInt();
+			py = dis.readInt();
+			pz = -1f;
+		}
 
-		Coordinates c = new Coordinates(px, py, 0);
+		Coordinates c = new Coordinates(px, py, -1);
 
 		// Le type du message
 		MessageType type;

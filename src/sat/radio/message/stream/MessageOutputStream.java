@@ -40,8 +40,15 @@ public class MessageOutputStream extends FilterOutputStream {
 
 		Coordinates c = m.getCoordinates();
 
-		dos.writeInt((int) c.getX());
-		dos.writeInt((int) c.getY());
+		if(extended) {
+			dos.writeFloat(c.getX());
+			dos.writeFloat(c.getY());
+			dos.writeFloat(c.getZ());
+		}
+		else {
+			dos.writeInt((int) c.getX());
+			dos.writeInt((int) c.getY());
+		}
 
 		dos.writeInt(m.getType().ordinal());
 
