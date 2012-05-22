@@ -76,7 +76,9 @@ public class SegmentableFile implements Iterable<byte[]> {
 
 	public byte[] getSegment(int offset) throws IOException {
 		byte[] bytes = new byte[SEGMENT_SIZE];
-		int bytesRead = file.read(bytes, offset * SEGMENT_SIZE, SEGMENT_SIZE);
+		
+		file.seek(offset * SEGMENT_SIZE);
+		int bytesRead = file.read(bytes, 0, SEGMENT_SIZE);
 		
 		// Truncate array if we havent read a full block of data
 		if(bytesRead < SEGMENT_SIZE) {
@@ -87,7 +89,8 @@ public class SegmentableFile implements Iterable<byte[]> {
 	}
 	
 	public void writeSegment(int offset, byte[] data) throws IOException {
-		file.write(data, offset * SEGMENT_SIZE, data.length);
+		file.seek(offset * SEGMENT_SIZE);
+		file.write(data);
 	}
 
 	public byte[] getHash() throws NoSuchAlgorithmException, IOException {
@@ -132,5 +135,9 @@ public class SegmentableFile implements Iterable<byte[]> {
 
 	public long getSize() throws IOException {
 		return this.file.length();
+	}
+	
+	public void close() throws IOException {
+		file.close();
 	}
 }
