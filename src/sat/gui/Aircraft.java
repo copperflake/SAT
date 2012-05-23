@@ -21,7 +21,7 @@ import sat.radio.RadioEvent;
 import sat.radio.RadioID;
 import sat.utils.geo.*;
 
-public class Aircraft implements EventListener {
+public class Aircraft {
 	private Node mainNode, simsWrapper, parent;
 	private Geometry model, sims;
 	private Vector3f currentPos, initPos;
@@ -138,8 +138,8 @@ public class Aircraft implements EventListener {
 	
 	private void drawAircraft3D(Vector3f initPos) {
 		model = (Geometry) assetManager.loadModel("Models/default.obj");
-		
 		model.getMaterial().setColor("Ambient", new ColorRGBA(0.3f, 0.3f, 0.3f, 1f));
+		model.scale(3f);
 		mainNode.attachChild(model);
 		
 		sims = (Geometry) assetManager.loadModel("Models/sims.obj");

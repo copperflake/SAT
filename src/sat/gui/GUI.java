@@ -12,6 +12,7 @@ import javax.swing.SwingUtilities;
 import sat.events.EventListener;
 import sat.radio.RadioEvent;
 import sat.radio.RadioID;
+import sat.tower.agent.TowerAgent;
 
 import com.jme3.system.AppSettings;
 import com.jme3.system.JmeCanvasContext;
@@ -27,10 +28,12 @@ public class GUI extends JFrame implements EventListener {
 	public static HashMap<RadioID, Aircraft> aircrafts;
 	private Radar radar;
 	
-	public GUI(final boolean hd) {
+	public GUI(final boolean hd, TowerAgent agent) {
 		// Create a window. The program will exit when the window is closed.
 		// See http://docs.oracle.com/javase/tutorial/uiswing/components/frame.html
 		super("Airport");
+		
+		agent.addListener(this);
 		
 		aircrafts = new HashMap<RadioID, Aircraft>();
 
@@ -134,7 +137,7 @@ public class GUI extends JFrame implements EventListener {
 		// TODO Add listener(aircraft);
 		Aircraft aircraft = new Aircraft();
 		// TODO S'assurer que radar est instancié.
-		aircraft.init3D(radar.getAssetManager(), radar.getRootNode(), e.getType());
+		aircraft.init3D(radar.getRootNode(), radar.getAssetManager());
 		aircrafts.put(e.getID(), aircraft);
 	}
 
@@ -142,11 +145,11 @@ public class GUI extends JFrame implements EventListener {
 		// TODO Remove listener(aircraft);
 		aircrafts.remove(e.getID());
 	}
-	
-	public void on(RadioEvent.PlaneMoved e) {
+
+	public void on(TowerEvent.PlaneMoved e) {
 		aircrafts.get(e.getID()).addDestination(e.getVector3f());
 	}
-	
+
 	public void on(RadioEvent.PlaneDistress e) {
 		// TODO Will crash if 3D Aircraft is not initialized (for example if there is no 3D GUI).
 		aircrafts.get(e.getID()).setDistress3D(e.getDistress());

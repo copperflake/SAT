@@ -23,7 +23,7 @@ public class Radar extends SimpleApplication {
 	private Controls3D controls;
 	private boolean hd;
 	protected Spatial tower;
-	
+
 	public Radar(boolean hd) {
 		this.hd = hd;
 		setShowSettings(false);
@@ -56,14 +56,31 @@ public class Radar extends SimpleApplication {
 		 */
 		mat_zurick.setTexture("ColorMap", assetManager.loadTexture("Images/kloten15"+((hd) ? "mid" : "low")+".jpg"));
 		zurick.setMaterial(mat_zurick);
-		zurick.setLocalTranslation(457f, 0f, 272f);
-		zurick.rotate(0f, (float) (Math.PI*0.508), 0f);
+		zurick.setLocalTranslation(473f, 0f, 330f);
+		zurick.rotate(0f, (float) (-Math.PI*0.492), 0f);
 		rootNode.attachChild(zurick);
+		
+		
+		// PISTE (DEV)
+		Box b1 = new Box(Vector3f.ZERO, 2f,100f,2f);
+		Spatial p1 = new Geometry("Box", b1);
+		Material pm = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+		pm.setColor("Color", ColorRGBA.Blue);
+		p1.setMaterial(pm);
+		p1.setLocalTranslation(400f,0f,166f);
+		rootNode.attachChild(p1);
+
+		Box b2 = new Box(Vector3f.ZERO, 2f,10f,2f);
+		Spatial p2 = new Geometry("Box", b2);
+		p2.setMaterial(pm);
+		p2.setLocalTranslation(533f,0f,437f);
+		rootNode.attachChild(p2);
+		
 		
 		// Tower
 		tower = assetManager.loadModel("Models/tower.obj");
 		tower.scale(4f);
-		tower.setLocalTranslation(425f, 0f, 270f);
+		tower.setLocalTranslation(600f, 0f, 400f);
 		rootNode.attachChild(tower);
 		
 			// DEV
