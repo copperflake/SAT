@@ -472,9 +472,6 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 				try {
 					FileTransferHash receivedHash = new FileTransferHash(file.getHash());
 
-					System.out.println(hash.asHex());
-					System.out.println(receivedHash.asHex());
-
 					if(!receivedHash.equals(hash)) {
 						emitDebug("[FTA] File corrupted from " + m.getID());
 

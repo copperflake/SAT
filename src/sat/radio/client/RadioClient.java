@@ -16,14 +16,13 @@ import sat.radio.message.Message;
 import sat.radio.message.MessageHello;
 import sat.radio.message.MessageSendRSAKey;
 import sat.radio.message.MessageUpgrade;
-import sat.radio.server.RadioServer;
-import sat.radio.server.RadioServer.PlaneAgent;
 import sat.radio.socket.RadioSocket;
 import sat.radio.socket.RadioSocketState;
 import sat.utils.crypto.RSAInputStream;
 import sat.utils.crypto.RSAKey;
 import sat.utils.crypto.RSAKeyPair;
 import sat.utils.crypto.RSAOutputStream;
+import sat.utils.file.DataFile;
 import sat.utils.geo.Coordinates;
 
 /**
@@ -109,6 +108,14 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 
 		Coordinates coords = delegate.getLocation();
 		manager.send(new MessageHello(id, coords, ciphered, !legacy));
+	}
+	
+	public void sendFile(DataFile file) {
+		manager.sendFile(file);
+	}
+	
+	public void sendText(String text) {
+		manager.sendText(text);
 	}
 
 	// - - - Tower Socket Manager - - -

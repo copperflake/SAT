@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -23,6 +24,7 @@ import sat.utils.cli.Config;
 import sat.utils.crypto.RSAException;
 import sat.utils.crypto.RSAKey;
 import sat.utils.crypto.RSAKeyPair;
+import sat.utils.file.DataFile;
 import sat.utils.geo.Coordinates;
 import sat.utils.routes.MoveType;
 import sat.utils.routes.Route;
@@ -159,6 +161,17 @@ public class Plane implements EventListener, RadioClientDelegate {
 
 	public void on(Event event) {
 		System.out.println(event);
+		try {
+			radio.sendFile(new DataFile("tyrael_1920x1080.jpg"));
+		}
+		catch(NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch(IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	// - - - Plane Simulator - - -

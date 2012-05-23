@@ -14,7 +14,7 @@ public abstract class Message extends PriorityEvent<Message> {
 
 	// Defaults
 
-	private int length = 0;
+	protected int length = 0;
 
 	protected int priority = 5;
 	protected MessageType type = MessageType.INVALID;

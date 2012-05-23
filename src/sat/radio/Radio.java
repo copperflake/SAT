@@ -114,6 +114,59 @@ public abstract class Radio extends AsyncEventEmitter {
 		public void send(Message message) {
 			writer.send(message);
 		}
+		
+		public void sendFile(final DataFile file) {
+			(new Thread() {
+				public void run() {
+					try {
+						int i = 0;
+						for(byte[] part : file) {
+							Coordinates c = delegate.getLocation();
+							send(new MessageData(id, c, file.getHash(), i, file.getFormat(), file.getSize(), part));
+							i++;
+							// TODO: sleep
+						}
+					}
+					catch(NoSuchAlgorithmException e) {
+						emitEvent(new RadioEvent.UncaughtException("Error hashing file", e));
+					}
+					catch(IOException e) {
+						emitEvent(new RadioEvent.UncaughtException("Error when reading file", e));
+					}
+					finally {
+						try {
+							file.close();
+						}
+						catch(IOException e) {
+						}
+					}
+				}
+			}).start();
+		}
+
+		public void sendText(String text) {
+			byte[] data = text.getBytes();
+
+			if(data.length > 1024) {
+				// TODO: what else?
+				return;
+			}
+
+			byte[] hash;
+
+			try {
+				MessageDigest digest = MessageDigest.getInstance("SHA1");
+				digest.update(data, 0, data.length);
+				hash = digest.digest();
+			}
+			catch(NoSuchAlgorithmException e) {
+				// TODO: what else?
+				return;
+			}
+
+			Coordinates c = delegate.getLocation();
+			send(new MessageData(id, c, hash, 0, "txt", data.length, data));
+		}
 
 		/**
 		 * Passe ce SocketManager en état <code>READY</code>.
@@ -301,51 +354,6 @@ public abstract class Radio extends AsyncEventEmitter {
 			 */
 			public void send(Message m) {
 				queue.put(m);
-			}
-
-			public void sendFile(final DataFile file) {
-				(new Thread() {
-					public void run() {
-						try {
-							int i = 0;
-							for(byte[] part : file) {
-								Coordinates c = delegate.getLocation();
-								send(new MessageData(id, c, file.getHash(), i, file.getFormat(), file.getSize(), part));
-								i++;
-							}
-						}
-						catch(NoSuchAlgorithmException e) {
-							emitEvent(new RadioEvent.UncaughtException("Error hashing file", e));
-						}
-						catch(IOException e) {
-							emitEvent(new RadioEvent.UncaughtException("Error when reading file", e));
-						}
-					}
-				}).start();
-			}
-
-			public void sendText(String text) {
-				byte[] data = text.getBytes();
-
-				if(data.length > 1024) {
-					// TODO: what else?
-					return;
-				}
-
-				byte[] hash;
-
-				try {
-					MessageDigest digest = MessageDigest.getInstance("SHA1");
-					digest.update(data, 0, data.length);
-					hash = digest.digest();
-				}
-				catch(NoSuchAlgorithmException e) {
-					// TODO: what else?
-					return;
-				}
-
-				Coordinates c = delegate.getLocation();
-				send(new MessageData(id, c, hash, 0, "txt", data.length, data));
 			}
 
 			public void upgrade() {

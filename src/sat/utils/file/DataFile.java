@@ -19,11 +19,6 @@ public class DataFile extends File implements Iterable<byte[]> {
 	private int segmentsCount = 0;
 
 	/**
-	 * Chemin vers le fichier d'origine.
-	 */
-	private String pathname;
-
-	/**
 	 * Le flux d'entrée du fichier.
 	 */
 	private RandomAccessFile file;
@@ -114,7 +109,7 @@ public class DataFile extends File implements Iterable<byte[]> {
 	}
 
 	public String getFormat() {
-		String name = this.pathname;
+		String name = getName();
 		int dotOffset = -1;
 
 		for(int i = name.length() - 1; i >= 0; i--) {
