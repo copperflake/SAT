@@ -33,7 +33,7 @@ public class Event implements Cloneable, Serializable {
 			catch(InvocationTargetException e) {
 				throw e;
 			}
-			catch(ReflectiveOperationException e) {
+			catch(Exception e) {
 				//e.printStackTrace();
 
 				if(eventClass == Event.class) {

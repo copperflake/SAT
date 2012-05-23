@@ -14,11 +14,14 @@ import sat.EndOfWorldException;
 import sat.events.Event;
 import sat.events.EventListener;
 import sat.external.twitter.TweetSender;
+import sat.radio.RadioEvent;
 import sat.radio.RadioID;
 import sat.radio.client.RadioClient;
 import sat.radio.client.RadioClientDelegate;
 import sat.radio.engine.client.RadioClientEngine;
+import sat.radio.message.Message;
 import sat.radio.message.MessageBye;
+import sat.radio.message.MessageLanding;
 import sat.radio.message.MessageMayDay;
 import sat.utils.cli.Config;
 import sat.utils.crypto.RSAException;
@@ -88,9 +91,10 @@ public class Plane implements EventListener, RadioClientDelegate {
 		defaults = new Config();
 
 		defaults.setProperty("plane.debug", "no");
+		defaults.setProperty("plane.twitter", "no");
 
-		defaults.setProperty("plane.coords", "0,0,-1");    // Initial coords [NYI]
-		defaults.setProperty("plane.waypoint", "625,445,-1");  // Initial waypoint [NYI]
+		defaults.setProperty("plane.coords", "0,0,-1");    // Initial coords
+		defaults.setProperty("plane.waypoint", "625,445,-1");  // Initial waypoint
 
 		defaults.setProperty("plane.prefix", "PLN");
 
@@ -182,7 +186,11 @@ public class Plane implements EventListener, RadioClientDelegate {
 	}
 
 	// - - - Events - - -
-
+	
+	public void on(RadioEvent.TowerConnected e) {
+		radio.sendLandingRequest();
+	}
+	
 	public void on(Event event) {
 		System.out.println(event);
 	}
@@ -198,7 +206,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 					move(updateInterval);
 					kerozene -= type.consumption * 60 * updateInterval / 1000;
 					if(kerozene < type.fuel * 0.2)
-						radio.send(new MessageMayDay(id, coords, "Less than 20% of kerozene."));
+						radio.sendMayDay("Less than 20% of kerozene.");
 
 					sleep(updateInterval);
 				}
@@ -236,35 +244,41 @@ public class Plane implements EventListener, RadioClientDelegate {
 			}
 
 			// How much time will it take us to get there?
-			double timeNeeded = length / type.speed;
+			double timeNeeded = length / type.speedAsPxPerSec();
 
 			// Move the plane.
-			double newX = coords.getX() + dx * interval * type.speed;
-			double newY = coords.getY() + dy * interval * type.speed;
+			double newX = coords.getX() + dx * interval * type.speedAsPxPerSec();
+			double newY = coords.getY() + dy * interval * type.speedAsPxPerSec();
 			coords = new Coordinates((float) newX, (float) newY, coords.getZ());
 
 			// If we arrived, continue with the next road instruction
 			if(interval >= timeNeeded) {
 				if(instruction.getType() == MoveType.LANDING) {
-					radio.send(new MessageBye(id, coords));
+					radio.sendBye();
 
 					DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 					dateFormat.format(new Date());
 
-					TweetSender.tweet("Plane #" + id + " has LANDED at " + dateFormat.toString() + ". #ICAirport13 · #ICITP2012");
+					tweet("Plane #" + id + " has LANDED at " + dateFormat.toString() + ". #ICAirport13 · #ICITP2012");
 				}
 				else if(instruction.getType() == MoveType.DESTRUCTION) {
-					radio.send(new MessageBye(id, coords));
+					radio.sendBye();
 
 					DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 					dateFormat.format(new Date());
 
-					TweetSender.tweet("Plane #" + id + " has AUTODESTRUCT-ITSELF at " + dateFormat.toString() + ". #ICAirport13 · #ICITP2012");
+					tweet("Plane #" + id + " has AUTODESTRUCT-ITSELF at " + dateFormat.toString() + ". #ICAirport13 · #ICITP2012");
 				}
 
 				System.out.println("Plane " + id + " arrived atwaypoint (" + instruction.getCoordiates().getX() + ", " + instruction.getCoordiates().getY() + ").");
 				route.remove(0);
 				move(1000 * (interval - timeNeeded));
+			}
+		}
+
+		private void tweet(String tweet) {
+			if(config.getBoolean("plane.twitter")) {
+				TweetSender.tweet(tweet);
 			}
 		}
 
@@ -276,7 +290,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 			double instructionAngleSign = Math.signum(instructionAngle);
 			double r = Math.sqrt(modX * modX + modY * modY);
 			double theta = computeTheta(modX, modY, 0, 0);
-			double rotSpeed = type.speed / r;
+			double rotSpeed = type.speedAsPxPerSec() / r;
 			double deltaTheta = rotSpeed * interval;
 
 			if(deltaTheta < Math.abs(instructionAngle)) {

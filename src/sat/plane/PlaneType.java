@@ -36,10 +36,14 @@ public enum PlaneType {
 	public final float speed;
 	public final int fuel, consumption, passengers;
 
-	PlaneType(float speed, int fuel, int consumption, int passengers) {
+	private PlaneType(float speed, int fuel, int consumption, int passengers) {
 		this.speed = speed;
 		this.fuel = fuel;
 		this.consumption = consumption;
 		this.passengers = passengers;
+	}
+
+	public float speedAsPxPerSec() {
+		return speed*340*12;
 	}
 }
