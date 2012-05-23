@@ -1,16 +1,21 @@
 package sat.tower;
 
-import java.util.Date;
-
 import sat.plane.PlaneType;
 import sat.radio.RadioID;
 
 public class TowerPlane {
+	private static int nextLandingID = 0;
+	
+	private synchronized static int getNextLandingID() {
+		return nextLandingID++;
+	}
+	
 	private RadioID id;
-	private Date landingRequested;
+	private int landingID = -1;
 	private int currentRoute = -1;
 	private boolean mayDay = false;
 	private PlaneType type;
+	private boolean landing;
 	
 	public TowerPlane(RadioID id) {
 		this.id = id;
@@ -29,19 +34,23 @@ public class TowerPlane {
 	}
 
 	public void setMayDay(boolean mayDay) {
-		this.mayDay = mayDay;
+		if(!isLanding()) {
+			this.mayDay = mayDay;
+		}
 	}
 
 	public RadioID getID() {
 		return id;
 	}
 
-	public Date getLandingRequested() {
-		return landingRequested;
+	public int getLandingID() {
+		return landingID;
 	}
 	
-	public void landingRquested() {
-		landingRequested = new Date();
+	public void landingRequested() {
+		if(landingID == -1) {
+			landingID = getNextLandingID();
+		}
 	}
 
 	public PlaneType getType() {
@@ -49,6 +58,16 @@ public class TowerPlane {
 	}
 
 	public void setType(PlaneType type) {
-		this.type = type;
+		if(!isLanding()) {
+			this.type = type;
+		}
+	}
+
+	public boolean isLanding() {
+		return landing;
+	}
+
+	public void setLanding() {
+		this.landing = true;
 	}
 }

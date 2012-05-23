@@ -1,4 +1,8 @@
 set tower.debug yes
+
+loadroute routes/small 3
+loadroute routes/medium 10
+loadroute routes/small 100
 init
 writekey tower.key
 agentserver

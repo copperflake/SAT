@@ -143,10 +143,9 @@ public class TowerCLI extends GlobalCLI implements EventListener {
 	 *            Le fichier contenant la route.
 	 * @param capacity
 	 *            Le nombre d'avion maximum sur la route.
-	 * @throws NumberFormatException
-	 * @throws IOException
+	 * @throws Exception 
 	 */
-	public void loadroute(String path, String capacity) throws NumberFormatException, IOException {
+	public void loadroute(String path, String capacity) throws Exception {
 		getTower().loadRoute(path, Integer.parseInt(capacity));
 	}
 
@@ -251,6 +250,19 @@ public class TowerCLI extends GlobalCLI implements EventListener {
 				fos.close();
 			}
 		});
+	}
+	
+
+	public void on(RadioEvent.PlaneConnected ev) {
+		println("Plane " + ev.getID() + " connected");
+	}
+	
+	public void on(TowerEvent.PlaneMoved ev) {
+		// too verbose
+	}
+	
+	public void on(RadioEvent.PlaneDisconnected ev) {
+		println("Plane " + ev.getID() + " disconnected");
 	}
 
 	public void on(DebugEvent event) {

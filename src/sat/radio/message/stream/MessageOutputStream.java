@@ -27,7 +27,7 @@ public class MessageOutputStream extends FilterOutputStream {
 
 	public synchronized void writeMessage(Message m) throws IOException {
 		baos.reset();
-
+		
 		if(extended) {
 			byte[] id = Serializer.serialize(m.getID());
 			dos.writeInt(id.length);

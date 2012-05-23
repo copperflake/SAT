@@ -4,7 +4,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.TreeSet;
 
 import sat.DebugEvent;
 import sat.events.AsyncEventEmitter;
@@ -17,18 +19,22 @@ import sat.radio.RadioEvent;
 import sat.radio.RadioID;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.message.Message;
+import sat.radio.message.MessageBye;
 import sat.radio.message.MessageData;
 import sat.radio.message.MessageKeepalive;
+import sat.radio.message.MessageLanding;
 import sat.radio.server.RadioServer;
 import sat.radio.server.RadioServerDelegate;
 import sat.utils.cli.Config;
 import sat.utils.crypto.RSAException;
 import sat.utils.crypto.RSAKeyPair;
 import sat.utils.geo.Coordinates;
+import sat.utils.geo.InvalidCoordinatesException;
 import sat.utils.pftp.FileTransferAgentDispatcher;
 import sat.utils.pftp.FileTransferDelegate;
 import sat.utils.routes.MoveType;
 import sat.utils.routes.Route;
+import sat.utils.routes.RoutingType;
 import sat.utils.routes.Waypoint;
 
 /**
@@ -57,6 +63,8 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		defaults.setProperty("tower.debug", "no");
 		defaults.setProperty("tower.prefix", "TWR");
 		defaults.setProperty("tower.downloads", "downloads/");
+		defaults.setProperty("tower.routing", "chronos");
+		defaults.setProperty("tower.graveyard", "600,100,-1");
 
 		defaults.setProperty("radio.ciphered", "yes");
 		defaults.setProperty("radio.legacy", "no");
@@ -70,16 +78,16 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	 */
 	private Tower() {
 		config = new Config(defaults);
-		
+
 		dataDispatcher = new FileTransferAgentDispatcher(new FileTransferDelegate() {
 			public void planeIdentified(RadioID id, PlaneType type) {
 				emit(new TowerEvent.PlaneIdentified(id, type));
 			}
-			
+
 			public String getDownloadsPath() {
 				return config.getString("tower.downloads");
 			}
-			
+
 			public void debugEvent(DebugEvent ev) {
 				emitDebug(ev);
 			}
@@ -131,12 +139,12 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	 * Le gestionnaire de dispatch des messages de données.
 	 */
 	private FileTransferAgentDispatcher dataDispatcher;
-	
+
 	/**
 	 * Avions connectés à cette tour.
 	 */
 	private HashMap<RadioID, TowerPlane> planes = new HashMap<RadioID, TowerPlane>();
-	
+
 	/**
 	 * Liste des routes (circuits d'attente et piste d'atterissage)
 	 */
@@ -150,9 +158,9 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	 *            Le fichier contenant la route.
 	 * @param capacity
 	 *            Le nombre d'avion maximum sur la route.
-	 * @throws IOException
+	 * @throws Exception 
 	 */
-	public void loadRoute(String path, int capacity) throws IOException {
+	public void loadRoute(String path, int capacity) throws Exception {
 		StringBuffer fileData = new StringBuffer();
 		BufferedReader reader = new BufferedReader(new FileReader(path));
 
@@ -170,7 +178,7 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		Route route = new Route(capacity);
 
 		for(String instruction : data.split(";")) {
-			if(instruction.isEmpty()) {
+			if(instruction.matches("\\s*")) {
 				continue;
 			}
 
@@ -218,6 +226,14 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 
 			route.add(new Waypoint(type, args));
 		}
+		
+		if(route.isLanding()) {
+			for(Route otherRoute : routes) {
+				if(!otherRoute.isLanding()) {
+					throw new Exception("Cannot load a landing route when a not-landing route is already loaded.");
+				}
+			}
+		}
 
 		routes.add(route);
 	}
@@ -261,6 +277,124 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		radio.listen(engine);
 	}
 
+	public void refreshRouting() {
+		String routingModeRaw = config.getString("tower.routing").toLowerCase();
+		
+		emitDebug("[ROUTING] Refreshing routes");
+		
+		final RoutingMode routingMode;
+		
+		if(routingModeRaw.equals("fuel")) {
+			routingMode = RoutingMode.FUEL;
+		}
+		else if(routingModeRaw.equals("time")) {
+			routingMode = RoutingMode.TIME;
+		}
+		else {
+			routingMode = RoutingMode.CHRONOS;
+		}
+		
+		emitDebug("[ROUTING] Route mode is " + routingMode);
+		
+		TreeSet<TowerPlane> planes = new TreeSet<TowerPlane>(new Comparator<TowerPlane>() {
+			public int compare(TowerPlane p1, TowerPlane p2) {
+				if(p1.isLanding() != p2.isLanding()) {
+					return (p1.isLanding()) ? -1 : 1;
+				}
+				else if(p1.isMayDay() != p2.isMayDay()) {
+					return (p1.isMayDay()) ? -1 : 1;
+				}
+				else {
+					RoutingMode localRoutingMode = routingMode;
+					
+					if(p1.getType() == null && p2.getType() == null) {
+						localRoutingMode = RoutingMode.CHRONOS;
+					}
+					else if(p1.getType() == null || p2.getType() == null) {
+						return (p1.getType() == null) ? 1 : -1;
+					}
+					else if(p1.isMayDay()) { // and p2.isMayDay()
+						localRoutingMode = RoutingMode.TIME; // Saving passengers
+					}
+
+					switch(localRoutingMode) {
+						case FUEL:
+							return (p1.getType().consumption > p2.getType().consumption) ? -1 : 1;
+							
+						case TIME:
+							return (p1.getType().passengers > p2.getType().passengers) ? -1 : 1;
+							
+						default: // CHRONOS
+							return (p1.getLandingID() < p2.getLandingID()) ? -1 : 1;
+					}
+				}
+			}
+		});
+		
+		// Add planes to waiting list
+		for(TowerPlane plane : this.planes.values()) {
+			// We ignore plane without landing requested
+			if(plane.getLandingID() != -1) {
+				planes.add(plane);
+			}
+		}
+		
+		emitDebug("[ROUTING] Step 1/2, done");
+		
+		int currentRoute = 0;
+		int planesAssigned = 0;
+		
+		// Assign routes
+		for(TowerPlane plane : planes) {
+			if(currentRoute >= routes.size()) {
+				currentRoute = -1;
+			}
+			
+			if(plane.getCurrentRoute() != currentRoute) {
+				if(currentRoute < 0) {
+					Route highwayToHell = new Route();
+					
+					try {
+						highwayToHell.add(new Waypoint(MoveType.DESTRUCTION, Coordinates.parseCoordinates(config.getProperty("tower.graveyard")).toFloats()));
+					}
+					catch(InvalidCoordinatesException e) {
+						radio.kick(plane.getID());
+						continue;
+					}
+					
+					redefineRoute(plane.getID(), highwayToHell);
+				}
+				else {
+					redefineRoute(plane.getID(), routes.get(currentRoute));
+				}
+
+				plane.setCurrentRoute(currentRoute);
+			}
+		
+			planesAssigned++;
+			
+			if(currentRoute != -1 && planesAssigned >= routes.get(currentRoute).getCapacity()) {
+				currentRoute++;
+			}
+		}
+		
+		emitDebug("[ROUTING] Step 2/2, done");
+	}
+	
+	private void redefineRoute(RadioID id, Route route) {
+		emitDebug("[ROUTING] Redefining route for " + id);
+		
+		for(Waypoint waypoint : route) {
+			System.out.println(waypoint.getCoordiates().getX() + "," +waypoint.getCoordiates().getY() + "," +waypoint.getCoordiates().getZ());
+		}
+		
+		radio.sendRouting(id, route.remove(0), RoutingType.REPLACEALL);
+		
+		for(Waypoint waypoint : route) {
+			radio.sendRouting(id, waypoint, RoutingType.LAST);
+		}
+	}
+
 	// - - - Radio Delegate - - -
 
 	/**
@@ -294,6 +428,17 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	public void on(MessageData m) {
 		// TODO: something asynchronous?
 		dataDispatcher.dispatchMessageToAgent(m);
+		emit(m);
+	}
+
+	public void on(MessageLanding m) {
+		planes.get(m.getID()).landingRequested();
+		refreshRouting();
+		emit(m);
+	}
+	
+	public void on(MessageBye m) {
+		radio.kick(m.getID());
 		emit(m);
 	}
 
