@@ -1,6 +1,7 @@
 package sat.gui;
 
 import com.jme3.app.SimpleApplication;
+import com.jme3.asset.AssetKey;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
@@ -21,7 +22,7 @@ public class Radar extends SimpleApplication {
 	private float moveSpeed, moveAltSpeed, zoomSpeed, rotSpeed;
 	private Controls3D controls;
 	private boolean hd;
-	protected Node tower;
+	protected Spatial tower;
 	
 	public Radar(boolean hd) {
 		this.hd = hd;
@@ -59,33 +60,38 @@ public class Radar extends SimpleApplication {
 		zurick.rotate(0f, (float) (Math.PI*0.508), 0f);
 		rootNode.attachChild(zurick);
 		
-		// PISTE (DEV)
-		Box b1 = new Box(Vector3f.ZERO, 0.2f,0.1f,0.2f);
-		Spatial p1 = new Geometry("Box", b1);
-		Material pm = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-		pm.setColor("Color", ColorRGBA.Blue);
-		p1.setMaterial(pm);
-		p1.setLocalTranslation(400f,0f,166f);
-		rootNode.attachChild(p1);
-		
-		Box b2 = new Box(Vector3f.ZERO, 0.2f,0.1f,0.2f);
-		Spatial p2 = new Geometry("Box", b2);
-		p2.setMaterial(pm);
-		p2.setLocalTranslation(533f,0f,437f);
-		rootNode.attachChild(p2);
-		
 		// Tower
-		tower = (Node) assetManager.loadModel("Models/tower.obj");
-		tower.scale(3f);
-		// TODO Verify position
-		tower.setLocalTranslation(445f, 0f, 625f);
+		tower = assetManager.loadModel("Models/tower.obj");
+		tower.scale(4f);
+		tower.setLocalTranslation(425f, 0f, 270f);
 		rootNode.attachChild(tower);
+		
+			// DEV
+			Node allPlanes = new Node();
+			Spatial gripen = assetManager.loadModel("Models/gripen.obj");
+			gripen.setLocalTranslation(0, 0, 10);
+			Spatial concorde = assetManager.loadModel("Models/concorde.obj");
+			concorde.setLocalTranslation(0, 0, -10);
+			Spatial a320 = assetManager.loadModel("Models/a320.obj");
+			allPlanes.attachChild(gripen);
+			allPlanes.attachChild(concorde);
+			allPlanes.attachChild(a320);
+			allPlanes.scale(6f);
+			allPlanes.setLocalRotation(new Quaternion(new float[]{0f, (float) -Math.PI/2, 0f}));
+			allPlanes.setLocalTranslation(425f, 50f, 270f);
+			rootNode.attachChild(allPlanes);
 		
 		// Sun
 		DirectionalLight sun = new DirectionalLight();
 		sun.setDirection(new Vector3f(-0.1f, -0.7f, -1.0f));
 		sun.setColor(new ColorRGBA(1f, 0.95f, 0.9f, 1f));
 		rootNode.addLight(sun);
+		
+		// Counter-Sun
+		DirectionalLight sun2 = new DirectionalLight();
+		sun2.setDirection(new Vector3f(0.1f, -0.3f, 1.0f));
+		sun2.setColor(new ColorRGBA(0.3f, 0.25f, 0.25f, 1f));
+		//rootNode.addLight(sun2);
 
 		// Ambient
 		AmbientLight al = new AmbientLight();

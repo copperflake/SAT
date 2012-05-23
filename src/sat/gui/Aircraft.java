@@ -35,18 +35,19 @@ public class Aircraft implements EventListener {
 	public Aircraft() {
 	}
 	
-	public void init3D(Node parent, AssetManager assetManager, PlaneType type) {
-		this.type = type;
+	public void init3D(Node parent, AssetManager assetManager) {
 		this.assetManager = assetManager;
 		this.parent = parent;
+		
 		simsWrapper = new Node();
 		mainNode = new Node();
 		lineMesh = new Mesh();
-		
 		initPos = new Vector3f(0f, 0f, 0f);
+		
 		currentPos = initPos;
-		drawAircraft3D(initPos, parent, assetManager);
-		drawTrace3D(parent, assetManager);
+		
+		drawAircraft3D(initPos);
+		drawTrace3D();
 		move3D();
 	}
 	
@@ -165,20 +166,17 @@ public class Aircraft implements EventListener {
 		
 		if(this.type == PlaneType.A320) {
 			model = (Geometry) assetManager.loadModel("Models/plane.obj");
-			model.scale(1f);
 		}
 		else if(this.type == PlaneType.GRIPEN) {
 			model = (Geometry) assetManager.loadModel("Models/gripen.obj");
-			model.scale(0.5f);
 		}
 		else if(this.type == PlaneType.CONCORDE) {
 			model = (Geometry) assetManager.loadModel("Models/concorde.obj");
-			model.scale(0.5f);
 		}
 		else {
 			model = (Geometry) assetManager.loadModel("Models/plane.obj");
-			model.scale(1f);
 		}
+		
 		mainNode.attachChild(model);
 	}
 	

@@ -235,7 +235,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 					DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 					dateFormat.format(new Date());
 					
-					TweetSender.tweet("Plane #"+id+" has LANDED at "+dateFormat.toString()+". #ICAirport13 #ICITP2012");
+					TweetSender.tweet("Plane #"+id+" has LANDED at "+dateFormat.toString()+". #ICAirport13 · #ICITP2012");
 				}
 				else if(instruction.getType() == MoveType.DESTRUCTION) {
 					radio.send(new MessageBye(id, coords));
@@ -243,7 +243,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 					DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 					dateFormat.format(new Date());
 					
-					TweetSender.tweet("Plane #"+id+" has AUTODESTRUCT at "+dateFormat.toString()+". #ICAirport13 #ICITP2012");
+					TweetSender.tweet("Plane #"+id+" has AUTODESTRUCT-ITSELF at "+dateFormat.toString()+". #ICAirport13 · #ICITP2012");
 				}
 
 				System.out.println("Plane "+id+" arrived atwaypoint ("+instruction.getCoordiates().getX()+", "+instruction.getCoordiates().getY()+").");

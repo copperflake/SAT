@@ -33,48 +33,73 @@ public class GUI extends JFrame implements EventListener {
 		super("Airport");
 		
 		aircrafts = new HashMap<RadioID, Aircraft>();
-		setSize(1500, 1000);
-		// Pop the window in the middle of the screen. (Work correctly on a dual-screen btw.) 
-		//setLocationRelativeTo(null);
+
+		int width = 1500;
+		int height = 950;
+		setSize(width, height);
+		
+		// Pop the window in the middle of the screen. (Work correctly on a dual-screen btw.)
+		setLocationRelativeTo(null);
 		setResizable(false);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
+		
 		/**
 		 * La classe Toolkit va nous permettre de récupérer la taille de l'écran.
 		 */
 		Toolkit toolkit = Toolkit.getDefaultToolkit ();
 		Dimension screenSize = toolkit.getScreenSize();
 		
-		Box topRow = Box.createHorizontalBox();
-		Box botRow = Box.createHorizontalBox();
-		Box main = Box.createVerticalBox();
-		final JTabbedPane tabbedPane = new JTabbedPane();
-		
 		AirportPanel airportPanel = new AirportPanel();
 		airportPanel.setPreferredSize(airportPanel.getBackgroundDimension());
-		
-		tabbedPane.addTab("2D View", airportPanel);
 
 		JournalPanel journalPanel = new JournalPanel();
 		DownloadPanel downloadPanel = new DownloadPanel();
 
-		// Un bout de code affreux, mais c'est belle est bien le seul moyen d'obtenir le résultat esconté.
-		// Merci Java.
-		int topRowHeight = 783;
-		topRow.setPreferredSize(new Dimension(topRow.getWidth(), topRowHeight));
-		botRow.setPreferredSize(new Dimension(botRow.getWidth(), getHeight()-topRowHeight));
+		final JTabbedPane tabbedPane = new JTabbedPane();
+		tabbedPane.addTab("2D View", airportPanel);
 		
-		topRow.add(tabbedPane);
-		topRow.add(Box.createHorizontalStrut(5));
-		topRow.add(downloadPanel);
-		botRow.add(journalPanel);
+		if(screenSize.getWidth() >= width && screenSize.getHeight() >= height) {
+			Box topRow = Box.createHorizontalBox();
+			Box botRow = Box.createHorizontalBox();
+			Box main = Box.createVerticalBox();
+	
+			// Un bout de code affreux, mais c'est belle est bien le seul moyen d'obtenir le résultat esconté.
+			// Merci Java.
+			int topRowHeight = 783;
+			topRow.setPreferredSize(new Dimension(topRow.getWidth(), topRowHeight));
+			botRow.setPreferredSize(new Dimension(botRow.getWidth(), getHeight()-topRowHeight));
+			
+			topRow.add(tabbedPane);
+			topRow.add(Box.createHorizontalStrut(5));
+			topRow.add(downloadPanel);
+			botRow.add(journalPanel);
+	
+			main.add(topRow);
+			main.add(Box.createVerticalStrut(5));
+			main.add(botRow);
+			setContentPane(main);
+	
+			setVisible(true);
+		}
+		else {
+			JFrame journalFrame = new JFrame();
+			journalFrame.add(journalPanel);
+			journalFrame.setSize(700, 500);
+			journalFrame.setVisible(true);
 
-		main.add(topRow);
-		main.add(Box.createVerticalStrut(5));
-		main.add(botRow);
-		setContentPane(main);
+			JFrame downloadFrame = new JFrame();
+			downloadFrame.add(downloadPanel);
+			downloadFrame.setSize(500, 600);
+			downloadFrame.setVisible(true);
 
-		setVisible(true);
-		setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
+			JFrame tabbedFrame = new JFrame();
+			tabbedFrame.add(tabbedPane);
+			tabbedFrame.setSize(new Dimension(1116, 779));
+			tabbedFrame.setLocationRelativeTo(null);
+			tabbedFrame.setResizable(false);
+			tabbedFrame.setDefaultCloseOperation(EXIT_ON_CLOSE);
+			tabbedFrame.setVisible(true);
+		}
 		
 		/**
 		 * 3D Stuff
