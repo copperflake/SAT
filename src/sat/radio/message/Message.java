@@ -12,6 +12,13 @@ public abstract class Message extends PriorityEvent<Message> {
 	private RadioID id;
 	private Coordinates coords;
 
+	private static long nextMessageID = 0;
+	private long messageID;
+
+	private synchronized static long getNextMessageID() {
+		return nextMessageID++;
+	}
+
 	// Defaults
 
 	protected int length = 0;
@@ -19,14 +26,11 @@ public abstract class Message extends PriorityEvent<Message> {
 	protected int priority = 5;
 	protected MessageType type = MessageType.INVALID;
 
-	// Additions
-	protected Date time;
-
 	public Message(RadioID i, Coordinates c) {
 		id = i;
 		coords = c;
 
-		time = new Date();
+		messageID = getNextMessageID();
 	}
 
 	public RadioID getID() {
@@ -49,12 +53,6 @@ public abstract class Message extends PriorityEvent<Message> {
 		return type;
 	}
 
-	// Compare tools
-
-	public Date getTime() {
-		return time;
-	}
-
 	public int compareTo(Message msg) {
 		if(priority > msg.getPriority()) {
 			return 1;
@@ -63,7 +61,7 @@ public abstract class Message extends PriorityEvent<Message> {
 			return -1;
 		}
 		else {
-			return getTime().compareTo(msg.getTime());
+			return (messageID > msg.messageID) ? 1 : -1;
 		}
 	}
 
