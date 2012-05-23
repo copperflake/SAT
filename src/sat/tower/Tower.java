@@ -10,12 +10,15 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import sat.DebugEvent;
 import sat.events.AsyncEventEmitter;
 import sat.events.Event;
 import sat.events.EventListener;
 
+import sat.plane.PlaneType;
 import sat.radio.RadioEvent;
 
 import sat.radio.RadioID;
@@ -277,10 +280,11 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	}
 
 	public void on(MessageData m) {
+		// TODO: something asynchronous?
 		dataDispatcher.dispatchMessageToAgent(m);
 		emit(m);
 	}
-	
+
 	/**
 	 * Réception d'un message (cas général)
 	 */
@@ -325,7 +329,7 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		public FileTransferHash(byte[] hash) {
 			this.hash = hash;
 		}
-		
+
 		public boolean equals(Object o) {
 			// Obvious equality
 			if(this == o)
@@ -343,10 +347,10 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		public int hashCode() {
 			return Arrays.hashCode(hash);
 		}
-		
+
 		public String asHex() {
 			StringBuffer sb = new StringBuffer();
-			
+
 			for(byte b : hash) {
 				String h = String.format("%x", b);
 				if(h.length() != 2) {
@@ -354,15 +358,14 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 				}
 				sb.append(h);
 			}
-			
+
 			return sb.toString();
-		}
-		
-		public byte[] asBytes() {
-			return hash;
 		}
 	}
 
+	/**
+	 * Dispatcher de MessageData vers le bon FileTransferAgent.
+	 */
 	private class FileTransferAgentDispatcher {
 		private HashMap<FileTransferHash, FileTransferAgent> agents = new HashMap<FileTransferHash, FileTransferAgent>();
 
@@ -397,15 +400,18 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 				}
 			}
 		}
-		
+
 		public synchronized void deleteAgent(FileTransferHash hash) {
 			agents.remove(hash);
 		}
 	}
 
+	/**
+	 * Gestionnaire de transfert de fichier.
+	 */
 	private class FileTransferAgent {
 		private FileTransferHash hash;
-		
+
 		private int segmentCount;
 		private int segmentReceived = 0;
 
@@ -421,13 +427,13 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 			filename = filename.replaceAll("[:/\\\\]", "_");
 			path = config.getString("tower.downloads") + filename;
 
-			emitDebug("Started receiving file: " + path);
+			emitDebug("[FTA] Started receiving  " + path);
 
 			file = new DataFile(path);
 
 			// TODO: implements timeouts
 		}
-		
+
 		public void exit() throws IOException {
 			dataDispatcher.deleteAgent(hash);
 			file.close();
@@ -440,31 +446,50 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 
 		private void gotMessage(MessageData m) throws IOException {
 			file.writeSegment(m.getContinuation(), m.getPayload());
-			
-			if(++segmentReceived >= segmentCount) {
-				// TODO: better "file received management"
-				
-				try {
-					FileTransferHash receivedHash = new FileTransferHash(file.getHash()); 
+
+			// Catch PLANE_TYPE= files
+			if(m.getContinuation() == 0 && segmentCount == 1) {
+				String data = new String(m.getPayload());
+
+				Pattern pattern = Pattern.compile("^PLANE_TYPE=(.+);");
+				Matcher matcher = pattern.matcher(data);
+
+				if(matcher.find()) {
+					PlaneType type = PlaneType.getPlaneTypeByName(matcher.group(1));
 					
+					if(type != null) {
+						emit(new TowerEvent.PlaneIdentified(m.getID(), type));
+						emitDebug("[FTA] Successfully identified " + m.getID() + " as " + type);
+						// TODO: store plane informations locally
+						
+						abort();
+					}
+				}
+			}
+
+			// TODO: better "file received management"
+			if(++segmentReceived >= segmentCount) {
+				try {
+					FileTransferHash receivedHash = new FileTransferHash(file.getHash());
+
 					System.out.println(hash.asHex());
 					System.out.println(receivedHash.asHex());
-					
+
 					if(!receivedHash.equals(hash)) {
-						emitDebug("File corrupted: " + path);
-						
+						emitDebug("[FTA] File corrupted from " + m.getID());
+
 						abort();
 						return;
 					}
 				}
 				catch(NoSuchAlgorithmException e) {
-					emitDebug("Error while hashing: " + path);
-					
+					emitDebug("[FTA] Error while hashing file from " + m.getID());
+
 					abort();
 					return;
 				}
-				
-				emitDebug("File successfully received: " + path);
+
+				emitDebug("[FTA] Successfully received from " + m.getID());
 				exit();
 			}
 		}

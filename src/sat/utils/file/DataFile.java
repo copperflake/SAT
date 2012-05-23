@@ -16,17 +16,17 @@ public class DataFile extends File implements Iterable<byte[]> {
 	 * Nombre de partie à ce fichier.
 	 */
 	private int segmentsCount = 0;
-	
+
 	/**
 	 * Chemin vers le fichier d'origine.
 	 */
 	private String pathname;
-	
+
 	/**
 	 * Le flux d'entrée du fichier.
 	 */
 	private RandomAccessFile file;
-	
+
 	/**
 	 * La taille maximale d'un segment de fichier.
 	 */
@@ -76,18 +76,18 @@ public class DataFile extends File implements Iterable<byte[]> {
 
 	public byte[] getSegment(int offset) throws IOException {
 		byte[] bytes = new byte[SEGMENT_SIZE];
-		
+
 		file.seek(offset * SEGMENT_SIZE);
 		int bytesRead = file.read(bytes, 0, SEGMENT_SIZE);
-		
+
 		// Truncate array if we havent read a full block of data
 		if(bytesRead < SEGMENT_SIZE) {
 			bytes = Arrays.copyOfRange(bytes, 0, bytesRead);
 		}
-		
+
 		return bytes;
 	}
-	
+
 	public void writeSegment(int offset, byte[] data) throws IOException {
 		file.seek(offset * SEGMENT_SIZE);
 		file.write(data);
@@ -97,7 +97,7 @@ public class DataFile extends File implements Iterable<byte[]> {
 		MessageDigest digest = MessageDigest.getInstance("SHA1");
 
 		file.seek(0);
-		
+
 		byte[] buffer = new byte[1024];
 		int numRead;
 
@@ -136,12 +136,12 @@ public class DataFile extends File implements Iterable<byte[]> {
 	public long getSize() throws IOException {
 		return this.file.length();
 	}
-	
+
 	public void close() throws IOException {
 		file.close();
 	}
-	
+
 	public static int segmentsCountForSize(int size) {
-		return (int) (Math.ceil( ((float) size) / ((float) DataFile.SEGMENT_SIZE) ));
+		return (int) (Math.ceil(((float) size) / ((float) DataFile.SEGMENT_SIZE)));
 	}
 }
