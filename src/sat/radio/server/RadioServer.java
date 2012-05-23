@@ -20,6 +20,7 @@ import sat.utils.crypto.RSAInputStream;
 import sat.utils.crypto.RSAKey;
 import sat.utils.crypto.RSAKeyPair;
 import sat.utils.crypto.RSAOutputStream;
+import sat.utils.file.DataFile;
 import sat.utils.geo.Coordinates;
 
 /**
@@ -52,7 +53,7 @@ public class RadioServer extends Radio {
 	 * la responsabilité de s'ajouter dans cette liste lorsqu'il devient prêt à
 	 * être utilisé.
 	 */
-	private HashMap<RadioID, PlaneAgent> managers;
+	private HashMap<RadioID, PlaneAgent> agents;
 
 	/**
 	 * Crée un nouveau serveur radio qui dépend du délégué spécifié.
@@ -64,7 +65,7 @@ public class RadioServer extends Radio {
 	public RadioServer(RadioServerDelegate delegate, RadioID id) {
 		super(delegate, id);
 		this.delegate = delegate;	// TODO: useful ?
-		this.managers = new HashMap<RadioID, PlaneAgent>();
+		this.agents = new HashMap<RadioID, PlaneAgent>();
 	}
 
 	/**
@@ -98,10 +99,44 @@ public class RadioServer extends Radio {
 	 *            Le RadioID du client à déconnecter.
 	 */
 	public void kick(RadioID id) {
-		synchronized(managers) {
-			if(managers.containsKey(id)) {
-				managers.get(id).kick();
+		synchronized(agents) {
+			if(agents.containsKey(id)) {
+				agents.get(id).kick();
 			}
+		}
+	}
+	
+	public PlaneAgent getAgentForId(RadioID id) {
+		synchronized(agents) {
+			return agents.get(id);
+		}
+	}
+	
+	public void send(RadioID id, Message m) {
+		PlaneAgent agent = getAgentForId(id);
+		if(agent != null) {
+			agent.send(m);
+		}
+	}
+	
+	public void sendFile(RadioID id, DataFile file) {
+		PlaneAgent agent = getAgentForId(id);
+		if(agent != null) {
+			agent.sendFile(file);
+		}
+		else {
+			try {
+				file.close();
+			}
+			catch(IOException e) {
+			}
+		}
+	}
+	
+	public void sendText(RadioID id, String text) {
+		PlaneAgent agent = getAgentForId(id);
+		if(agent != null) {
+			agent.sendText(text);
 		}
 	}
 
@@ -193,8 +228,8 @@ public class RadioServer extends Radio {
 		protected void ready() {
 			super.ready();
 
-			synchronized(managers) {
-				managers.put(socketID, this);
+			synchronized(agents) {
+				agents.put(socketID, this);
 			}
 
 			RadioServer.this.emit(new RadioEvent.PlaneConnected(socketID));
@@ -214,8 +249,8 @@ public class RadioServer extends Radio {
 					// Notification must be the first thing done.
 					RadioServer.this.emit(new RadioEvent.PlaneDisconnected(socketID));
 
-					synchronized(managers) {
-						managers.remove(socketID);
+					synchronized(agents) {
+						agents.remove(socketID);
 					}
 				}
 
