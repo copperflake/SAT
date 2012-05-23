@@ -2,9 +2,14 @@ package sat.utils.routes;
 
 import java.util.ArrayList;
 
+@SuppressWarnings("serial")
 public class Route extends ArrayList<Waypoint> {
 	private int capacity;
 	private boolean landing = false;
+
+	public Route() {
+		this(-1);
+	}
 
 	public Route(int capacity) {
 		this.capacity = capacity;
@@ -13,7 +18,7 @@ public class Route extends ArrayList<Waypoint> {
 	public boolean isLanding() {
 		return landing;
 	}
-	
+
 	public void setLanding() {
 		landing = true;
 	}

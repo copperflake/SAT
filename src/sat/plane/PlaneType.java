@@ -6,7 +6,7 @@ public enum PlaneType {
 	B787		( 0.85f,	15000,	63,		242 ),
 	CONCORDE	( 2.02f,	120000,	461,	140 ),
 	GRIPEN		( 2.00f,	45000,	200,	1	);
-	
+
 	public static PlaneType getPlaneTypeByName(String name) {
 		name = name.toLowerCase();
 
@@ -32,10 +32,10 @@ public enum PlaneType {
 			return null;
 		}
 	}
-	
+
 	public final float speed;
 	public final int fuel, consumption, passengers;
-	
+
 	PlaneType(float speed, int fuel, int consumption, int passengers) {
 		this.speed = speed;
 		this.fuel = fuel;

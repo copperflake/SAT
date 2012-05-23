@@ -49,17 +49,12 @@ public class Plane implements EventListener, RadioClientDelegate {
 	 * La position de l'avion.
 	 */
 	private Coordinates coords;
-	
-	/**
-	 * La vitesse de l'avion. (en pixel/s)
-	 */
-	private float speed;
 
 	/**
 	 * L'identifiant de l'avion.
 	 */
 	private RadioID id;
-	
+
 	private Route route;
 
 	private PlaneType type;
@@ -67,40 +62,20 @@ public class Plane implements EventListener, RadioClientDelegate {
 	private RadioClient radio;
 
 	private PlaneSimulator simulator;
-	
-	/**
-	 * Intervale de temps pour la mise à jour de l'avion. [ms]
-	 */
-	private long updateInterval;
-	
-	/**
-	 * Consommation de l'avion. [l/min]
-	 */
-	private float consumption;
-	
+
 	/**
 	 * Kérozène restants. [l]
 	 */
 	private float kerozene;
-	
-	/**
-	 * Kérozène maximum. [l]
-	 */
-	private float kerozeneMax;
-	
-	/**
-	 * Nombre de passagers.
-	 */
-	private int passengers;
 
 	private boolean initDone = false;
 
 	public Plane() {
-
 		if(defaults == null)
 			initDefaults();
 
 		config = new Config(defaults);
+		route = new Route();
 	}
 
 	/**
@@ -110,9 +85,15 @@ public class Plane implements EventListener, RadioClientDelegate {
 		defaults = new Config();
 
 		defaults.setProperty("plane.debug", "no");
-		defaults.setProperty("plane.coords", "0,0,-1");
-		defaults.setProperty("plane.type", "A320");
+
+		defaults.setProperty("plane.coords", "0,0,-1");    // Initial coords [NYI]
+		defaults.setProperty("plane.waypoint", "0,0,-1");  // Initial waypoint [NYI]
+
 		defaults.setProperty("plane.prefix", "PLN");
+
+		defaults.setProperty("plane.type", "A320");
+		defaults.setProperty("plane.update", "100");
+		defaults.setProperty("plane.fuel", "200000");
 
 		defaults.setProperty("legacy.towerkey", "tower.key");
 
@@ -142,6 +123,15 @@ public class Plane implements EventListener, RadioClientDelegate {
 		if(type == null) { // getPlaneTypeByName return null for unknown types
 			throw new EndOfWorldException("Invalid plane type");
 		}
+
+		// Initial fuel
+		int initialFuel = config.getInt("plane.fuel");
+
+		if(initialFuel > type.fuel) {
+			initialFuel = type.fuel;
+		}
+
+		kerozene = initialFuel;
 
 		// ID
 		id = new RadioID(config.getString("plane.prefix"));
@@ -174,19 +164,16 @@ public class Plane implements EventListener, RadioClientDelegate {
 	// - - - Plane Simulator - - -
 
 	private class PlaneSimulator extends Thread {
-
-		public PlaneSimulator() {
-
-		}
-
 		public void run() {
 			while(true) {
 				try {
+					int updateInterval = config.getInt("plane.update");
+
 					move(updateInterval);
-					kerozene -= consumption*60 * updateInterval/1000;
-					if(kerozene < kerozeneMax*0.2)
+					kerozene -= type.consumption * 60 * updateInterval / 1000;
+					if(kerozene < type.fuel * 0.2)
 						radio.send(new MessageMayDay(id, coords, "Less than 20% of kerozene."));
-					
+
 					sleep(updateInterval);
 				}
 				catch(InterruptedException e) {
@@ -195,104 +182,107 @@ public class Plane implements EventListener, RadioClientDelegate {
 				}
 			}
 		}
-		
+
 		// ROUTING
 		private void move(double interval) {
-			if(route.get(0).getType() == MoveType.STRAIGHT || route.get(0).getType() == MoveType.LANDING || route.get(0).getType() == MoveType.DESTRUCTION)
-				moveInStraightLine(interval);
-			if(route.get(0).getType() == MoveType.CIRCULAR)
-				moveInCircle(interval);
-			// TODO MoveType.NONE
+			if(route.size() < 1) {
+				System.out.println("Plane dont know where to fly, crashing");
+				System.exit(1);
+			}
+
+			Waypoint waypoint = route.get(0);
+
+			if(waypoint.getType() == MoveType.STRAIGHT || waypoint.getType() == MoveType.LANDING || waypoint.getType() == MoveType.DESTRUCTION)
+				moveInStraightLine(interval, waypoint);
+
+			if(waypoint.getType() == MoveType.CIRCULAR)
+				moveInCircle(interval, waypoint);
 		}
-		
+
 		// deltaTimeSeconds = interval entre chaque mouvement?
-		private void moveInStraightLine(double interval) {
-			Waypoint instruction = route.get(0);
-			
+		private void moveInStraightLine(double interval, Waypoint instruction) {
 			// Compute the normalized direction vector (dx, dy)
 			double dx = instruction.getCoordiates().getX() - coords.getX();
 			double dy = instruction.getCoordiates().getY() - coords.getY();
 			double length = Math.sqrt(dy * dy + dx * dx);
-			
+
 			if(length > 0) {
-				dx = dx/length;
-				dy = dy/length;
+				dx = dx / length;
+				dy = dy / length;
 			}
-			
+
 			// How much time will it take us to get there?
-			double timeNeeded = length/speed;
-			
+			double timeNeeded = length / type.speed;
+
 			// Move the plane.
-			double newX = coords.getX() + dx * interval * speed;
-			double newY = coords.getY() + dy * interval * speed;
+			double newX = coords.getX() + dx * interval * type.speed;
+			double newY = coords.getY() + dy * interval * type.speed;
 			coords = new Coordinates((float) newX, (float) newY, coords.getZ());
-			
+
 			// If we arrived, continue with the next road instruction
 			if(interval >= timeNeeded) {
 				if(instruction.getType() == MoveType.LANDING) {
 					radio.send(new MessageBye(id, coords));
-					
+
 					DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 					dateFormat.format(new Date());
-					
-					TweetSender.tweet("Plane #"+id+" has LANDED at "+dateFormat.toString()+". #ICAirport13 · #ICITP2012");
+
+					TweetSender.tweet("Plane #" + id + " has LANDED at " + dateFormat.toString() + ". #ICAirport13 · #ICITP2012");
 				}
 				else if(instruction.getType() == MoveType.DESTRUCTION) {
 					radio.send(new MessageBye(id, coords));
-					
+
 					DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 					dateFormat.format(new Date());
-					
-					TweetSender.tweet("Plane #"+id+" has AUTODESTRUCT-ITSELF at "+dateFormat.toString()+". #ICAirport13 · #ICITP2012");
+
+					TweetSender.tweet("Plane #" + id + " has AUTODESTRUCT-ITSELF at " + dateFormat.toString() + ". #ICAirport13 · #ICITP2012");
 				}
 
-				System.out.println("Plane "+id+" arrived atwaypoint ("+instruction.getCoordiates().getX()+", "+instruction.getCoordiates().getY()+").");
+				System.out.println("Plane " + id + " arrived atwaypoint (" + instruction.getCoordiates().getX() + ", " + instruction.getCoordiates().getY() + ").");
 				route.remove(0);
-				move(1000*(interval - timeNeeded));
+				move(1000 * (interval - timeNeeded));
 			}
 		}
-		
-		private void moveInCircle(double interval) {
-			Waypoint instruction = route.get(0);
-			
+
+		private void moveInCircle(double interval, Waypoint instruction) {
 			//Moves the plane in circle around the given center, with an objective of given angle.
 			double modX = coords.getX() - instruction.getCoordiates().getX();
 			double modY = coords.getY() - instruction.getCoordiates().getY();
 			double instructionAngle = Math.toRadians(instruction.getAngle());
 			double instructionAngleSign = Math.signum(instructionAngle);
-			double r = Math.sqrt(modX*modX + modY*modY);
+			double r = Math.sqrt(modX * modX + modY * modY);
 			double theta = computeTheta(modX, modY, 0, 0);
-			double rotSpeed = speed/r;
+			double rotSpeed = type.speed / r;
 			double deltaTheta = rotSpeed * interval;
-			
+
 			if(deltaTheta < Math.abs(instructionAngle)) {
 				theta = theta + instructionAngleSign * deltaTheta;
-				
+
 				// TODO Make it cleaner
 				route.remove(0);
-				route.add(0, new Waypoint(MoveType.CIRCULAR, new float[]{instruction.getCoordiates().getX(), instruction.getCoordiates().getY(), (float) Math.toDegrees(instructionAngle - instructionAngleSign * deltaTheta)}));
-				modX = r*Math.cos(theta) + instruction.getCoordiates().getX();
-				modY = r*Math.sin(theta) + instruction.getCoordiates().getY();
+				route.add(0, new Waypoint(MoveType.CIRCULAR, new float[] { instruction.getCoordiates().getX(), instruction.getCoordiates().getY(), (float) Math.toDegrees(instructionAngle - instructionAngleSign * deltaTheta) }));
+				modX = r * Math.cos(theta) + instruction.getCoordiates().getX();
+				modY = r * Math.sin(theta) + instruction.getCoordiates().getY();
 				coords = new Coordinates((float) modX, (float) modY, coords.getZ());
 			}
 			else {
 				theta += instructionAngle;
-				
+
 				route.remove(0);
-				
-				modX = (int) (r*Math.cos(theta) + instruction.getCoordiates().getX());
-				modY = (int) (r*Math.sin(theta) + instruction.getCoordiates().getY());
+
+				modX = (int) (r * Math.cos(theta) + instruction.getCoordiates().getX());
+				modY = (int) (r * Math.sin(theta) + instruction.getCoordiates().getY());
 				coords = new Coordinates((float) modX, (float) modY, coords.getZ());
-				
-				System.out.println("Plane " + id + " arrived atwaypoint ("+modX+", "+modY+").");
-				
+
+				System.out.println("Plane " + id + " arrived at waypoint (" + modX + ", " + modY + ").");
+
 				if(deltaTheta > Math.abs(instructionAngle)) {
 					double neededTime = Math.abs(instructionAngle) / rotSpeed;
-					move(1000*(interval - neededTime));
+					move(1000 * (interval - neededTime));
 				}
 			}
 		}
-		
+
 		private double computeTheta(double px, double py, double cx, double cy) {
 			return Math.atan2(py - cy, px - cx);
 		}
