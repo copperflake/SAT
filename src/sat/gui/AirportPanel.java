@@ -132,3 +132,4 @@ public class AirportPanel extends JPanel {
 		return imgRadar;
 	}
 }
+

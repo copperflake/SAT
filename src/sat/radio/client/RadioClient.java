@@ -11,7 +11,6 @@ import sat.radio.Radio;
 import sat.radio.RadioEvent;
 import sat.radio.RadioID;
 import sat.radio.engine.client.RadioClientEngine;
-import sat.radio.engine.client.RadioClientEngineDelegate;
 import sat.radio.message.*;
 import sat.radio.socket.RadioSocket;
 import sat.radio.socket.RadioSocketState;
@@ -31,7 +30,7 @@ import sat.utils.geo.Coordinates;
  * À la différence d'un serveur radio, le client radio ne peut pas accepter de
  * connexion entrante et n'est pas capable de se connecter à plus d'un hôte.
  */
-public class RadioClient extends Radio implements RadioClientEngineDelegate {
+public class RadioClient extends Radio {
 	/**
 	 * Le délégué de la radio. Le délégué reçoit les évenements émis par la
 	 * radio et est chargé de leur gestion.
@@ -87,7 +86,7 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 
 		try {
 			this.engine = engine;
-			socket = this.engine.init(this);
+			socket = this.engine.init();
 		}
 		catch(IOException e) {
 			// Reset the engine if initialization was not successful.
@@ -103,39 +102,63 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 		manager.send(new MessageHello(id, coords, ciphered, !legacy));
 	}
 
-	public void send(Message message) {
+	/**
+	 * Envoi un message quelconque à la tour. Méthode interne.
+	 */
+	private void send(Message message) {
 		manager.send(message);
 	}
 
+	/**
+	 * Envoi un KeepAlive à la tour.
+	 */
 	public void sendKeepalive() {
 		send(new MessageKeepalive(id, delegate.getLocation()));
 	}
 	
+	/**
+	 * Envoi un fichier à la tour.
+	 */
 	public void sendFile(DataFile file) {
 		manager.sendFile(file);
 	}
-	
+
+	/**
+	 * Envoi un message textuel à la tour.
+	 */
 	public void sendText(String text) {
 		manager.sendText(text);
 	}
-	
+
+	/**
+	 * Envoi une demande d'atterissage à la tour.
+	 */
 	public void sendLandingRequest() {
 		send(new MessageLanding(id, delegate.getLocation()));
 	}
-	
+
+	/**
+	 * Annonce une situation d'urgence à la tour.
+	 */
 	public void sendMayDay(String info) {
 		send(new MessageMayDay(id, delegate.getLocation(), info));
 	}
 
+	/**
+	 * Remercie la tour de sa collaboration.
+	 */
 	public void sendBye() {
 		send(new MessageBye(id, delegate.getLocation()));
 	}
-	
+
 	// - - - Tower Socket Manager - - -
 
+	/**
+	 * Objet de gestion de socket vers la tour.
+	 */
 	public class TowerSocketManager extends SocketManager {
 		/**
-		 * Gestionnaire de messages
+		 * Gestionnaire de messages.
 		 */
 		private MessageHandler messageHandler;
 
