@@ -9,15 +9,33 @@ import java.io.OutputStream;
 import sat.radio.message.*;
 import sat.utils.crypto.RSAKey;
 import sat.utils.geo.Coordinates;
-import sat.utils.routes.MoveType;
 import sat.utils.routes.Waypoint;
 
+/**
+ * Flux de sortie des messages radio.
+ */
 public class MessageOutputStream extends FilterOutputStream {
+	/**
+	 * Un flux interne servant de buffer pour l'écriture des messages.
+	 */
 	private ByteArrayOutputStream baos;
+
+	/**
+	 * Un flux d'écriture de données binaires.
+	 */
 	private DataOutputStream dos;
 
+	/**
+	 * Indique si le flux doit utiliser le mode étendu.
+	 */
 	private boolean extended = false;
 
+	/**
+	 * Crée un nouveau flux de sortie de messages radio.
+	 * 
+	 * @param out
+	 *            Le flux vers lequel les messages sérialisés seront écrit.
+	 */
 	public MessageOutputStream(OutputStream out) {
 		super(out);
 
@@ -25,9 +43,19 @@ public class MessageOutputStream extends FilterOutputStream {
 		dos = new DataOutputStream(baos);
 	}
 
+	/**
+	 * Ecrit un message dans le flux sous-jacent.
+	 * 
+	 * @param m
+	 *            Le message a écrire.
+	 * @throws IOException
+	 *             Si l'écriture dans le flux sous-jacent a provoqué une
+	 *             exception.
+	 */
 	public synchronized void writeMessage(Message m) throws IOException {
+		// Clear the previous output buffer
 		baos.reset();
-		
+
 		if(extended) {
 			byte[] id = Serializer.serialize(m.getID());
 			dos.writeInt(id.length);
@@ -42,7 +70,7 @@ public class MessageOutputStream extends FilterOutputStream {
 
 		Coordinates c = m.getCoordinates();
 
-		if(extended) {
+		if(extended) { // Extended mode use floats for coordinates
 			dos.writeFloat(c.getX());
 			dos.writeFloat(c.getY());
 			dos.writeFloat(c.getZ());
@@ -94,6 +122,9 @@ public class MessageOutputStream extends FilterOutputStream {
 		out.flush();
 	}
 
+	/**
+	 * Ecrit les attributs spécifiques à un message Hello.
+	 */
 	private void writeMessageAttributes(MessageHello m) throws IOException {
 		byte reserved = 0;
 
@@ -103,6 +134,9 @@ public class MessageOutputStream extends FilterOutputStream {
 		dos.write(reserved);
 	}
 
+	/**
+	 * Ecrit les attributs spécifiques à un message Data.
+	 */
 	private void writeMessageAttributes(MessageData m) throws IOException {
 		dos.write(m.getHash());
 		dos.writeInt(m.getContinuation());
@@ -120,10 +154,16 @@ public class MessageOutputStream extends FilterOutputStream {
 		dos.write(m.getPayload());
 	}
 
+	/**
+	 * Ecrit les attributs spécifiques à un message MayDay.
+	 */
 	private void writeMessageAttributes(MessageMayDay m) throws IOException {
 		dos.write(m.getCause().getBytes());
 	}
 
+	/**
+	 * Ecrit les attributs spécifiques à un message SendRSAKey.
+	 */
 	private void writeMessageAttributes(MessageSendRSAKey m) throws IOException {
 		RSAKey key = m.getKey();
 
@@ -138,6 +178,9 @@ public class MessageOutputStream extends FilterOutputStream {
 		dos.write(exponent);
 	}
 
+	/**
+	 * Ecrit les attributs spécifiques à un message Routing.
+	 */
 	private void writeMessageAttributes(MessageRouting m) throws IOException {
 		Waypoint waypoint = m.getWaypoint();
 
@@ -154,10 +197,16 @@ public class MessageOutputStream extends FilterOutputStream {
 		}
 	}
 
+	/**
+	 * Indique si le flux est étendu.
+	 */
 	public boolean isExtended() {
 		return extended;
 	}
 
+	/**
+	 * Défini si le flux doit utiliser le mode étendu.
+	 */
 	public synchronized void setExtended(boolean extended) {
 		this.extended = extended;
 	}

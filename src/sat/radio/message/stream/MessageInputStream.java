@@ -15,8 +15,7 @@ import sat.utils.routes.RoutingType;
 import sat.utils.routes.Waypoint;
 
 /**
- * Flux d'entrée de message compatible avec le protocole de sérialisation de
- * l'ITP.
+ * Flux d'entrée de message radio.
  */
 public class MessageInputStream extends FilterInputStream {
 	/**
@@ -25,7 +24,16 @@ public class MessageInputStream extends FilterInputStream {
 	 */
 	private DataInputStream dis;
 
+	/**
+	 * Indique si le flux utilise le mode étendu.
+	 */
 	private boolean extended = false;
+
+	/**
+	 * La longueur maximal qu'un bloc de taille variable peut nécessiter avant
+	 * que la tour estime qu'il y a une erreur de communication.
+	 */
+	private static final int MAX_VARLENGTH_INPUT = 2048;
 
 	/**
 	 * Crée un nouveau flux d'entrée de message ITP-compliant.
@@ -100,27 +108,27 @@ public class MessageInputStream extends FilterInputStream {
 				break;
 
 			case DATA:
-				byte[] hash = fill(new byte[20]);
+				byte[] hash = fill(20);
 				int continuation = dis.readInt();
 
 				String format;
 				if(this.extended) {
 					// TODO: why serializing?
 					int formatLength = dis.readInt();
-					format = (String) Serializer.deserialize(fill(new byte[formatLength]));
+					format = (String) Serializer.deserialize(fill(formatLength));
 				}
 				else {
-					format = new String(fill(new byte[4]));
+					format = new String(fill(4));
 				}
 
 				int fileSize = dis.readInt();
-				byte[] payload = fill(new byte[length]);
+				byte[] payload = fill(length);
 
 				message = new MessageData(id, c, hash, continuation, format, fileSize, payload);
 				break;
 
 			case MAYDAY:
-				String cause = new String(fill(new byte[length]));
+				String cause = new String(fill(length));
 				message = new MessageMayDay(id, c, cause);
 				break;
 
@@ -129,10 +137,10 @@ public class MessageInputStream extends FilterInputStream {
 				int keySize = dis.readInt();
 
 				int modulusLength = dis.readInt();
-				byte[] modulus = fill(new byte[modulusLength]);
+				byte[] modulus = fill(modulusLength);
 
 				int publicKeyLength = dis.readInt();
-				byte[] publicKey = fill(new byte[publicKeyLength]);
+				byte[] publicKey = fill(publicKeyLength);
 
 				RSAKey key = new RSAKey(new BigInteger(publicKey), new BigInteger(modulus));
 
@@ -156,22 +164,24 @@ public class MessageInputStream extends FilterInputStream {
 				MoveType moveType = MoveType.values()[dis.readInt()];
 
 				float circularAngle = 0;
-				
+
 				if(length > 0) {
 					if(this.extended) {
 						circularAngle = dis.readFloat();
-					} else {
+					}
+					else {
 						circularAngle = dis.readInt();
 					}
 				}
-				
+
 				float args[];
 				if(moveType == MoveType.CIRCULAR) {
-					args = new float[]{c.getX(), c.getY(), c.getZ(), circularAngle};
-				} else {
+					args = new float[] { c.getX(), c.getY(), c.getZ(), circularAngle };
+				}
+				else {
 					args = c.toFloats();
 				}
-				
+
 				Waypoint waypoint = new Waypoint(moveType, args);
 
 				message = new MessageRouting(id, waypoint, routingType);
@@ -199,6 +209,10 @@ public class MessageInputStream extends FilterInputStream {
 	/**
 	 * Replis un buffer donné.
 	 * 
+	 * Cette méthode est normalement utilisée au travers du wrapper fill(int)
+	 * qui demande simplement la longueur du bloc de données à lire sans
+	 * l'allouer, et vérifie que cette taille ne soit pas trop importante.
+	 * 
 	 * @param buffer
 	 *            Un buffer de byte qui sera rempli avec les bytes disponible
 	 *            dans le flux d'entrée interne.
@@ -216,10 +230,27 @@ public class MessageInputStream extends FilterInputStream {
 		return buffer;
 	}
 
+	/**
+	 * Remplis un nouveau buffer de taille donnée. Voir fill(byte[]).
+	 */
+	private byte[] fill(int length) throws IOException {
+		if(length > MAX_VARLENGTH_INPUT) {
+			throw new IOException("Varlength data block is too big");
+		}
+
+		return fill(new byte[length]);
+	}
+
+	/**
+	 * Indique si le flux est étendu.
+	 */
 	public boolean isExtended() {
 		return extended;
 	}
 
+	/**
+	 * Défini si le flux doit utiliser le mode étendu.
+	 */
 	public synchronized void setExtended(boolean extended) {
 		this.extended = extended;
 	}

@@ -3,6 +3,7 @@ package sat.radio.message;
 import sat.radio.RadioID;
 import sat.utils.geo.Coordinates;
 
+@SuppressWarnings("serial")
 public class MessageKeepalive extends Message {
 	public MessageKeepalive(RadioID id, Coordinates c) {
 		super(id, c);
@@ -14,6 +15,4 @@ public class MessageKeepalive extends Message {
 	public String toString() {
 		return "I'm a Keepalive!";
 	}
-
-	private static final long serialVersionUID = -5308604255489464485L;
 }

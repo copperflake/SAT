@@ -3,6 +3,7 @@ package sat.radio.message;
 import sat.radio.RadioID;
 import sat.utils.geo.Coordinates;
 
+@SuppressWarnings("serial")
 public class MessageUnchoke extends Message {
 	public MessageUnchoke(RadioID id, Coordinates c) {
 		super(id, c);
@@ -12,8 +13,6 @@ public class MessageUnchoke extends Message {
 	}
 
 	public String toString() {
-		return "I'm a Unchoke!";
+		return "I'm an Unchoke!";
 	}
-
-	private static final long serialVersionUID = -4086684315280907680L;
 }

@@ -4,6 +4,7 @@ import sat.radio.RadioID;
 import sat.utils.crypto.RSAKey;
 import sat.utils.geo.Coordinates;
 
+@SuppressWarnings("serial")
 public class MessageSendRSAKey extends Message {
 	private RSAKey key;
 
@@ -16,13 +17,11 @@ public class MessageSendRSAKey extends Message {
 		this.key = key;
 	}
 
-	public String toString() {
-		return "I'm a SendRSAKey";
-	}
-
 	public RSAKey getKey() {
 		return key;
 	}
 
-	private static final long serialVersionUID = 7757801401504526502L;
+	public String toString() {
+		return "I'm a SendRSAKey";
+	}
 }

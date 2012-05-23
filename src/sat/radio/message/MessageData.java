@@ -3,6 +3,7 @@ package sat.radio.message;
 import sat.radio.RadioID;
 import sat.utils.geo.Coordinates;
 
+@SuppressWarnings("serial")
 public class MessageData extends Message {
 	private byte[] hash;
 	int continuation;
@@ -48,6 +49,4 @@ public class MessageData extends Message {
 	public String toString() {
 		return "I'm a FileSegment!";
 	}
-
-	private static final long serialVersionUID = 6788760569267293839L;
 }

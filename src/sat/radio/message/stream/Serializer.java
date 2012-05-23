@@ -6,7 +6,21 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+/**
+ * Un sérialisateur d'objet.
+ * 
+ * Les classes de sérialisation de Java (ObjectI/OStream) ne fonctionnent que
+ * sous la forme de flux. Cette classe fournit deux méthodes permettant de
+ * travailler avec des byte[].
+ */
 public class Serializer {
+	/**
+	 * Sérialise un objet.
+	 * 
+	 * @param o
+	 *            L'objet à sérialiser.
+	 * @return L'objet sérialisé
+	 */
 	public static byte[] serialize(Object o) {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -22,6 +36,13 @@ public class Serializer {
 		return baos.toByteArray();
 	}
 
+	/**
+	 * Désérialise un objet.
+	 * 
+	 * @param o
+	 *            L'objet sérialisé
+	 * @return L'objet désérialisé
+	 */
 	public static Object deserialize(byte[] o) {
 		ByteArrayInputStream bais = new ByteArrayInputStream(o);
 

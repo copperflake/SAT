@@ -3,6 +3,7 @@ package sat.radio.message;
 import sat.radio.RadioID;
 import sat.utils.geo.Coordinates;
 
+@SuppressWarnings("serial")
 public class MessageHello extends Message {
 	private boolean ciphered;
 	private boolean extended;
@@ -28,6 +29,4 @@ public class MessageHello extends Message {
 	public String toString() {
 		return "I'm a Teapot!";
 	}
-
-	private static final long serialVersionUID = 6638823010239251082L;
 }

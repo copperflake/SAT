@@ -1,11 +1,11 @@
 package sat.radio.message;
 
 import sat.radio.RadioID;
-import sat.utils.geo.Coordinates;
 import sat.utils.routes.MoveType;
 import sat.utils.routes.RoutingType;
 import sat.utils.routes.Waypoint;
 
+@SuppressWarnings("serial")
 public class MessageRouting extends Message {
 	private RoutingType routingType;
 	private Waypoint waypoint;
@@ -35,6 +35,4 @@ public class MessageRouting extends Message {
 	public String toString() {
 		return "I'm a routing!";
 	}
-
-	private static final long serialVersionUID = -8493801549147991470L;
 }
