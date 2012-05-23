@@ -1,17 +1,10 @@
 package sat.tower;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import sat.DebugEvent;
 import sat.events.AsyncEventEmitter;
@@ -31,8 +24,9 @@ import sat.radio.server.RadioServerDelegate;
 import sat.utils.cli.Config;
 import sat.utils.crypto.RSAException;
 import sat.utils.crypto.RSAKeyPair;
-import sat.utils.file.DataFile;
 import sat.utils.geo.Coordinates;
+import sat.utils.pftp.FileTransferAgentDispatcher;
+import sat.utils.pftp.FileTransferDelegate;
 import sat.utils.routes.MoveType;
 import sat.utils.routes.Route;
 import sat.utils.routes.Waypoint;
@@ -76,7 +70,20 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	 */
 	private Tower() {
 		config = new Config(defaults);
-		dataDispatcher = new FileTransferAgentDispatcher();
+		
+		dataDispatcher = new FileTransferAgentDispatcher(new FileTransferDelegate() {
+			public void planeIdentified(RadioID id, PlaneType type) {
+				emit(new TowerEvent.PlaneIdentified(id, type));
+			}
+			
+			public String getDownloadsPath() {
+				return config.getString("tower.downloads");
+			}
+			
+			public void debugEvent(DebugEvent ev) {
+				emitDebug(ev);
+			}
+		});
 	}
 
 	/**
@@ -94,10 +101,46 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		return instance;
 	}
 
+	// - - - Class methods - - -
+
+	/**
+	 * Le serveur-radio de la tour. Le serveur radio est chargé de toute la
+	 * gestion technique de la communication avec le monde extérieur.
+	 */
+	private RadioServer radio = null;
+
+	/**
+	 * La configuration spécifique à une instance de la tour (même si en
+	 * pratique, la tour est un singleton).
+	 */
+	private Config config;
+
+	/**
+	 * La clé de cette tour de contrôle.
+	 */
+	private RSAKeyPair keyPair;
+
+	/**
+	 * L'identifiant de la tour.
+	 */
+	private RadioID id;
+
+	private boolean initDone = false;
+
+	/**
+	 * Le gestionnaire de dispatch des messages de données.
+	 */
+	private FileTransferAgentDispatcher dataDispatcher;
+	
+	/**
+	 * Avions connectés à cette tour.
+	 */
+	private HashMap<RadioID, TowerPlane> planes = new HashMap<RadioID, TowerPlane>();
+	
 	/**
 	 * Liste des routes (circuits d'attente et piste d'atterissage)
 	 */
-	private ArrayList<Route> routes;
+	private ArrayList<Route> routes = new ArrayList<Route>();
 
 	/**
 	 * Charge un fichier de route, le lit, le parse et ajoute une route à
@@ -178,37 +221,6 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 
 		routes.add(route);
 	}
-
-	// - - - Class methods - - -
-
-	/**
-	 * Le serveur-radio de la tour. Le serveur radio est chargé de toute la
-	 * gestion technique de la communication avec le monde extérieur.
-	 */
-	private RadioServer radio = null;
-
-	/**
-	 * La configuration spécifique à une instance de la tour (même si en
-	 * pratique, la tour est un singleton).
-	 */
-	private Config config;
-
-	/**
-	 * La clé de cette tour de contrôle.
-	 */
-	private RSAKeyPair keyPair;
-
-	/**
-	 * L'identifiant de la tour.
-	 */
-	private RadioID id;
-
-	private boolean initDone = false;
-
-	/**
-	 * Le gestionnaire de dispatch des messages de données.
-	 */
-	private FileTransferAgentDispatcher dataDispatcher;
 
 	/**
 	 * Retourne l'objet de configuration de la tour.
@@ -294,12 +306,12 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	}
 
 	public void on(RadioEvent.PlaneConnected e) {
-		// Plane connected
+		planes.put(e.getID(), new TowerPlane(e.getID()));
 		emit(e); // reemit
 	}
 
 	public void on(RadioEvent.PlaneDisconnected e) {
-		// Plane disconnected
+		planes.remove(e.getID());
 		emit(e); // reemit
 	}
 
@@ -315,180 +327,6 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	private void emitDebug(DebugEvent event) {
 		if(config.getBoolean("tower.debug")) {
 			emit(event);
-		}
-	}
-
-	// - - - FileTransferAgent - - -
-
-	/**
-	 * Classe wrapper permettant d'utiliser des hashs comme clés.
-	 */
-	private class FileTransferHash {
-		private byte[] hash;
-
-		public FileTransferHash(byte[] hash) {
-			this.hash = hash;
-		}
-
-		public boolean equals(Object o) {
-			// Obvious equality
-			if(this == o)
-				return true;
-
-			// Obvious inequality
-			if((o == null) || (o.getClass() != this.getClass()))
-				return false;
-
-			FileTransferHash h = (FileTransferHash) o;
-
-			return Arrays.equals(hash, h.hash);
-		}
-
-		public int hashCode() {
-			return Arrays.hashCode(hash);
-		}
-
-		public String asHex() {
-			StringBuffer sb = new StringBuffer();
-
-			for(byte b : hash) {
-				String h = String.format("%x", b);
-				if(h.length() != 2) {
-					sb.append("0");
-				}
-				sb.append(h);
-			}
-
-			return sb.toString();
-		}
-	}
-
-	/**
-	 * Dispatcher de MessageData vers le bon FileTransferAgent.
-	 */
-	private class FileTransferAgentDispatcher {
-		private HashMap<FileTransferHash, FileTransferAgent> agents = new HashMap<FileTransferHash, FileTransferAgent>();
-
-		public synchronized void dispatchMessageToAgent(MessageData m) {
-			FileTransferHash hash = new FileTransferHash(m.getHash());
-
-			FileTransferAgent agent = agents.get(hash);
-
-			if(agent == null) {
-				try {
-					agent = new FileTransferAgent(hash, m.getID(), m.getFormat(), m.getFileSize());
-				}
-				catch(Exception e) {
-					e.printStackTrace();
-					return;
-				}
-
-				agents.put(hash, agent);
-			}
-
-			try {
-				agent.gotMessage(m);
-			}
-			catch(IOException e) {
-				emit(new DebugEvent("Failed to write data block from " + m.getID() + " file transfer aborted"));
-				try {
-					agent.abort();
-					agents.remove(hash);
-				}
-				catch(IOException e1) {
-					e1.printStackTrace();
-				}
-			}
-		}
-
-		public synchronized void deleteAgent(FileTransferHash hash) {
-			agents.remove(hash);
-		}
-	}
-
-	/**
-	 * Gestionnaire de transfert de fichier.
-	 */
-	private class FileTransferAgent {
-		private FileTransferHash hash;
-
-		private int segmentCount;
-		private int segmentReceived = 0;
-
-		private String path;
-		private DataFile file;
-
-		private FileTransferAgent(FileTransferHash hash, RadioID sender, String format, int size) throws NoSuchAlgorithmException, IOException {
-			this.hash = hash;
-
-			segmentCount = DataFile.segmentsCountForSize(size);
-
-			String filename = sender + "-" + hash.asHex() + "." + format;
-			filename = filename.replaceAll("[:/\\\\]", "_");
-			path = config.getString("tower.downloads") + filename;
-
-			emitDebug("[FTA] Started receiving  " + path);
-
-			file = new DataFile(path);
-
-			// TODO: implements timeouts
-		}
-
-		public void exit() throws IOException {
-			dataDispatcher.deleteAgent(hash);
-			file.close();
-		}
-
-		public void abort() throws IOException {
-			exit();
-			file.delete();
-		}
-
-		private void gotMessage(MessageData m) throws IOException {
-			file.writeSegment(m.getContinuation(), m.getPayload());
-
-			// Catch PLANE_TYPE= files
-			if(m.getContinuation() == 0 && segmentCount == 1) {
-				String data = new String(m.getPayload());
-
-				Pattern pattern = Pattern.compile("^PLANE_TYPE=(.+);");
-				Matcher matcher = pattern.matcher(data);
-
-				if(matcher.find()) {
-					PlaneType type = PlaneType.getPlaneTypeByName(matcher.group(1));
-					
-					if(type != null) {
-						emit(new TowerEvent.PlaneIdentified(m.getID(), type));
-						emitDebug("[FTA] Successfully identified " + m.getID() + " as " + type);
-						// TODO: store plane informations locally
-						
-						abort();
-					}
-				}
-			}
-
-			// TODO: better "file received management"
-			if(++segmentReceived >= segmentCount) {
-				try {
-					FileTransferHash receivedHash = new FileTransferHash(file.getHash());
-
-					if(!receivedHash.equals(hash)) {
-						emitDebug("[FTA] File corrupted from " + m.getID());
-
-						abort();
-						return;
-					}
-				}
-				catch(NoSuchAlgorithmException e) {
-					emitDebug("[FTA] Error while hashing file from " + m.getID());
-
-					abort();
-					return;
-				}
-
-				emitDebug("[FTA] Successfully received from " + m.getID());
-				exit();
-			}
 		}
 	}
 }

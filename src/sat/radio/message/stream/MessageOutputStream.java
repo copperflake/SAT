@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import sat.radio.message.*;
 import sat.utils.crypto.RSAKey;
 import sat.utils.geo.Coordinates;
+import sat.utils.routes.MoveType;
 
 public class MessageOutputStream extends FilterOutputStream {
 	private ByteArrayOutputStream baos;
