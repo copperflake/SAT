@@ -1,17 +1,25 @@
 package sat.gui;
 
 import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.LayoutManager;
 import java.awt.Toolkit;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import sat.events.EventListener;
 import sat.radio.RadioEvent;
 import sat.radio.RadioID;
+import sat.tower.TowerEvent;
 import sat.tower.agent.TowerAgent;
 
 import com.jme3.system.AppSettings;
@@ -39,6 +47,7 @@ public class GUI extends JFrame implements EventListener {
 
 		int width = 1500;
 		int height = 950;
+		int topRowHeight = 783;
 		setSize(width, height);
 		
 		// Pop the window in the middle of the screen. (Work correctly on a dual-screen btw.)
@@ -56,8 +65,24 @@ public class GUI extends JFrame implements EventListener {
 		airportPanel.setPreferredSize(airportPanel.getBackgroundDimension());
 
 		JournalPanel journalPanel = new JournalPanel();
-		DownloadPanel downloadPanel = new DownloadPanel();
 
+		JPanel downloadPanel;
+		
+		if(!agent.isRemote()) {
+			downloadPanel = new DownloadPanel();
+		}
+		else {
+			downloadPanel = new JPanel();
+			downloadPanel.setLayout(new BoxLayout(downloadPanel, BoxLayout.Y_AXIS));
+			JLabel label = new JLabel("<html>This is a remote interface.<br>If you want to see files, you have to check<br>manually on the server.</html>", SwingConstants.CENTER);
+			downloadPanel.add(Box.createVerticalStrut(200));
+			downloadPanel.add(label);
+			downloadPanel.add(Box.createVerticalGlue());
+			if(screenSize.getWidth() >= width && screenSize.getHeight() >= height) {
+				downloadPanel.setPreferredSize(new Dimension(380, topRowHeight));
+			}
+		}
+		
 		final JTabbedPane tabbedPane = new JTabbedPane();
 		tabbedPane.addTab("2D View", airportPanel);
 		
@@ -68,7 +93,6 @@ public class GUI extends JFrame implements EventListener {
 	
 			// Un bout de code affreux, mais c'est belle est bien le seul moyen d'obtenir le résultat esconté.
 			// Merci Java.
-			int topRowHeight = 783;
 			topRow.setPreferredSize(new Dimension(topRow.getWidth(), topRowHeight));
 			botRow.setPreferredSize(new Dimension(botRow.getWidth(), getHeight()-topRowHeight));
 			
@@ -109,7 +133,7 @@ public class GUI extends JFrame implements EventListener {
 		 */
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				Dimension dim = new Dimension(1109, 751);
+				/*Dimension dim = new Dimension(1109, 751);
 
 				AppSettings settings = new AppSettings(true);
 				settings.setWidth((int) dim.getWidth());
@@ -127,7 +151,7 @@ public class GUI extends JFrame implements EventListener {
 				ctx.setSystemListener(radar);
 				ctx.getCanvas().setPreferredSize(dim);
 				
-				tabbedPane.addTab("3D View", ctx.getCanvas());
+				tabbedPane.addTab("3D View", ctx.getCanvas());*/
 				tabbedPane.setVisible(true);
 			}
 		});
@@ -147,11 +171,11 @@ public class GUI extends JFrame implements EventListener {
 	}
 
 	public void on(TowerEvent.PlaneMoved e) {
-		aircrafts.get(e.getID()).addDestination(e.getVector3f());
+		aircrafts.get(e.getID()).addDestination(e.getWhere());
 	}
 
 	public void on(RadioEvent.PlaneDistress e) {
 		// TODO Will crash if 3D Aircraft is not initialized (for example if there is no 3D GUI).
-		aircrafts.get(e.getID()).setDistress3D(e.getDistress());
+		aircrafts.get(e.getID()).setDistress();
 	}
 }

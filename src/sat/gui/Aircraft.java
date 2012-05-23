@@ -219,12 +219,20 @@ public class Aircraft {
 		lineMesh.setBuffer(Type.Index,    2, BufferUtils.createIntBuffer(indexes));
 	}
 	
-	public void setDistress3D(boolean distress) {
+	public void setDistress() {
+		setDistress3D(true);
+	}
+	
+	private void setDistress3D(boolean distress) {
 		sims.getMaterial().setColor("Ambient", new ColorRGBA(distress?1f:0.2f, 0.2f, 0.2f, 1f));
 	}
 	
 	public void addDestination(Vector3f dest) {
 		path.add(dest);
+	}
+	
+	public void addDestination(Coordinates dest) {
+		addDestination(new Vector3f(dest.getX(), dest.getY(), dest.getZ()));
 	}
 
 	public void update2D(Graphics2D g2d) {

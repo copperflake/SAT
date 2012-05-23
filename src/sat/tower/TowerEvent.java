@@ -14,7 +14,7 @@ public abstract class TowerEvent extends Event {
 			this.id = id;
 		}
 
-		public RadioID getId() {
+		public RadioID getID() {
 			return id;
 		}
 	}
