@@ -211,7 +211,15 @@ public class TowerCLI extends GlobalCLI implements EventListener {
 		 * AirportGUI(HD) Changez HD en "false" si la vue 3D est trop lente.
 		 */
 		// TODO: start GUI with CLI's agent
-		new GUI(true, agent);
+		new GUI(true, agent, true);
+	}
+	
+	public void gui2D() {
+		/**
+		 * AirportGUI(HD) Changez HD en "false" si la vue 3D est trop lente.
+		 */
+		// TODO: start GUI with CLI's agent
+		new GUI(true, agent, false);
 	}
 
 	public void agentserver() {
