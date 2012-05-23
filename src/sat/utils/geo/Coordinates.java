@@ -59,6 +59,10 @@ public class Coordinates implements Serializable {
 		throw new InvalidCoordinatesException();
 	}
 	
+	public String toString() {
+		return x+","+y+","+z;
+	}
+	
 	public float[] toFloats() {
 		return new float[] {x, y, z};
 	}

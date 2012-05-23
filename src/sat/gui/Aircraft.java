@@ -8,6 +8,8 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
 import com.jme3.asset.AssetManager;
+import com.jme3.effect.ParticleEmitter;
+import com.jme3.effect.ParticleMesh;
 import com.jme3.material.Material;
 import com.jme3.math.*;
 import com.jme3.scene.*;
@@ -29,10 +31,12 @@ public class Aircraft {
 	private PlaneType type;
 	private RadioID id;
 	private AssetManager assetManager;
+	private float defaultAltitude;
 
-	private CircularBuffer<Vector3f> path = new CircularBuffer<Vector3f>(50);
+	private CircularBuffer<Vector3f> path = new CircularBuffer<Vector3f>(500);
 
-	public Aircraft() {
+	public Aircraft(RadioID id) {
+		this.id = id;
 	}
 	
 	public void init3D(Node parent, AssetManager assetManager) {
@@ -43,6 +47,7 @@ public class Aircraft {
 		mainNode = new Node();
 		lineMesh = new Mesh();
 		initPos = new Vector3f(0f, 0f, 0f);
+		defaultAltitude = (float) Math.random()*80f+30f;
 		
 		currentPos = initPos;
 		
@@ -117,8 +122,9 @@ public class Aircraft {
 		g2d.setColor(Color.GREEN);
 
 		Vector3f coords = path.get(path.size()-1);
-		int x = (int) coords.getX();
-		int y = (int) coords.getY();
+		float x = coords.getX();
+		float y = coords.getY();
+		
 		// TODO Find another solution to replace this.
 		// BufferedImage planeImg = plane.hasCrashed() ? imgKboom : imgPlane;
 		BufferedImage planeImg = AirportPanel.getImgPlane();
@@ -133,7 +139,8 @@ public class Aircraft {
 			double theta = Math.atan2(dy, dx);
 			g2d.setTransform(AffineTransform.getRotateInstance(theta, x, y));
 		}
-		g2d.drawImage(planeImg, x-planeImg.getWidth()/2, y-planeImg.getHeight()/2, null);
+		g2d.drawImage(planeImg, (int) (x-planeImg.getWidth()/2), (int) (y-planeImg.getHeight()/2), null);
+		g2d.setTransform(new AffineTransform());
 	}
 	
 	private void drawAircraft3D(Vector3f initPos) {
@@ -152,6 +159,23 @@ public class Aircraft {
 		mainNode.attachChild(simsWrapper);
 		
 		path.add(initPos);
+		
+		ParticleEmitter smoke = new ParticleEmitter("Emitter", ParticleMesh.Type.Triangle, 500);
+		Material smoke_mat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
+		smoke_mat.setTexture("Texture", assetManager.loadTexture("Effects/Explosion/smoketrail.png"));
+		smoke.setMaterial(smoke_mat);
+		smoke.setImagesX(1); smoke.setImagesY(3); // 1x3 texture animation
+		smoke.setEndColor(new ColorRGBA(1f, 1f, 1f, 0.3f));
+		smoke.setStartColor(new ColorRGBA(1f, 1f, 1f, 1f));
+		smoke.getParticleInfluencer().setInitialVelocity(new Vector3f(0f,0.5f,0f));
+		smoke.setStartSize(1.5f);
+		smoke.setEndSize(0.1f);
+		smoke.setGravity(0,0,0);
+		smoke.setLowLife(20);
+		smoke.setHighLife(30);
+		smoke.setParticlesPerSec(20);
+		smoke.getParticleInfluencer().setVelocityVariation(0.5f);
+		mainNode.attachChild(smoke);
 		
 		parent.attachChild(mainNode);
 	}
@@ -191,20 +215,14 @@ public class Aircraft {
 	}
 	
 	private void drawTrace3D() {
-		lineMesh.setMode(Mesh.Mode.Lines);
-		lineMesh.setLineWidth(4f);
-		Geometry lineGeometry = new Geometry("line", lineMesh);
-		Material lineMaterial = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-		lineMaterial.setColor("Color", ColorRGBA.Green);
-		lineGeometry.setMaterial(lineMaterial);
-		parent.attachChild(lineGeometry);
+		
 	}
 	
 	private void updateTrace3D() {
 		Vector3f[] vertices = new Vector3f[path.size()];
 		int[] indexes = new int[path.size()*2];
 		
-		for (int i=0; i < path.size(); i++) {
+		for(int i=0; i < path.size(); i++) {
 			vertices[i] = new Vector3f(path.get(i).getX(), path.get(i).getZ(), path.get(i).getY());
 			if(i > 0) {
 				indexes[i*2] = i-1;
@@ -228,11 +246,19 @@ public class Aircraft {
 	}
 	
 	public void addDestination(Vector3f dest) {
+		dest.setZ(defaultAltitude);
 		path.add(dest);
 	}
 	
 	public void addDestination(Coordinates dest) {
 		addDestination(new Vector3f(dest.getX(), dest.getY(), dest.getZ()));
+	}
+	
+	/**
+	 * Même principe qu'un destructeur en C++ sauf qu'il doit être appelé à la main.
+	 */
+	public void destroy() {
+		mainNode.removeFromParent();
 	}
 
 	public void update2D(Graphics2D g2d) {

@@ -1,10 +1,7 @@
 package sat.gui;
 
 import java.awt.Dimension;
-import java.awt.GridLayout;
-import java.awt.LayoutManager;
 import java.awt.Toolkit;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.swing.Box;
@@ -16,14 +13,15 @@ import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
+import com.jme3.system.AppSettings;
+import com.jme3.system.JmeCanvasContext;
+
+import sat.events.Event;
 import sat.events.EventListener;
 import sat.radio.RadioEvent;
 import sat.radio.RadioID;
 import sat.tower.TowerEvent;
 import sat.tower.agent.TowerAgent;
-
-import com.jme3.system.AppSettings;
-import com.jme3.system.JmeCanvasContext;
 
 /**
  * This class represents the main window of the application. It mainly consists
@@ -35,12 +33,14 @@ public class GUI extends JFrame implements EventListener {
 	private static final long serialVersionUID = -6319538639673860639L;
 	public static HashMap<RadioID, Aircraft> aircrafts;
 	private Radar radar;
+	private TowerAgent agent;
 	
 	public GUI(final boolean hd, TowerAgent agent) {
 		// Create a window. The program will exit when the window is closed.
 		// See http://docs.oracle.com/javase/tutorial/uiswing/components/frame.html
 		super("Airport");
 		
+		this.agent = agent;
 		agent.addListener(this);
 		
 		aircrafts = new HashMap<RadioID, Aircraft>();
@@ -65,6 +65,7 @@ public class GUI extends JFrame implements EventListener {
 		airportPanel.setPreferredSize(airportPanel.getBackgroundDimension());
 
 		JournalPanel journalPanel = new JournalPanel();
+		//ChokerPanel chockerPanel = new ChokerPanel();
 
 		JPanel downloadPanel;
 		
@@ -92,7 +93,7 @@ public class GUI extends JFrame implements EventListener {
 			Box main = Box.createVerticalBox();
 	
 			// Un bout de code affreux, mais c'est belle est bien le seul moyen d'obtenir le résultat esconté.
-			// Merci Java.
+			// Merci Swing.
 			topRow.setPreferredSize(new Dimension(topRow.getWidth(), topRowHeight));
 			botRow.setPreferredSize(new Dimension(botRow.getWidth(), getHeight()-topRowHeight));
 			
@@ -100,6 +101,7 @@ public class GUI extends JFrame implements EventListener {
 			topRow.add(Box.createHorizontalStrut(5));
 			topRow.add(downloadPanel);
 			botRow.add(journalPanel);
+			//botRow.add(chockerPanel);
 	
 			main.add(topRow);
 			main.add(Box.createVerticalStrut(5));
@@ -133,7 +135,7 @@ public class GUI extends JFrame implements EventListener {
 		 */
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				/*Dimension dim = new Dimension(1109, 751);
+				Dimension dim = new Dimension(1109, 751);
 
 				AppSettings settings = new AppSettings(true);
 				settings.setWidth((int) dim.getWidth());
@@ -151,26 +153,26 @@ public class GUI extends JFrame implements EventListener {
 				ctx.setSystemListener(radar);
 				ctx.getCanvas().setPreferredSize(dim);
 				
-				tabbedPane.addTab("3D View", ctx.getCanvas());*/
+				tabbedPane.addTab("3D View", ctx.getCanvas());
 				tabbedPane.setVisible(true);
 			}
 		});
 	}
 
 	public void on(RadioEvent.PlaneConnected e) {
-		// TODO Add listener(aircraft);
-		Aircraft aircraft = new Aircraft();
+		Aircraft aircraft = new Aircraft(e.getID());
 		// TODO S'assurer que radar est instancié.
 		aircraft.init3D(radar.getRootNode(), radar.getAssetManager());
 		aircrafts.put(e.getID(), aircraft);
 	}
 
 	public void on(RadioEvent.PlaneDisconnected e) {
-		// TODO Remove listener(aircraft);
+		aircrafts.get(e.getID()).destroy();
 		aircrafts.remove(e.getID());
 	}
 
 	public void on(TowerEvent.PlaneMoved e) {
+		//System.out.println(e.getWhere().toString());
 		aircrafts.get(e.getID()).addDestination(e.getWhere());
 	}
 
@@ -178,4 +180,8 @@ public class GUI extends JFrame implements EventListener {
 		// TODO Will crash if 3D Aircraft is not initialized (for example if there is no 3D GUI).
 		aircrafts.get(e.getID()).setDistress();
 	}
+	
+//	public void on(Event e) {
+//		System.out.println(e);
+//	}
 }

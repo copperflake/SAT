@@ -106,7 +106,9 @@ public abstract class Radio extends AsyncEventEmitter {
 
 			listener = new SocketListener();
 			writer = new SocketWriter();
-
+		}
+		
+		public void start() {
 			listener.start();
 			writer.start();
 		}

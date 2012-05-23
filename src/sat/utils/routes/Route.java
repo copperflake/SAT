@@ -3,7 +3,7 @@ package sat.utils.routes;
 import java.util.ArrayList;
 
 @SuppressWarnings("serial")
-public class Route extends ArrayList<Waypoint> {
+public class Route extends ArrayList<Waypoint> implements Cloneable {
 	private int capacity;
 	private boolean landing = false;
 

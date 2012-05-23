@@ -12,13 +12,7 @@ import sat.radio.RadioEvent;
 import sat.radio.RadioID;
 import sat.radio.engine.client.RadioClientEngine;
 import sat.radio.engine.client.RadioClientEngineDelegate;
-import sat.radio.message.Message;
-import sat.radio.message.MessageBye;
-import sat.radio.message.MessageHello;
-import sat.radio.message.MessageLanding;
-import sat.radio.message.MessageMayDay;
-import sat.radio.message.MessageSendRSAKey;
-import sat.radio.message.MessageUpgrade;
+import sat.radio.message.*;
 import sat.radio.socket.RadioSocket;
 import sat.radio.socket.RadioSocketState;
 import sat.utils.crypto.RSAInputStream;
@@ -112,6 +106,10 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 	public void send(Message message) {
 		manager.send(message);
 	}
+
+	public void sendKeepalive() {
+		send(new MessageKeepalive(id, delegate.getLocation()));
+	}
 	
 	public void sendFile(DataFile file) {
 		manager.sendFile(file);
@@ -143,7 +141,10 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 
 		public TowerSocketManager(RadioSocket socket) {
 			super(socket);
+			
 			messageHandler = new MessageHandler();
+
+			start();
 		}
 
 		protected void handleMessage(Message message) throws InvocationTargetException, UnhandledEventException {

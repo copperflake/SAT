@@ -66,7 +66,7 @@ public class RadioServer extends Radio {
 	 */
 	public RadioServer(RadioServerDelegate delegate, RadioID id) {
 		super(delegate, id);
-		this.delegate = delegate;	// TODO: useful ?
+		this.delegate = delegate; // TODO: useful ?
 		this.agents = new HashMap<RadioID, PlaneAgent>();
 	}
 
@@ -107,20 +107,20 @@ public class RadioServer extends Radio {
 			}
 		}
 	}
-	
+
 	public PlaneAgent getAgentForId(RadioID id) {
 		synchronized(agents) {
 			return agents.get(id);
 		}
 	}
-	
+
 	public void send(RadioID id, Message m) {
 		PlaneAgent agent = getAgentForId(id);
 		if(agent != null) {
 			agent.send(m);
 		}
 	}
-	
+
 	public void sendFile(RadioID id, DataFile file) {
 		PlaneAgent agent = getAgentForId(id);
 		if(agent != null) {
@@ -134,14 +134,14 @@ public class RadioServer extends Radio {
 			}
 		}
 	}
-	
+
 	public void sendText(RadioID id, String text) {
 		PlaneAgent agent = getAgentForId(id);
 		if(agent != null) {
 			agent.sendText(text);
 		}
 	}
-	
+
 	public void sendRouting(RadioID id, Waypoint waypoint, RoutingType routingType) {
 		send(id, new MessageRouting(id, waypoint, routingType));
 	}
@@ -221,6 +221,8 @@ public class RadioServer extends Radio {
 			super(socket);
 
 			messageHandler = new MessageHandler();
+
+			start();
 		}
 
 		/**
@@ -265,7 +267,7 @@ public class RadioServer extends Radio {
 			}
 		}
 
-		protected void handleMessage(Message message) throws InvocationTargetException, UnhandledEventException {
+		protected void handleMessage(Message message) throws UnhandledEventException, InvocationTargetException {
 			message.trigger(messageHandler);
 		}
 

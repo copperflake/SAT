@@ -27,6 +27,6 @@ public class MessageHello extends Message {
 	}
 
 	public String toString() {
-		return "I'm a Teapot!";
+		return "I'm a Hello!";
 	}
 }

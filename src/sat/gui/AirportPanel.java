@@ -6,7 +6,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -17,11 +16,7 @@ import java.util.TimerTask;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
-import sat.events.EventListener;
-import sat.radio.RadioEvent;
 import sat.radio.RadioID;
-import sat.tower.Tower;
-import sat.utils.geo.CircularBuffer;
 
 /**
  * This class draws an airport and the planes. It makes the following assumption
@@ -39,7 +34,7 @@ import sat.utils.geo.CircularBuffer;
  * be displayed. - It considers a plane crashed when the hasCrashed() method of
  * the class TowerAgent returns true.
  */
-public class AirportPanel extends JPanel implements EventListener {
+public class AirportPanel extends JPanel {
 
 	private static final long serialVersionUID = 5254715425216686775L;
 

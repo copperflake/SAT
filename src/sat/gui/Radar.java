@@ -1,8 +1,11 @@
 package sat.gui;
 
+import sat.radio.RadioID;
+
 import com.jme3.app.SimpleApplication;
-import com.jme3.asset.AssetKey;
 import com.jme3.asset.plugins.FileLocator;
+import com.jme3.effect.ParticleEmitter;
+import com.jme3.effect.ParticleMesh;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
@@ -60,23 +63,6 @@ public class Radar extends SimpleApplication {
 		zurick.rotate(0f, (float) (-Math.PI*0.492), 0f);
 		rootNode.attachChild(zurick);
 		
-		
-		// PISTE (DEV)
-		Box b1 = new Box(Vector3f.ZERO, 2f,100f,2f);
-		Spatial p1 = new Geometry("Box", b1);
-		Material pm = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-		pm.setColor("Color", ColorRGBA.Blue);
-		p1.setMaterial(pm);
-		p1.setLocalTranslation(400f,0f,166f);
-		rootNode.attachChild(p1);
-
-		Box b2 = new Box(Vector3f.ZERO, 2f,10f,2f);
-		Spatial p2 = new Geometry("Box", b2);
-		p2.setMaterial(pm);
-		p2.setLocalTranslation(533f,0f,437f);
-		rootNode.attachChild(p2);
-		
-		
 		// Tower
 		tower = assetManager.loadModel("Models/tower.obj");
 		tower.scale(4f);
@@ -132,9 +118,10 @@ public class Radar extends SimpleApplication {
 		if(frameNumber == 0) {
 			controls.setupControls();
 		}
-		
-		for(int i = 0; i < GUI.aircrafts.size(); i++)
-			GUI.aircrafts.get(i).update3D(timer.getTimeInSeconds());
+
+		for(RadioID key : GUI.aircrafts.keySet()) {
+			GUI.aircrafts.get(key).update3D(timer.getTimeInSeconds());
+		}
 		
 		frameNumber++;
 	}

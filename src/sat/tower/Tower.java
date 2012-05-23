@@ -375,6 +375,7 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 			
 			if(currentRoute != -1 && planesAssigned >= routes.get(currentRoute).getCapacity()) {
 				currentRoute++;
+				planesAssigned = 0;
 			}
 		}
 		
@@ -383,6 +384,8 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	
 	private void redefineRoute(RadioID id, Route route) {
 		emitDebug("[ROUTING] Redefining route for " + id);
+		
+		route = (Route) route.clone();
 		
 		for(Waypoint waypoint : route) {
 			System.out.println(waypoint.getCoordiates().getX() + "," +waypoint.getCoordiates().getY() + "," +waypoint.getCoordiates().getZ());
@@ -457,6 +460,7 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 
 	public void on(RadioEvent.PlaneDisconnected e) {
 		planes.remove(e.getID());
+		//refreshRouting();
 		emit(e); // reemit
 	}
 

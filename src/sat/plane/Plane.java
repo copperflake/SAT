@@ -21,16 +21,11 @@ import sat.radio.RadioID;
 import sat.radio.client.RadioClient;
 import sat.radio.client.RadioClientDelegate;
 import sat.radio.engine.client.RadioClientEngine;
-import sat.radio.message.Message;
-import sat.radio.message.MessageBye;
-import sat.radio.message.MessageLanding;
-import sat.radio.message.MessageMayDay;
 import sat.radio.message.MessageRouting;
 import sat.utils.cli.Config;
 import sat.utils.crypto.RSAException;
 import sat.utils.crypto.RSAKey;
 import sat.utils.crypto.RSAKeyPair;
-import sat.utils.file.DataFile;
 import sat.utils.geo.Coordinates;
 import sat.utils.geo.InvalidCoordinatesException;
 import sat.utils.routes.MoveType;
@@ -72,6 +67,8 @@ public class Plane implements EventListener, RadioClientDelegate {
 
 	private PlaneSimulator simulator;
 
+	private boolean started = false;
+
 	/**
 	 * Kérozène restants. [l]
 	 */
@@ -83,6 +80,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 		if(defaults == null)
 			initDefaults();
 
+		simulator = new PlaneSimulator();
 		config = new Config(defaults);
 		route = new Route();
 	}
@@ -178,18 +176,19 @@ public class Plane implements EventListener, RadioClientDelegate {
 	}
 
 	public boolean started() {
-		return (simulator != null);
+		return started;
 	}
 
 	public void start() {
 		if(!started()) {
-			simulator = new PlaneSimulator();
 			simulator.start();
+			started = true;
 		}
 	}
 
 	public void crash(String message) {
 		System.out.println(message);
+		crash();
 	}
 
 	public void crash() {
@@ -221,7 +220,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 					int updateInterval = config.getInt("plane.update");
 
 					move(updateInterval / 1000f);
-					kerozene -= type.consumption * 60 * updateInterval / 1000;
+					kerozene -= (type.consumption / 60) * (updateInterval / 1000);
 
 					if(kerozene <= 0) {
 						crash("No more kerozene, crashing");
@@ -230,6 +229,8 @@ public class Plane implements EventListener, RadioClientDelegate {
 						radio.sendMayDay("Less than 20% of kerozene.");
 						kerozeneSent = true;
 					}
+
+					radio.sendKeepalive();
 
 					sleep(updateInterval);
 				}
@@ -322,6 +323,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 			//Moves the plane in circle around the given center, with an objective of given angle.
 			double modX = coords.getX() - instruction.getCoordiates().getX();
 			double modY = coords.getY() - instruction.getCoordiates().getY();
+			
 			double instructionAngle = Math.toRadians(instruction.getAngle());
 			double instructionAngleSign = Math.signum(instructionAngle);
 			double r = Math.sqrt(modX * modX + modY * modY);
@@ -334,7 +336,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 
 				// TODO Make it cleaer
 				route.remove(0);
-				route.add(0, new Waypoint(MoveType.CIRCULAR, new float[] { instruction.getCoordiates().getX(), instruction.getCoordiates().getY(), (float) Math.toDegrees(instructionAngle - instructionAngleSign * deltaTheta) }));
+				route.add(0, new Waypoint(MoveType.CIRCULAR, new float[] { instruction.getCoordiates().getX(), instruction.getCoordiates().getY(), instruction.getCoordiates().getZ(), (float) Math.toDegrees(instructionAngle - instructionAngleSign * deltaTheta) }));
 				modX = r * Math.cos(theta) + instruction.getCoordiates().getX();
 				modY = r * Math.sin(theta) + instruction.getCoordiates().getY();
 				coords = new Coordinates((float) modX, (float) modY, coords.getZ());
