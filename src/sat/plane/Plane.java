@@ -161,17 +161,6 @@ public class Plane implements EventListener, RadioClientDelegate {
 
 	public void on(Event event) {
 		System.out.println(event);
-		try {
-			radio.sendFile(new DataFile("tyrael_1920x1080.jpg"));
-		}
-		catch(NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch(IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 	// - - - Plane Simulator - - -
