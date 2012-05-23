@@ -3,6 +3,8 @@ package sat.radio;
 import java.io.EOFException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import sat.events.AsyncEventEmitter;
@@ -10,11 +12,13 @@ import sat.events.Event;
 import sat.events.UnhandledEventException;
 import sat.events.schedulers.PriorityEventScheduler;
 import sat.radio.message.Message;
+import sat.radio.message.MessageData;
 import sat.radio.message.stream.MessageInputStream;
 import sat.radio.message.stream.MessageOutputStream;
 import sat.radio.socket.RadioSocket;
 import sat.radio.socket.RadioSocketState;
-import sat.utils.crypto.RSAKeyPair;
+import sat.utils.file.DataFile;
+import sat.utils.geo.Coordinates;
 
 /**
  * Une radio non-spécialisée (ni client, ni serveur). Cette classe fourni les
@@ -58,9 +62,6 @@ public abstract class Radio extends AsyncEventEmitter {
 		this.delegate = delegate;
 		this.id = id;
 	}
-
-	// - - - Socket Manager - - -
-
 	public boolean isCiphered() {
 		return ciphered;
 	}
@@ -76,6 +77,8 @@ public abstract class Radio extends AsyncEventEmitter {
 	public void setLegacy(boolean legacy) {
 		this.legacy = legacy;
 	}
+
+	// - - - Socket Manager - - -
 
 	protected abstract class SocketManager {
 		/**
@@ -298,6 +301,51 @@ public abstract class Radio extends AsyncEventEmitter {
 			 */
 			public void send(Message m) {
 				queue.put(m);
+			}
+
+			public void sendFile(final DataFile file) {
+				(new Thread() {
+					public void run() {
+						try {
+							int i = 0;
+							for(byte[] part : file) {
+								Coordinates c = delegate.getLocation();
+								send(new MessageData(id, c, file.getHash(), i, file.getFormat(), file.getSize(), part));
+								i++;
+							}
+						}
+						catch(NoSuchAlgorithmException e) {
+							emitEvent(new RadioEvent.UncaughtException("Error hashing file", e));
+						}
+						catch(IOException e) {
+							emitEvent(new RadioEvent.UncaughtException("Error when reading file", e));
+						}
+					}
+				}).start();
+			}
+
+			public void sendText(String text) {
+				byte[] data = text.getBytes();
+
+				if(data.length > 1024) {
+					// TODO: what else?
+					return;
+				}
+
+				byte[] hash;
+
+				try {
+					MessageDigest digest = MessageDigest.getInstance("SHA1");
+					digest.update(data, 0, data.length);
+					hash = digest.digest();
+				}
+				catch(NoSuchAlgorithmException e) {
+					// TODO: what else?
+					return;
+				}
+
+				Coordinates c = delegate.getLocation();
+				send(new MessageData(id, c, hash, 0, "txt", data.length, data));
 			}
 
 			public void upgrade() {

@@ -11,6 +11,7 @@ import java.util.Iterator;
 /**
  * Un fichier segmentable pour l'envoi par la radio.
  */
+@SuppressWarnings("serial")
 public class DataFile extends File implements Iterable<byte[]> {
 	/**
 	 * Nombre de partie à ce fichier.
@@ -133,8 +134,8 @@ public class DataFile extends File implements Iterable<byte[]> {
 		}
 	}
 
-	public long getSize() throws IOException {
-		return this.file.length();
+	public int getSize() throws IOException {
+		return (int) this.file.length();
 	}
 
 	public void close() throws IOException {
