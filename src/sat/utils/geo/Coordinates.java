@@ -36,4 +36,30 @@ public class Coordinates implements Serializable {
 
 		return false;
 	}
+	
+	public static Coordinates parseCoordinates(String coords) throws InvalidCoordinatesException {
+		String[] parts = coords.split(",");
+		
+		if(parts.length == 2) {
+			return new Coordinates(
+				Float.parseFloat(parts[0]),
+				Float.parseFloat(parts[1]),
+				-1f
+			);
+		}
+		
+		if(parts.length == 3) {
+			return new Coordinates(
+				Float.parseFloat(parts[0]),
+				Float.parseFloat(parts[1]),
+				Float.parseFloat(parts[2])
+			);
+		}
+		
+		throw new InvalidCoordinatesException();
+	}
+	
+	public float[] toFloats() {
+		return new float[] {x, y, z};
+	}
 }

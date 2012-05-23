@@ -26,6 +26,7 @@ import sat.utils.crypto.RSAKey;
 import sat.utils.crypto.RSAKeyPair;
 import sat.utils.file.DataFile;
 import sat.utils.geo.Coordinates;
+import sat.utils.geo.InvalidCoordinatesException;
 import sat.utils.routes.MoveType;
 import sat.utils.routes.Route;
 import sat.utils.routes.Waypoint;
@@ -89,7 +90,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 		defaults.setProperty("plane.debug", "no");
 
 		defaults.setProperty("plane.coords", "0,0,-1");    // Initial coords [NYI]
-		defaults.setProperty("plane.waypoint", "0,0,-1");  // Initial waypoint [NYI]
+		defaults.setProperty("plane.waypoint", "625,445,-1");  // Initial waypoint [NYI]
 
 		defaults.setProperty("plane.prefix", "PLN");
 
@@ -116,9 +117,26 @@ public class Plane implements EventListener, RadioClientDelegate {
 			return;
 		}
 
-		// Coords
-		// TODO: read from config
-		coords = new Coordinates(0, 0, -1);
+		// Initial Coords
+		
+		try {
+			coords = Coordinates.parseCoordinates(config.getString("plane.coords"));
+		}
+		catch(InvalidCoordinatesException e) {
+			coords = new Coordinates(0, 0, -1);
+		}
+		
+		// Initial Waypoint
+		
+		Coordinates initalWaypoint;
+		try {
+			initalWaypoint = Coordinates.parseCoordinates(config.getString("plane.waypoint"));
+		}
+		catch(InvalidCoordinatesException e) {
+			initalWaypoint = new Coordinates(625f, 445f, -1f);
+		}
+		
+		route.add(new Waypoint(MoveType.STRAIGHT, initalWaypoint.toFloats()));
 
 		// Plane Type
 		type = PlaneType.getPlaneTypeByName(config.getString("plane.type"));
@@ -151,10 +169,16 @@ public class Plane implements EventListener, RadioClientDelegate {
 	public void connect(RadioClientEngine engine) throws IOException {
 		radio.connect(engine);
 	}
+	
+	public boolean started() {
+		return (simulator != null);
+	}
 
 	public void start() {
-		simulator = new PlaneSimulator();
-		simulator.start();
+		if(!started()) {
+			simulator = new PlaneSimulator();
+			simulator.start();
+		}
 	}
 
 	// - - - Events - - -
@@ -179,8 +203,6 @@ public class Plane implements EventListener, RadioClientDelegate {
 					sleep(updateInterval);
 				}
 				catch(InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
 			}
 		}
