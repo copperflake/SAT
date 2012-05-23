@@ -46,7 +46,7 @@ public abstract class RadioEvent extends Event {
 			this.id = id;
 		}
 
-		public RadioID getId() {
+		public RadioID getID() {
 			return id;
 		}
 	}

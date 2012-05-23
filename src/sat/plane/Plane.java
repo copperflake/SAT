@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
@@ -13,6 +14,7 @@ import java.util.Date;
 import sat.EndOfWorldException;
 import sat.events.Event;
 import sat.events.EventListener;
+import sat.events.UnhandledEventException;
 import sat.external.twitter.TweetSender;
 import sat.radio.RadioEvent;
 import sat.radio.RadioID;
@@ -23,6 +25,7 @@ import sat.radio.message.Message;
 import sat.radio.message.MessageBye;
 import sat.radio.message.MessageLanding;
 import sat.radio.message.MessageMayDay;
+import sat.radio.message.MessageRouting;
 import sat.utils.cli.Config;
 import sat.utils.crypto.RSAException;
 import sat.utils.crypto.RSAKey;
@@ -93,8 +96,8 @@ public class Plane implements EventListener, RadioClientDelegate {
 		defaults.setProperty("plane.debug", "no");
 		defaults.setProperty("plane.twitter", "no");
 
-		defaults.setProperty("plane.coords", "0,0,-1");    // Initial coords
-		defaults.setProperty("plane.waypoint", "625,445,-1");  // Initial waypoint
+		defaults.setProperty("plane.coords", "0,0,-1"); // Initial coords
+		defaults.setProperty("plane.waypoint", "625,445,-1"); // Initial waypoint
 
 		defaults.setProperty("plane.prefix", "PLN");
 
@@ -122,16 +125,16 @@ public class Plane implements EventListener, RadioClientDelegate {
 		}
 
 		// Initial Coords
-		
+
 		try {
 			coords = Coordinates.parseCoordinates(config.getString("plane.coords"));
 		}
 		catch(InvalidCoordinatesException e) {
 			coords = new Coordinates(0, 0, -1);
 		}
-		
+
 		// Initial Waypoint
-		
+
 		Coordinates initalWaypoint;
 		try {
 			initalWaypoint = Coordinates.parseCoordinates(config.getString("plane.waypoint"));
@@ -139,7 +142,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 		catch(InvalidCoordinatesException e) {
 			initalWaypoint = new Coordinates(625f, 445f, -1f);
 		}
-		
+
 		route.add(new Waypoint(MoveType.STRAIGHT, initalWaypoint.toFloats()));
 
 		// Plane Type
@@ -173,7 +176,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 	public void connect(RadioClientEngine engine) throws IOException {
 		radio.connect(engine);
 	}
-	
+
 	public boolean started() {
 		return (simulator != null);
 	}
@@ -185,28 +188,48 @@ public class Plane implements EventListener, RadioClientDelegate {
 		}
 	}
 
+	public void crash(String message) {
+		System.out.println(message);
+	}
+
+	public void crash() {
+		System.exit(1);
+	}
+
 	// - - - Events - - -
-	
+
 	public void on(RadioEvent.TowerConnected e) {
 		radio.sendLandingRequest();
 	}
-	
+
+	public void on(MessageRouting message) throws UnhandledEventException, InvocationTargetException {
+		message.trigger(simulator);
+	}
+
 	public void on(Event event) {
 		System.out.println(event);
 	}
 
 	// - - - Plane Simulator - - -
 
-	private class PlaneSimulator extends Thread {
+	private class PlaneSimulator extends Thread implements EventListener {
+		private boolean kerozeneSent = false;
+
 		public void run() {
 			while(true) {
 				try {
 					int updateInterval = config.getInt("plane.update");
 
-					move(updateInterval/1000f);
+					move(updateInterval / 1000f);
 					kerozene -= type.consumption * 60 * updateInterval / 1000;
-					if(kerozene < type.fuel * 0.2)
+
+					if(kerozene <= 0) {
+						crash("No more kerozene, crashing");
+					}
+					else if(kerozene < type.fuel * 0.2 && !kerozeneSent) {
 						radio.sendMayDay("Less than 20% of kerozene.");
+						kerozeneSent = true;
+					}
 
 					sleep(updateInterval);
 				}
@@ -216,10 +239,23 @@ public class Plane implements EventListener, RadioClientDelegate {
 		}
 
 		// ROUTING
+		public void on(MessageRouting message) {
+			switch(message.getRoutingType()) {
+				case NEWFIRST:
+					route.add(0, message.getWaypoint());
+					break;
+
+				case REPLACEALL:
+					route.clear();
+				case LAST:
+					route.add(message.getWaypoint());
+					break;
+			}
+		}
+
 		private void move(double interval) {
 			if(route.size() < 1) {
-				System.out.println("Plane dont know where to fly, crashing");
-				System.exit(1);
+				crash("Plane dont know where to fly, crashing");
 			}
 
 			Waypoint waypoint = route.get(0);
@@ -250,7 +286,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 			double newX = coords.getX() + dx * interval * type.speedAsPxPerSec();
 			double newY = coords.getY() + dy * interval * type.speedAsPxPerSec();
 			coords = new Coordinates((float) newX, (float) newY, coords.getZ());
-			
+
 			// If we arrived, continue with the next road instruction
 			if(interval >= timeNeeded) {
 				if(instruction.getType() == MoveType.LANDING) {

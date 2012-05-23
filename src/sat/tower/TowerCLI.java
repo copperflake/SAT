@@ -52,20 +52,6 @@ public class TowerCLI extends GlobalCLI implements EventListener {
 
 		this.agent = agent;
 		agent.addListener(this);
-
-		this.agent.addListener(new EventListener() {
-			@SuppressWarnings("unused")
-			public void on(DebugEvent event) {
-				print("[DEBUG] ");
-				println(event.getMessage());
-			}
-
-			@SuppressWarnings("unused")
-			public void on(RadioEvent.UncaughtException event) {
-				print("[EXCEPTION] ");
-				event.getException().printStackTrace(out);
-			}
-		});
 	}
 
 	private Tower getTower() {
@@ -226,7 +212,7 @@ public class TowerCLI extends GlobalCLI implements EventListener {
 		 * AirportGUI(HD) Changez HD en "false" si la vue 3D est trop lente.
 		 */
 		// TODO: start GUI with CLI's agent
-		new GUI(true);
+		new GUI(true, agent);
 	}
 
 	public void agentserver() {
@@ -265,5 +251,15 @@ public class TowerCLI extends GlobalCLI implements EventListener {
 				fos.close();
 			}
 		});
+	}
+
+	public void on(DebugEvent event) {
+		print("[DEBUG] ");
+		println(event.getMessage());
+	}
+
+	public void on(RadioEvent.UncaughtException event) {
+		print("[EXCEPTION] ");
+		event.getException().printStackTrace(out);
 	}
 }
