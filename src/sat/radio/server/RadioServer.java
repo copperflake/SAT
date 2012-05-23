@@ -22,6 +22,8 @@ import sat.utils.crypto.RSAKeyPair;
 import sat.utils.crypto.RSAOutputStream;
 import sat.utils.file.DataFile;
 import sat.utils.geo.Coordinates;
+import sat.utils.routes.RoutingType;
+import sat.utils.routes.Waypoint;
 
 /**
  * Un serveur radio.
@@ -138,6 +140,10 @@ public class RadioServer extends Radio {
 		if(agent != null) {
 			agent.sendText(text);
 		}
+	}
+	
+	public void sendRouting(RadioID id, Waypoint waypoint, RoutingType routingType) {
+		send(id, new MessageRouting(id, waypoint, routingType));
 	}
 
 	// - - - Engine Events Delegate - - -
