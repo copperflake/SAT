@@ -1,5 +1,7 @@
 package sat.radio.message;
 
+import java.util.Date;
+
 import sat.events.PriorityEvent;
 import sat.radio.RadioID;
 import sat.utils.geo.Coordinates;
@@ -24,6 +26,11 @@ public abstract class Message extends PriorityEvent<Message> {
 	 */
 	private Coordinates coords;
 
+	/**
+	 * Horodatage de la réception du message.
+	 */
+	private Date date;
+	
 	/**
 	 * La longueur du payload du packet. En général non-utilisée sauf pour les
 	 * message MayDay, Routing et Data.
@@ -55,6 +62,7 @@ public abstract class Message extends PriorityEvent<Message> {
 		coords = c;
 
 		messageID = getNextMessageID();
+		date = new Date();
 	}
 
 	/**
@@ -90,6 +98,13 @@ public abstract class Message extends PriorityEvent<Message> {
 	 */
 	public MessageType getType() {
 		return type;
+	}
+	
+	/**
+	 * Retourne l'horodatage de réception du message.
+	 */
+	public Date getDate() {
+		return date;
 	}
 
 	/**

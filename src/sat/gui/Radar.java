@@ -1,5 +1,7 @@
 package sat.gui;
 
+import java.util.logging.Level;
+
 import sat.radio.RadioID;
 
 import com.jme3.app.SimpleApplication;
@@ -32,12 +34,13 @@ public class Radar extends SimpleApplication {
 		setShowSettings(false);
 		setDisplayStatView(false);
 		setPauseOnLostFocus(false);
+		java.util.logging.Logger.getLogger("").setLevel(Level.SEVERE);
 	}
-	
+
 	@SuppressWarnings("deprecation")
 	public void simpleInitApp() {
 		// TODO Add listener(this)
-		
+
 		camUp = cam.getUp();
 		moveSpeed = 5f;
 		moveAltSpeed = 100f;
@@ -51,45 +54,33 @@ public class Radar extends SimpleApplication {
 		Box zurickBox = new Box(Vector3f.ZERO, 900f, 0f, 900f);
 		Spatial zurick = new Geometry("Box", zurickBox);
 		Material mat_zurick = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+		
 		/**
-		 * On ajoute la texture du sol selon le paramètre HD. En effet, deux images de différente dimension peuvent être utilisées.
+		 * On ajoute la texture du sol selon le paramètre HD. En effet, deux
+		 * images de différente dimension peuvent être utilisées.
 		 * assets/Images/kloten15mid: 4000x4000 pixels
-		 * assets/Images/kloten15low: 1000x1000 pixels
-		 * Notez que assets/Images/kloten15 (6144x6144 pixels) existe aussi mais a été retiré du code car son chargement était vraiment trop gourmant. 
+		 * assets/Images/kloten15low: 1000x1000 pixels Notez que
+		 * assets/Images/kloten15 (6144x6144 pixels) existe aussi mais a été
+		 * retiré du code car son chargement était vraiment trop gourmant.
 		 */
-		mat_zurick.setTexture("ColorMap", assetManager.loadTexture("Images/kloten15"+((hd) ? "mid" : "low")+".jpg"));
+		mat_zurick.setTexture("ColorMap", assetManager.loadTexture("Images/kloten15" + ((hd) ? "mid" : "low") + ".jpg"));
 		zurick.setMaterial(mat_zurick);
 		zurick.setLocalTranslation(473f, 0f, 330f);
-		zurick.rotate(0f, (float) (-Math.PI*0.492), 0f);
+		zurick.rotate(0f, (float) (-Math.PI * 0.492), 0f);
 		rootNode.attachChild(zurick);
-		
+
 		// Tower
 		tower = assetManager.loadModel("Models/tower.obj");
 		tower.scale(4f);
 		tower.setLocalTranslation(600f, 0f, 400f);
 		rootNode.attachChild(tower);
-		
-			// DEV
-			Node allPlanes = new Node();
-			Spatial gripen = assetManager.loadModel("Models/gripen.obj");
-			gripen.setLocalTranslation(0, 0, 10);
-			Spatial concorde = assetManager.loadModel("Models/concorde.obj");
-			concorde.setLocalTranslation(0, 0, -10);
-			Spatial a320 = assetManager.loadModel("Models/a320.obj");
-			allPlanes.attachChild(gripen);
-			allPlanes.attachChild(concorde);
-			allPlanes.attachChild(a320);
-			allPlanes.scale(6f);
-			allPlanes.setLocalRotation(new Quaternion(new float[]{0f, (float) -Math.PI/2, 0f}));
-			allPlanes.setLocalTranslation(425f, 50f, 270f);
-			rootNode.attachChild(allPlanes);
-		
+
 		// Sun
 		DirectionalLight sun = new DirectionalLight();
 		sun.setDirection(new Vector3f(-0.1f, -0.7f, -1.0f));
 		sun.setColor(new ColorRGBA(1f, 0.95f, 0.9f, 1f));
 		rootNode.addLight(sun);
-		
+
 		// Counter-Sun
 		DirectionalLight sun2 = new DirectionalLight();
 		sun2.setDirection(new Vector3f(0.1f, -0.3f, 1.0f));
@@ -100,14 +91,14 @@ public class Radar extends SimpleApplication {
 		AmbientLight al = new AmbientLight();
 		al.setColor(ColorRGBA.White);
 		rootNode.addLight(al);
-		
+
 		// POST PROCESSING
 		FilterPostProcessor fpp = new FilterPostProcessor(assetManager);
 		GammaCorrectionFilter gammaFilter = new GammaCorrectionFilter(0.8f);
 		fpp.addFilter(gammaFilter);
 		viewPort.addProcessor(fpp);
-		
-		cam.setFrustumPerspective(45f, (float) cam.getWidth()/cam.getHeight(), 0.01f, 10000f);
+
+		cam.setFrustumPerspective(45f, (float) cam.getWidth() / cam.getHeight(), 0.01f, 10000f);
 
 		cam.setLocation(new Vector3f(457f, 200f, 672f));
 		cam.lookAt(new Vector3f(457f, 0f, 272f), cam.getUp());
@@ -122,10 +113,10 @@ public class Radar extends SimpleApplication {
 		for(RadioID key : GUI.aircrafts.keySet()) {
 			GUI.aircrafts.get(key).update3D(timer.getTimeInSeconds());
 		}
-		
+
 		frameNumber++;
 	}
-	
+
 	public void moveCamFront(float value) {
 		Vector3f v = cam.getDirection().setY(0).normalize().mult(value * moveSpeed * cam.getLocation().getY());
 		cam.setLocation(cam.getLocation().add(v));
@@ -153,27 +144,27 @@ public class Radar extends SimpleApplication {
 	public void rotateCamH(float value) {
 		rotateCamDetached(-value, camUp);
 	}
-	
+
 	public void rotateCamV(float value) {
 		rotateCamDetached(value, cam.getLeft());
 	}
-	
+
 	@SuppressWarnings("deprecation")
 	private void rotateCamDetached(float value, Vector3f axis) {
 		Vector3f up = this.cam.getUp();
 		Vector3f left = this.cam.getLeft();
 		Vector3f dir = this.cam.getDirection();
-		
+
 		Matrix3f mat = new Matrix3f();
 		mat.fromAngleNormalAxis(rotSpeed * value, axis);
-		
+
 		mat.mult(up, up);
 		mat.mult(left, left);
 		mat.mult(dir, dir);
-		
+
 		Quaternion q = new Quaternion();
-		q.fromAxes(left, up, dir).normalize();	
-		
+		q.fromAxes(left, up, dir).normalize();
+
 		this.cam.setAxes(q);
 	}
 }

@@ -3,6 +3,7 @@ package sat.gui;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.util.HashMap;
+import java.util.Vector;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -11,15 +12,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-
-import com.jme3.system.AppSettings;
-import com.jme3.system.JmeCanvasContext;
-
-import sat.events.Event;
 import sat.events.EventListener;
 import sat.radio.RadioEvent;
 import sat.radio.RadioID;
+import sat.radio.message.Message;
 import sat.tower.TowerEvent;
 import sat.tower.agent.TowerAgent;
 
@@ -34,12 +30,13 @@ public class GUI extends JFrame implements EventListener {
 	public static HashMap<RadioID, Aircraft> aircrafts;
 	private Radar radar;
 	private TowerAgent agent;
+	private JournalPanel journalPanel;
 	
 	public GUI(final boolean hd, TowerAgent agent) {
 		// Create a window. The program will exit when the window is closed.
 		// See http://docs.oracle.com/javase/tutorial/uiswing/components/frame.html
 		super("Airport");
-		
+
 		this.agent = agent;
 		agent.addListener(this);
 		
@@ -64,7 +61,7 @@ public class GUI extends JFrame implements EventListener {
 		AirportPanel airportPanel = new AirportPanel();
 		airportPanel.setPreferredSize(airportPanel.getBackgroundDimension());
 
-		JournalPanel journalPanel = new JournalPanel();
+		journalPanel = new JournalPanel();
 		//ChokerPanel chockerPanel = new ChokerPanel();
 
 		JPanel downloadPanel;
@@ -133,6 +130,7 @@ public class GUI extends JFrame implements EventListener {
 		/**
 		 * 3D Stuff
 		 */
+		/*
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				Dimension dim = new Dimension(1109, 751);
@@ -157,13 +155,14 @@ public class GUI extends JFrame implements EventListener {
 				tabbedPane.setVisible(true);
 			}
 		});
+		*/
 	}
 
 	public void on(RadioEvent.PlaneConnected e) {
 		Aircraft aircraft = new Aircraft(e.getID());
+		aircrafts.put(e.getID(), aircraft);
 		// TODO S'assurer que radar est instancié.
 		aircraft.init3D(radar.getRootNode(), radar.getAssetManager());
-		aircrafts.put(e.getID(), aircraft);
 	}
 
 	public void on(RadioEvent.PlaneDisconnected e) {
@@ -179,6 +178,17 @@ public class GUI extends JFrame implements EventListener {
 	public void on(RadioEvent.PlaneDistress e) {
 		// TODO Will crash if 3D Aircraft is not initialized (for example if there is no 3D GUI).
 		aircrafts.get(e.getID()).setDistress();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void on(Message m) {
+		Vector v = new Vector();
+		v.add(m.getPriority());
+		v.add(m.getType().toString());
+		v.add(m.getID().toString());
+		v.add("Dest");
+		v.add(m.getDate());
+		journalPanel.addEvent(v);
 	}
 	
 //	public void on(Event e) {

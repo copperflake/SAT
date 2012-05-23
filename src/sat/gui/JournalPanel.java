@@ -100,7 +100,6 @@ public class JournalPanel extends JPanel implements ActionListener /*, Observer*
 	 *  String destination    the message destination (same format as source)
 	 *  java.util.Date data   the date and time when the message arrived
      */
-	@SuppressWarnings("rawtypes")
 	public void addEvent(Vector v) {
 		model.addRow(v);
 	}
