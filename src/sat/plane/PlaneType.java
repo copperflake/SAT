@@ -44,6 +44,6 @@ public enum PlaneType {
 	}
 
 	public float speedAsPxPerSec() {
-		return speed*340*12;
+		return speed*340/12;
 	}
 }

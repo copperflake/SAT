@@ -203,7 +203,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 				try {
 					int updateInterval = config.getInt("plane.update");
 
-					move(updateInterval);
+					move(updateInterval/1000f);
 					kerozene -= type.consumption * 60 * updateInterval / 1000;
 					if(kerozene < type.fuel * 0.2)
 						radio.sendMayDay("Less than 20% of kerozene.");
@@ -250,7 +250,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 			double newX = coords.getX() + dx * interval * type.speedAsPxPerSec();
 			double newY = coords.getY() + dy * interval * type.speedAsPxPerSec();
 			coords = new Coordinates((float) newX, (float) newY, coords.getZ());
-
+			
 			// If we arrived, continue with the next road instruction
 			if(interval >= timeNeeded) {
 				if(instruction.getType() == MoveType.LANDING) {
@@ -272,7 +272,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 
 				System.out.println("Plane " + id + " arrived atwaypoint (" + instruction.getCoordiates().getX() + ", " + instruction.getCoordiates().getY() + ").");
 				route.remove(0);
-				move(1000 * (interval - timeNeeded));
+				move(interval - timeNeeded);
 			}
 		}
 
@@ -296,7 +296,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 			if(deltaTheta < Math.abs(instructionAngle)) {
 				theta = theta + instructionAngleSign * deltaTheta;
 
-				// TODO Make it cleaner
+				// TODO Make it cleaer
 				route.remove(0);
 				route.add(0, new Waypoint(MoveType.CIRCULAR, new float[] { instruction.getCoordiates().getX(), instruction.getCoordiates().getY(), (float) Math.toDegrees(instructionAngle - instructionAngleSign * deltaTheta) }));
 				modX = r * Math.cos(theta) + instruction.getCoordiates().getX();
@@ -316,7 +316,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 
 				if(deltaTheta > Math.abs(instructionAngle)) {
 					double neededTime = Math.abs(instructionAngle) / rotSpeed;
-					move(1000 * (interval - neededTime));
+					move(interval - neededTime);
 				}
 			}
 		}

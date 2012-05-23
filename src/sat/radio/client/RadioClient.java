@@ -13,7 +13,10 @@ import sat.radio.RadioID;
 import sat.radio.engine.client.RadioClientEngine;
 import sat.radio.engine.client.RadioClientEngineDelegate;
 import sat.radio.message.Message;
+import sat.radio.message.MessageBye;
 import sat.radio.message.MessageHello;
+import sat.radio.message.MessageLanding;
+import sat.radio.message.MessageMayDay;
 import sat.radio.message.MessageSendRSAKey;
 import sat.radio.message.MessageUpgrade;
 import sat.radio.socket.RadioSocket;
@@ -68,10 +71,6 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 		this.delegate = delegate;
 	}
 
-	public void send(Message message) {
-
-	}
-
 	/**
 	 * Connecte le client radio à un serveur radio en utilisant le moteur de
 	 * communcation <code>engine</code> spécifié. Le moteur passé en paramètre
@@ -109,6 +108,10 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 		Coordinates coords = delegate.getLocation();
 		manager.send(new MessageHello(id, coords, ciphered, !legacy));
 	}
+
+	public void send(Message message) {
+		manager.send(message);
+	}
 	
 	public void sendFile(DataFile file) {
 		manager.sendFile(file);
@@ -117,7 +120,19 @@ public class RadioClient extends Radio implements RadioClientEngineDelegate {
 	public void sendText(String text) {
 		manager.sendText(text);
 	}
+	
+	public void sendLandingRequest() {
+		send(new MessageLanding(id, delegate.getLocation()));
+	}
+	
+	public void sendMayDay(String info) {
+		send(new MessageMayDay(id, delegate.getLocation(), info));
+	}
 
+	public void sendBye() {
+		send(new MessageBye(id, delegate.getLocation()));
+	}
+	
 	// - - - Tower Socket Manager - - -
 
 	public class TowerSocketManager extends SocketManager {
