@@ -12,6 +12,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+
+import com.jme3.system.AppSettings;
+import com.jme3.system.JmeCanvasContext;
+
 import sat.events.EventListener;
 import sat.radio.RadioEvent;
 import sat.radio.RadioID;
@@ -31,11 +36,14 @@ public class GUI extends JFrame implements EventListener {
 	private Radar radar;
 	private TowerAgent agent;
 	private JournalPanel journalPanel;
+	private boolean enable3D = true;
 	
-	public GUI(final boolean hd, TowerAgent agent) {
+	public GUI(final boolean hd, TowerAgent agent, boolean enable3D) {
 		// Create a window. The program will exit when the window is closed.
 		// See http://docs.oracle.com/javase/tutorial/uiswing/components/frame.html
 		super("Airport");
+		
+		this.enable3D = enable3D;
 
 		this.agent = agent;
 		agent.addListener(this);
@@ -130,43 +138,48 @@ public class GUI extends JFrame implements EventListener {
 		/**
 		 * 3D Stuff
 		 */
-		/*
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				Dimension dim = new Dimension(1109, 751);
-
-				AppSettings settings = new AppSettings(true);
-				settings.setWidth((int) dim.getWidth());
-				settings.setHeight((int) dim.getHeight());
-				settings.setFrameRate(40);
-				settings.setSamples(hd?4:0);
-				
-				
-				radar = new Radar(hd);
-				radar.setSettings(settings);
-				radar.createCanvas();
-				radar.startCanvas(true);
-
-				JmeCanvasContext ctx = (JmeCanvasContext) radar.getContext();
-				ctx.setSystemListener(radar);
-				ctx.getCanvas().setPreferredSize(dim);
-				
-				tabbedPane.addTab("3D View", ctx.getCanvas());
-				tabbedPane.setVisible(true);
-			}
-		});
-		*/
+		if(enable3D) {
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					Dimension dim = new Dimension(1109, 751);
+	
+					AppSettings settings = new AppSettings(true);
+					settings.setWidth((int) dim.getWidth());
+					settings.setHeight((int) dim.getHeight());
+					settings.setFrameRate(40);
+					settings.setSamples(hd?4:0);
+					
+					
+					radar = new Radar(hd);
+					radar.setSettings(settings);
+					radar.createCanvas();
+					radar.startCanvas(true);
+	
+					JmeCanvasContext ctx = (JmeCanvasContext) radar.getContext();
+					ctx.setSystemListener(radar);
+					ctx.getCanvas().setPreferredSize(dim);
+					
+					tabbedPane.addTab("3D View", ctx.getCanvas());
+					tabbedPane.setVisible(true);
+				}
+			});
+		}
 	}
 
 	public void on(RadioEvent.PlaneConnected e) {
 		Aircraft aircraft = new Aircraft(e.getID());
 		aircrafts.put(e.getID(), aircraft);
-		// TODO S'assurer que radar est instancié.
-		aircraft.init3D(radar.getRootNode(), radar.getAssetManager());
+
+		if(enable3D && radar != null) {
+			aircraft.init3D(radar.getRootNode(), radar.getAssetManager());
+		}
 	}
 
 	public void on(RadioEvent.PlaneDisconnected e) {
-		aircrafts.get(e.getID()).destroy();
+		if(enable3D && radar != null) {
+			aircrafts.get(e.getID()).destroy();
+		}
+		
 		aircrafts.remove(e.getID());
 	}
 
@@ -182,6 +195,7 @@ public class GUI extends JFrame implements EventListener {
 	
 	@SuppressWarnings("unchecked")
 	public void on(Message m) {
+		@SuppressWarnings("rawtypes")
 		Vector v = new Vector();
 		v.add(m.getPriority());
 		v.add(m.getType().toString());

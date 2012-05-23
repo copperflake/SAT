@@ -118,6 +118,10 @@ public class Aircraft {
 	}
 
 	private void drawAircraft2D(Graphics2D g2d) {
+		if (path.size() < 1) {
+			return;
+		}
+		
 		g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
 		g2d.setColor(Color.GREEN);
 
@@ -242,7 +246,9 @@ public class Aircraft {
 	}
 	
 	private void setDistress3D(boolean distress) {
-		sims.getMaterial().setColor("Ambient", new ColorRGBA(distress?1f:0.2f, 0.2f, 0.2f, 1f));
+		if(sims != null) {
+			sims.getMaterial().setColor("Ambient", new ColorRGBA(distress?1f:0.2f, 0.2f, 0.2f, 1f));
+		}
 	}
 	
 	public void addDestination(Vector3f dest) {
