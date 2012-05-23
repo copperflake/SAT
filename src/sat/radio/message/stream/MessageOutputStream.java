@@ -10,6 +10,7 @@ import sat.radio.message.*;
 import sat.utils.crypto.RSAKey;
 import sat.utils.geo.Coordinates;
 import sat.utils.routes.MoveType;
+import sat.utils.routes.Waypoint;
 
 public class MessageOutputStream extends FilterOutputStream {
 	private ByteArrayOutputStream baos;
@@ -105,21 +106,22 @@ public class MessageOutputStream extends FilterOutputStream {
 	private void writeMessageAttributes(MessageData m) throws IOException {
 		dos.write(m.getHash());
 		dos.writeInt(m.getContinuation());
-		
+
 		if(extended) {
 			byte[] serializedString = Serializer.serialize(m.getFormat());
 			dos.writeInt(serializedString.length);
 			dos.write(serializedString);
-		} else {
+		}
+		else {
 			dos.writeBytes(m.getFormat().substring(1, 5));
 		}
-		
+
 		dos.writeInt(m.getFileSize());
 		dos.write(m.getPayload());
 	}
 
 	private void writeMessageAttributes(MessageMayDay m) throws IOException {
-		dos.writeChars(m.getCause());
+		dos.write(m.getCause().getBytes());
 	}
 
 	private void writeMessageAttributes(MessageSendRSAKey m) throws IOException {
@@ -137,7 +139,19 @@ public class MessageOutputStream extends FilterOutputStream {
 	}
 
 	private void writeMessageAttributes(MessageRouting m) throws IOException {
-		// TODO
+		Waypoint waypoint = m.getWaypoint();
+
+		dos.writeInt(m.getRoutingType().ordinal());
+		dos.writeInt(waypoint.getType().ordinal());
+
+		if(m.getLength() > 0) {
+			if(extended) {
+				dos.writeFloat(waypoint.getAngle());
+			}
+			else {
+				dos.writeInt((int) waypoint.getAngle());
+			}
+		}
 	}
 
 	public boolean isExtended() {

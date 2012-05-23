@@ -10,6 +10,9 @@ import sat.radio.RadioID;
 import sat.radio.message.*;
 import sat.utils.crypto.RSAKey;
 import sat.utils.geo.Coordinates;
+import sat.utils.routes.MoveType;
+import sat.utils.routes.RoutingType;
+import sat.utils.routes.Waypoint;
 
 /**
  * Flux d'entrée de message compatible avec le protocole de sérialisation de
@@ -102,13 +105,14 @@ public class MessageInputStream extends FilterInputStream {
 
 				String format;
 				if(this.extended) {
+					// TODO: why serializing?
 					int formatLength = dis.readInt();
 					format = (String) Serializer.deserialize(fill(new byte[formatLength]));
 				}
 				else {
 					format = new String(fill(new byte[4]));
 				}
-				
+
 				int fileSize = dis.readInt();
 				byte[] payload = fill(new byte[length]);
 
@@ -148,12 +152,29 @@ public class MessageInputStream extends FilterInputStream {
 				break;
 
 			case ROUTING:
-				int routingMessageType = dis.readInt();
-				int moveType = dis.readInt();
-				byte[] payload2 = fill(new byte[length]);
-				// TODO data
+				RoutingType routingType = RoutingType.values()[dis.readInt()];
+				MoveType moveType = MoveType.values()[dis.readInt()];
 
-				message = new MessageRouting(id, c);
+				float circularAngle = 0;
+				
+				if(length > 0) {
+					if(this.extended) {
+						circularAngle = dis.readFloat();
+					} else {
+						circularAngle = dis.readInt();
+					}
+				}
+				
+				float args[];
+				if(moveType == MoveType.CIRCULAR) {
+					args = new float[]{c.getX(), c.getY(), c.getZ(), circularAngle};
+				} else {
+					args = c.toFloats();
+				}
+				
+				Waypoint waypoint = new Waypoint(moveType, args);
+
+				message = new MessageRouting(id, waypoint, routingType);
 				break;
 
 			case KEEPALIVE:
