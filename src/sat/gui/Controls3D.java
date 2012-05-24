@@ -7,6 +7,9 @@ import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 
+/**
+ * Reconfigure les contrôle d'une simpleApplication.
+ */
 public class Controls3D {
 	private InputManager inputManager;
 	private boolean moveEnable, rotateEnable;
@@ -19,6 +22,9 @@ public class Controls3D {
 		this.app = app;
 	}
 
+	/**
+	 * Suppression des contrôles par défaut, puis nouveau mapping de contrôle plus adapter.
+	 */
 	public void setupControls() {
 		// Removing some shortcut
 		inputManager.deleteMapping("FLYCAM_Left");
@@ -55,6 +61,9 @@ public class Controls3D {
 		inputManager.addListener(analogListener, new String[] { "MoveX-L", "MoveX-R", "MoveY-U", "MoveY-D", "ZoomIn", "ZoomOut" });
 	}
 
+	/**
+	 * Listener "On/Off" des actions engendrées par l'utilisateur sur la vue.
+	 */
 	private ActionListener actionListener = new ActionListener() {
 		public void onAction(String name, boolean keyPressed, float tpf) {
 			if(name.equals("MoveEnable")) {
@@ -68,6 +77,9 @@ public class Controls3D {
 		}
 	};
 
+	/**
+	 * Listener analogique des actions engendrées par l'utilisateur sur la vue.
+	 */
 	private AnalogListener analogListener = new AnalogListener() {
 		public void onAnalog(String name, float value, float tpf) {
 			if(name.equals("MoveX-L")) {

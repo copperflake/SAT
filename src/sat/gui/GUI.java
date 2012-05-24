@@ -25,9 +25,8 @@ import sat.tower.TowerEvent;
 import sat.tower.agent.TowerAgent;
 
 /**
- * This class represents the main window of the application. It mainly consists
- * of an AirportPanel, but also contains the two other windows of the
- * application (The journal and the list of downloaded files).
+ * Cette classe va initialiser le GUI, l'afficher et récupérer les évenements émis par le ToweeAgent.
+ * Elle créera une ou plusieurs fenêtres selon la taille de l'écran de l'utilisateur.
  */
 public class GUI extends JFrame implements EventListener {
 	private static final long serialVersionUID = -6319538639673860639L;
@@ -40,6 +39,13 @@ public class GUI extends JFrame implements EventListener {
 	private DownloadPanel downloadPanel;
 	private boolean enable3D = true;
 	
+	/**
+	 * Le constructeur crée ou non un onglet contenant la vue tridimentionnelle selon les paramètres du constructeur.
+	 * Le paramètre HD permet de définir si la vue 3D doit être de haute qualité ou non.
+	 * @param hd
+	 * @param agent
+	 * @param enable3D
+	 */
 	public GUI(final boolean hd, TowerAgent agent, boolean enable3D) {
 		// Create a window. The program will exit when the window is closed.
 		// See http://docs.oracle.com/javase/tutorial/uiswing/components/frame.html
