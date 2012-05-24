@@ -2,6 +2,8 @@ package sat.utils.routes;
 
 import java.util.ArrayList;
 
+import sat.utils.geo.Coordinates;
+
 /**
  * Une route est une suite de Waypoint à suivre.
  */
@@ -44,6 +46,19 @@ public class Route extends ArrayList<Waypoint> implements Cloneable {
 	 */
 	public void setLanding() {
 		landing = true;
+	}
+
+	/**
+	 * Détermine le point de boucle de ce circuit.
+	 */
+	public Coordinates getLoopPoint() {
+		for(int i = size()-2; i >= 0; i--) {
+			if(get(i).getType() == MoveType.STRAIGHT) {
+				return get(i).getCoordiates();
+			}
+		}
+
+		return null;
 	}
 
 	/**

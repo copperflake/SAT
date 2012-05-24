@@ -33,7 +33,7 @@ public class Aircraft {
 	private AssetManager assetManager;
 	private float defaultAltitude;
 
-	private CircularBuffer<Vector3f> path = new CircularBuffer<Vector3f>(500);
+	private CircularBuffer<Vector3f> path = new CircularBuffer<Vector3f>(200);
 
 	public Aircraft(RadioID id) {
 		this.id = id;

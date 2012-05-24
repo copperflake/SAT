@@ -2,6 +2,7 @@ package sat.tower;
 
 import sat.plane.PlaneType;
 import sat.radio.RadioID;
+import sat.utils.geo.Coordinates;
 
 /**
  * Un avion interne à la tour. Il maintient une série d'informations nécessaires
@@ -56,6 +57,16 @@ public class TowerPlane {
 	 * avions ne plus plus être modifié et son atterrissage ne peut être annulé.
 	 */
 	private boolean landing;
+
+	/**
+	 * Point de boucle du circuit.
+	 */
+	private Coordinates loopPoint;
+
+	/**
+	 * Indique si la boucle a déjà été envoyée.
+	 */
+	private boolean loopSent = false;
 
 	/**
 	 * Crée un nouvel avion interne à la tour.
@@ -148,5 +159,35 @@ public class TowerPlane {
 	 */
 	public void setLanding() {
 		this.landing = true;
+	}
+
+	/**
+	 * Retourne la
+	 * 
+	 * @param coords
+	 * @return
+	 */
+	public float distanceToLoopPoint(Coordinates coords) {
+		if(loopPoint == null) {
+			return Float.NaN;
+		}
+
+		float dx = coords.getX() - loopPoint.getX();
+		float dy = coords.getY() - loopPoint.getY();
+		float dz = coords.getZ() - loopPoint.getZ();
+
+		return (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
+	};
+
+	public void setLoopPoint(Coordinates loopPoint) {
+		this.loopPoint = loopPoint;
+	}
+
+	public boolean isLoopSent() {
+		return loopSent;
+	}
+
+	public void setLoopSent(boolean loopSent) {
+		this.loopSent = loopSent;
 	}
 }

@@ -104,13 +104,4 @@ public class PlaneCLI extends GlobalCLI {
 
 		plane.connect(engine);
 	}
-	
-	public void start() {
-		if(plane.started()) {
-			println("Plane is already started");
-			return;
-		}
-		
-		plane.start();
-	}
 }

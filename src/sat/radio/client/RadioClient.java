@@ -115,7 +115,7 @@ public class RadioClient extends Radio {
 	public void sendKeepalive() {
 		send(new MessageKeepalive(id, delegate.getLocation()));
 	}
-	
+
 	/**
 	 * Envoi un fichier à la tour.
 	 */
@@ -164,7 +164,7 @@ public class RadioClient extends Radio {
 
 		public TowerSocketManager(RadioSocket socket) {
 			super(socket);
-			
+
 			messageHandler = new MessageHandler();
 
 			start();

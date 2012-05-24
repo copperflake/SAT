@@ -61,10 +61,10 @@ public class MessageInputStream extends FilterInputStream {
 		RadioID id;
 		if(extended) {
 			int idLength = dis.readInt();
-			id = (RadioID) Serializer.deserialize(fill(new byte[idLength]));
+			id = (RadioID) Serializer.deserialize(fill(idLength));
 		}
 		else {
-			id = new RadioID(fill(new byte[8]));
+			id = new RadioID(fill(8));
 		}
 
 		int length = dis.readInt();

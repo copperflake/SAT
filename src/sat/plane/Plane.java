@@ -2,11 +2,9 @@ package sat.plane;
 
 import java.io.DataInputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
-import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -66,8 +64,6 @@ public class Plane implements EventListener, RadioClientDelegate {
 	private RadioClient radio;
 
 	private PlaneSimulator simulator;
-
-	private boolean started = false;
 
 	/**
 	 * Kérozène restants. [l]
@@ -174,18 +170,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 	public void connect(RadioClientEngine engine) throws IOException {
 		radio.connect(engine);
 	}
-
-	public boolean started() {
-		return started;
-	}
-
-	public void start() {
-		if(!started()) {
-			simulator.start();
-			started = true;
-		}
-	}
-
+	
 	public void crash(String message) {
 		System.out.println(message);
 		crash();
@@ -199,6 +184,8 @@ public class Plane implements EventListener, RadioClientDelegate {
 
 	public void on(RadioEvent.TowerConnected e) {
 		radio.sendLandingRequest();
+		radio.sendText("PLANE_TYPE=" + type + ";");
+		simulator.start();
 	}
 
 	public void on(MessageRouting message) throws UnhandledEventException, InvocationTargetException {
@@ -240,6 +227,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 		}
 
 		// ROUTING
+		@SuppressWarnings("unused")
 		public void on(MessageRouting message) {
 			switch(message.getRoutingType()) {
 				case NEWFIRST:
@@ -307,7 +295,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 					tweet("Plane #" + id + " has AUTODESTRUCT-ITSELF at " + dateFormat.toString() + ". #ICAirport13 · #ICITP2012");
 				}
 
-				System.out.println("Plane " + id + " arrived atwaypoint (" + instruction.getCoordiates().getX() + ", " + instruction.getCoordiates().getY() + ").");
+				System.out.println("Plane " + id + " arrived at waypoint (" + instruction.getCoordiates().getX() + ", " + instruction.getCoordiates().getY() + ").");
 				route.remove(0);
 				move(interval - timeNeeded);
 			}

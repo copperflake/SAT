@@ -1,10 +1,9 @@
 set tower.debug yes
-
+loadroute routes/landing 1
 loadroute routes/small 3
 loadroute routes/medium 10
-loadroute routes/small 100
+loadroute routes/big 100
 init
 writekey tower.key
 agentserver
 listen
-gui

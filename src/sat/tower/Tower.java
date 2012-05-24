@@ -23,6 +23,7 @@ import sat.radio.message.MessageBye;
 import sat.radio.message.MessageData;
 import sat.radio.message.MessageKeepalive;
 import sat.radio.message.MessageLanding;
+import sat.radio.message.MessageMayDay;
 import sat.radio.server.RadioServer;
 import sat.radio.server.RadioServerDelegate;
 import sat.utils.cli.Config;
@@ -377,10 +378,14 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 						continue;
 					}
 
-					redefineRoute(plane.getID(), highwayToHell);
+					defineRoute(plane, highwayToHell, true);
 				}
 				else {
-					redefineRoute(plane.getID(), routes.get(currentRoute));
+					try {
+						defineRoute(plane, routes.get(currentRoute), true);
+					} catch(Exception e) {
+						e.printStackTrace();
+					}
 				}
 
 				plane.setCurrentRoute(currentRoute);
@@ -398,15 +403,25 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	}
 
 	/**
-	 * Redéfini la route d'un avion en lui envoyant les instructions de routage
+	 * Défini la route d'un avion en lui envoyant les instructions de routage
 	 * appropriées.
 	 */
-	private void redefineRoute(RadioID id, Route route) {
+	private void defineRoute(TowerPlane plane, Route route, boolean replace) {
+		RadioID id = plane.getID();
+		
 		emitDebug("[ROUTING] Redefining route for " + id);
+		
+		plane.setLoopPoint(route.getLoopPoint());
+		
+		if(route.isLanding()) {
+			plane.setLanding();
+		}
 
 		route = (Route) route.clone();
 
-		radio.sendRouting(id, route.remove(0), RoutingType.REPLACEALL);
+		if(replace) {
+			radio.sendRouting(id, route.remove(0), RoutingType.REPLACEALL);
+		}
 
 		for(Waypoint waypoint : route) {
 			radio.sendRouting(id, waypoint, RoutingType.LAST);
@@ -443,6 +458,19 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 
 	public void on(MessageKeepalive m) {
 		emit(new TowerEvent.PlaneMoved(m.getID(), m.getCoordinates()));
+		
+		TowerPlane plane = planes.get(m.getID());
+		
+		float d = plane.distanceToLoopPoint(m.getCoordinates());
+		if(!Float.isNaN(d) && d < 10) {
+			if(!plane.isLoopSent()) {
+				defineRoute(plane, routes.get(plane.getCurrentRoute()), false);
+				plane.setLoopSent(true);
+			}
+		} else {
+			plane.setLoopSent(false);
+		}
+		
 		emit(m);
 	}
 
@@ -452,7 +480,7 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		emit(m);
 	}
 
-	public void on(MessageLanding m) {
+	public synchronized void on(MessageLanding m) {
 		planes.get(m.getID()).landingRequested();
 		refreshRouting();
 		emit(m);
@@ -461,6 +489,12 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	public void on(MessageBye m) {
 		radio.kick(m.getID());
 		emit(m);
+	}
+	
+	public synchronized void on(MessageMayDay m) {
+		planes.get(m.getID()).setMayDay(true);
+		refreshRouting();
+		emit(m); // reemit
 	}
 	
 	public void on(Message m) {
@@ -473,9 +507,9 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		emit(e); // reemit
 	}
 
-	public void on(RadioEvent.PlaneDisconnected e) {
+	public synchronized void on(RadioEvent.PlaneDisconnected e) {
 		planes.remove(e.getID());
-		//refreshRouting();
+		refreshRouting();
 		emit(e); // reemit
 	}
 
