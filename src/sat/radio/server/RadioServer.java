@@ -16,7 +16,6 @@ import sat.radio.engine.server.RadioServerEngineDelegate;
 import sat.radio.message.*;
 import sat.radio.socket.RadioSocket;
 import sat.radio.socket.RadioSocketState;
-import sat.tower.TowerEvent;
 import sat.utils.crypto.RSAInputStream;
 import sat.utils.crypto.RSAKey;
 import sat.utils.crypto.RSAKeyPair;
@@ -285,6 +284,7 @@ public class RadioServer extends Radio {
 		}
 
 		protected void handleMessage(Message message) throws UnhandledEventException, InvocationTargetException {
+			emit(new RadioEvent.MessageReceived(message));
 			message.trigger(messageHandler);
 		}
 
@@ -297,7 +297,7 @@ public class RadioServer extends Radio {
 		 */
 		public void send(Message message) {
 			super.send(message);
-			emit(new TowerEvent.MessageSent(message));
+			emit(new RadioEvent.MessageSent(message));
 		}
 
 		/**

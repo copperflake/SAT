@@ -489,34 +489,29 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	public void on(MessageData m) {
 		// TODO: something asynchronous?
 		dataDispatcher.dispatchMessageToAgent(m);
-		emit(m);
 	}
 
 	public synchronized void on(MessageLanding m) {
 		planes.get(m.getID()).landingRequested();
 		refreshRouting();
-		emit(m);
 	}
 
 	public void on(MessageBye m) {
 		radio.kick(m.getID());
-		emit(m);
 	}
 	
 	public synchronized void on(MessageMayDay m) {
 		planes.get(m.getID()).setMayDay(true);
 		refreshRouting();
-		emit(m); // reemit
 	}
 	
 	public void on(Message m) {
-		System.out.println(m);
-		emit(m); // reemit
+		emitDebug(m.toString());
 	}
 
 	public void on(RadioEvent.PlaneConnected e) {
 		planes.put(e.getID(), new TowerPlane(e.getID()));
-		emit(e); // reemit
+		emit(e);
 	}
 
 	public synchronized void on(RadioEvent.PlaneDisconnected e) {
