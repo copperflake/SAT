@@ -9,7 +9,6 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import sat.tower.agent.TowerAgent;
-import sun.management.resources.agent;
 
 public class ChokerPanel extends JPanel implements ActionListener {
 	private static final long serialVersionUID = 1L;

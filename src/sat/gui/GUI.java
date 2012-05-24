@@ -226,7 +226,7 @@ public class GUI extends JFrame implements EventListener {
 	 * Passe l'Aircraft en mode MayDay
 	 * @param e
 	 */
-	public void on(RadioEvent.PlaneDistress e) {
+	public void on(TowerEvent.PlaneDistress e) {
 		aircrafts.get(e.getID()).setDistress2D();
 
 		if(enable3D && radar != null) {
@@ -243,17 +243,38 @@ public class GUI extends JFrame implements EventListener {
 		downloadPanel.addFilesToDownloadBox(fileList);
 	}
 	
+	public void on(TowerEvent.PlaneIdentified e) {
+		
+	}
+	
 	/**
 	 * Ajoute les Messages au JournalPanel.
 	 * @param m
 	 */
 	@SuppressWarnings("unchecked")
-	public void on(Message m) {
+	public void on(RadioEvent.MessageReceived e) {
+		Message m = e.getMessage();
 		Vector v = new Vector();
 		v.add(m.getPriority());
 		v.add(m.getType().toString());
 		v.add(m.getID().toString());
-		v.add("Dest");
+		v.add("Tower");
+		v.add(m.getDate());
+		journalPanel.addEvent(v);
+	}
+	
+	/**
+	 * Ajoute les Messages au JournalPanel.
+	 * @param m
+	 */
+	@SuppressWarnings("unchecked")
+	public void on(RadioEvent.MessageSent e) {
+		Message m = e.getMessage();
+		Vector v = new Vector();
+		v.add(m.getPriority());
+		v.add(m.getType().toString());
+		v.add("Tower");
+		v.add(m.getID().toString());
 		v.add(m.getDate());
 		journalPanel.addEvent(v);
 	}

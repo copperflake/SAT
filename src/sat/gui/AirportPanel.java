@@ -52,12 +52,10 @@ public class AirportPanel extends JPanel {
 	// The time it takes the radar beam to make a full circle, in milliseconds
 	private static final int RADAR_PERIOD = 5000;
 
-	// How long should aircraft trails be (in milliseconds)?
-	private static final int AIRCRAFT_TRAIL_DURATION = 5000;
-
 	// Desired framerate (in frames per second)
 	public static final int AIRPORT_PANEL_FRAMERATE = 10;
 
+	@SuppressWarnings("static-access")
 	public AirportPanel() {
 		try {
 			// We actually use it in Aircraft.
