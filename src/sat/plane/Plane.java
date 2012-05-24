@@ -98,7 +98,8 @@ public class Plane implements EventListener, RadioClientDelegate {
 		defaults.setProperty("plane.type", "A320");
 		defaults.setProperty("plane.update", "100");
 		defaults.setProperty("plane.fuel", "200000");
-
+		defaults.setProperty("plane.datainterval", "100");
+		
 		defaults.setProperty("legacy.towerkey", "tower.key");
 
 		defaults.setProperty("radio.ciphered", "yes");
