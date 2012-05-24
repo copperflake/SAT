@@ -30,12 +30,14 @@ import sat.tower.agent.TowerAgent;
  * application (The journal and the list of downloaded files).
  */
 public class GUI extends JFrame implements EventListener {
-
 	private static final long serialVersionUID = -6319538639673860639L;
+	
 	public static HashMap<RadioID, Aircraft> aircrafts;
 	private Radar radar;
 	private TowerAgent agent;
+	private JPanel remoteMsg;
 	private JournalPanel journalPanel;
+	private DownloadPanel downloadPanel;
 	private boolean enable3D = true;
 	
 	public GUI(final boolean hd, TowerAgent agent, boolean enable3D) {
@@ -70,24 +72,7 @@ public class GUI extends JFrame implements EventListener {
 		airportPanel.setPreferredSize(airportPanel.getBackgroundDimension());
 
 		journalPanel = new JournalPanel();
-		//ChokerPanel chockerPanel = new ChokerPanel();
-
-		JPanel downloadPanel;
-		
-		if(!agent.isRemote()) {
-			downloadPanel = new DownloadPanel();
-		}
-		else {
-			downloadPanel = new JPanel();
-			downloadPanel.setLayout(new BoxLayout(downloadPanel, BoxLayout.Y_AXIS));
-			JLabel label = new JLabel("<html>This is a remote interface.<br>If you want to see files, you have to check<br>manually on the server.</html>", SwingConstants.CENTER);
-			downloadPanel.add(Box.createVerticalStrut(200));
-			downloadPanel.add(label);
-			downloadPanel.add(Box.createVerticalGlue());
-			if(screenSize.getWidth() >= width && screenSize.getHeight() >= height) {
-				downloadPanel.setPreferredSize(new Dimension(380, topRowHeight));
-			}
-		}
+		ChokerPanel chockerPanel = new ChokerPanel();
 		
 		final JTabbedPane tabbedPane = new JTabbedPane();
 		tabbedPane.addTab("2D View", airportPanel);
@@ -104,9 +89,27 @@ public class GUI extends JFrame implements EventListener {
 			
 			topRow.add(tabbedPane);
 			topRow.add(Box.createHorizontalStrut(5));
-			topRow.add(downloadPanel);
+
+			
+			if(!agent.isRemote()) {
+				downloadPanel = new DownloadPanel();
+				topRow.add(downloadPanel);
+			}
+			else {
+				remoteMsg = new JPanel();
+				remoteMsg.setLayout(new BoxLayout(remoteMsg, BoxLayout.Y_AXIS));
+				JLabel label = new JLabel("<html>This is a remote interface.<br>If you want to see files, you have to check<br>manually on the server.</html>", SwingConstants.CENTER);
+				remoteMsg.add(Box.createVerticalStrut(200));
+				remoteMsg.add(label);
+				remoteMsg.add(Box.createVerticalGlue());
+				if(screenSize.getWidth() >= width && screenSize.getHeight() >= height) {
+					remoteMsg.setPreferredSize(new Dimension(380, topRowHeight));
+				}
+				topRow.add(remoteMsg);
+			}
+			
 			botRow.add(journalPanel);
-			//botRow.add(chockerPanel);
+			botRow.add(chockerPanel);
 	
 			main.add(topRow);
 			main.add(Box.createVerticalStrut(5));
@@ -135,10 +138,11 @@ public class GUI extends JFrame implements EventListener {
 			tabbedFrame.setVisible(true);
 		}
 		
-		/**
-		 * 3D Stuff
-		 */
 		if(enable3D) {
+			/**
+			 * Initialise, configure et lance la vue 3D dans un nouvel onglet.
+			 * Doit être invoquer une fois que le reste du GUI est prêt (selon la doc de jMonkeyEngine). 
+			 */
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					Dimension dim = new Dimension(1109, 751);
@@ -184,13 +188,19 @@ public class GUI extends JFrame implements EventListener {
 	}
 
 	public void on(TowerEvent.PlaneMoved e) {
-		//System.out.println(e.getWhere().toString());
 		aircrafts.get(e.getID()).addDestination(e.getWhere());
 	}
 
 	public void on(RadioEvent.PlaneDistress e) {
-		// TODO Will crash if 3D Aircraft is not initialized (for example if there is no 3D GUI).
-		aircrafts.get(e.getID()).setDistress();
+		aircrafts.get(e.getID()).setDistress2D();
+		
+		if(enable3D && radar != null) {
+			aircrafts.get(e.getID()).setDistress3D(true);
+		}
+	}
+	
+	public void on() {
+		 //downloadPanel.addFilesToDownloadBox(fileList);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -204,8 +214,4 @@ public class GUI extends JFrame implements EventListener {
 		v.add(m.getDate());
 		journalPanel.addEvent(v);
 	}
-	
-//	public void on(Event e) {
-//		System.out.println(e);
-//	}
 }

@@ -81,12 +81,6 @@ public class Radar extends SimpleApplication {
 		sun.setColor(new ColorRGBA(1f, 0.95f, 0.9f, 1f));
 		rootNode.addLight(sun);
 
-		// Counter-Sun
-		DirectionalLight sun2 = new DirectionalLight();
-		sun2.setDirection(new Vector3f(0.1f, -0.3f, 1.0f));
-		sun2.setColor(new ColorRGBA(0.3f, 0.25f, 0.25f, 1f));
-		//rootNode.addLight(sun2);
-
 		// Ambient
 		AmbientLight al = new AmbientLight();
 		al.setColor(ColorRGBA.White);

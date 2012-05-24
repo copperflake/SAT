@@ -85,12 +85,11 @@ public class Aircraft {
 			
 			// Roll
 			if(path.size()-3 >= 0) {
-				float fac = 100f;
+				float fac = 10f;
 				Vector3f start = path.get(path.size()-3);
 				Vector3f v1 = new Vector3f(mid.getX()-start.getX(), mid.getY()-start.getY(), 0f).normalize();
 				Vector3f v2 = dirYaw;
 				roll = v1.angleBetween(v2)*fac;
-				roll *= -1;
 				
 				if(roll > Math.PI/3)
 					roll = (float) (Math.PI/3);
@@ -241,11 +240,10 @@ public class Aircraft {
 		lineMesh.setBuffer(Type.Index,    2, BufferUtils.createIntBuffer(indexes));
 	}
 	
-	public void setDistress() {
-		setDistress3D(true);
+	public void setDistress2D() {
 	}
 	
-	private void setDistress3D(boolean distress) {
+	public void setDistress3D(boolean distress) {
 		if(sims != null) {
 			sims.getMaterial().setColor("Ambient", new ColorRGBA(distress?1f:0.2f, 0.2f, 0.2f, 1f));
 		}
@@ -273,8 +271,10 @@ public class Aircraft {
 	}
 	
 	public void update3D(float t) {
-		sims.setLocalTranslation(sims.getLocalTranslation().x, (float) (Math.sin(t*2f)+1)*sims.getLocalScale().y*2, sims.getLocalTranslation().z);
-		sims.rotate(0f, 0.01f, 0f);
+		if(sims != null) {
+			sims.setLocalTranslation(sims.getLocalTranslation().x, (float) (Math.sin(t*2f)+1)*sims.getLocalScale().y*2, sims.getLocalTranslation().z);
+			sims.rotate(0f, 0.01f, 0f);
+		}
 		move3D();
 	}
 }

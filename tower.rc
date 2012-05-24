@@ -7,3 +7,4 @@ init
 writekey tower.key
 agentserver
 listen
+gui

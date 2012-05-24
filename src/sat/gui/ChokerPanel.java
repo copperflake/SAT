@@ -1,29 +1,42 @@
 package sat.gui;
 
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
-public class ChokerPanel extends JPanel {
+public class ChokerPanel extends JPanel implements ActionListener {
+	private static final long serialVersionUID = 1L;
+	
+	private JButton choke;
+	private boolean choked;
+	
 	public ChokerPanel() {
-		BoxLayout layoutX = new BoxLayout(this, BoxLayout.X_AXIS);
-		BoxLayout layoutY = new BoxLayout(this, BoxLayout.Y_AXIS);
+		choked = false;
+		choke = new JButton("Choke");
 		
-		setLayout(layoutX);
+		choke.setPreferredSize(new Dimension(100, 25));
+		choke.addActionListener(this);
 		
-		JPanel content = new JPanel();
-		content.setLayout(layoutY);
-		
-		JButton btn = new JButton("Unchoke");
-		
-		content.add(Box.createVerticalGlue());
-		content.add(btn);
-		content.add(Box.createVerticalGlue());
-
 		add(Box.createHorizontalStrut(20));
-		add(content);
+		add(choke);
 		add(Box.createHorizontalStrut(20));
-		System.out.println(btn.getWidth());
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		Object obj = e.getSource();
+		if (obj == choke) {
+			if(!choked) {
+				choke.setText("Unchoke");
+			}
+			else {
+				choke.setText("Choke");
+			}
+			choked = !choked;
+		}
 	}
 }
