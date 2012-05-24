@@ -147,7 +147,12 @@ public class MessageOutputStream extends FilterOutputStream {
 			dos.write(serializedString);
 		}
 		else {
-			dos.writeBytes(m.getFormat().substring(1, 5));
+			byte[] legacyFormatByte = new byte[4];
+			byte[] formatByte = m.getFormat().getBytes();
+			
+			System.arraycopy(formatByte, 0, legacyFormatByte, 0, ((formatByte.length > 4) ? 4 : formatByte.length));
+			
+			dos.write(legacyFormatByte);
 		}
 
 		dos.writeInt(m.getFileSize());
