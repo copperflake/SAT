@@ -46,6 +46,9 @@ public final class SAT {
 		else if(args[0].equals("tower")) {
 			initTower(args);
 		}
+		else if(args[0].equals("legacyplane")) {
+			initPlaneLegacy(args);
+		}
 		else if(args[0].equals("cli")) {
 			// Remote CLI
 			try {
@@ -151,9 +154,66 @@ public final class SAT {
 		Plane plane = new Plane();
 
 		PlaneCLI cli = new PlaneCLI(plane, System.in, System.out);
+
+		String host = "";
+		String port = "";
+
+		String x = "0";
+		String y = "0";
+
+		// Defaults to 10000
+		cli.eval("set plane.fuel 10000");
+
+		for(int i = 0; i < args.length; i++) {
+			if(args[i].equals("--encryption-enabled")) {
+				if(args[++i].equals("false")) {
+					cli.eval("set radio.ciphered no");
+				}
+				else {
+					cli.eval("set radio.ciphered yes");
+				}
+			}
+			else if(args[i].equals("--towerkey")) {
+				cli.eval("set legacy.towerkey " + args[++i]);
+				cli.eval("set radio.legacy yes");
+			}
+			else if(args[i].equals("--towerhost")) {
+				host = args[++i];
+			}
+			else if(args[i].equals("--towerport")) {
+				port = args[++i];
+			}
+			else if(args[i].equals("--file-to-send")) {
+				// TODO
+			}
+			else if(args[i].equals("--planetype")) {
+				cli.eval("set plane.type " + args[++i]);
+			}
+			else if(args[i].equals("--initial-fuel")) {
+				cli.eval("set plane.fuel " + args[++i]);
+			}
+			else if(args[i].equals("--initial-x")) {
+				x = args[++i];
+			}
+			else if(args[i].equals("--initial-y")) {
+				y = args[++i];
+			}
+			else if(args[i].equals("--keepalive-interval")) {
+				cli.eval("set plane.update " + args[++i]);
+			}
+			else if(args[i].equals("--data-interval")) {
+				cli.eval("set plane.datainterval " + args[++i]);
+			}
+		}
+
+		cli.eval("set plane.coords " + x + "," + y + ",-1");
+
+		cli.eval("init");
+		
+		cli.eval("connect " + host + " " + port);
+
 		cli.runInNewThread();
 	}
-
 	/**
 	 * Affiche les instructions d'utilisation.
 	 */
