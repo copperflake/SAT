@@ -16,7 +16,6 @@ import com.jme3.scene.*;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.util.BufferUtils;
 
-import sat.plane.PlaneType;
 import sat.radio.RadioID;
 import sat.utils.geo.*;
 
@@ -147,7 +146,7 @@ public class Aircraft {
 		a320 = (Geometry) assetManager.loadModel("Models/a320.obj");
 
 		mainNode.attachChild(a320);
-		
+
 		sims = (Geometry) assetManager.loadModel("Models/sims.obj");
 		sims.getMaterial().setColor("Ambient", new ColorRGBA(0.2f, 0.2f, 0.2f, 1f));
 		sims.scale(0.5f);
@@ -159,24 +158,24 @@ public class Aircraft {
 
 		path.add(initPos);
 
-
 		ParticleEmitter smoke = new ParticleEmitter("Emitter", ParticleMesh.Type.Triangle, 500);
 		Material smoke_mat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
 		smoke_mat.setTexture("Texture", assetManager.loadTexture("Effects/Explosion/smoketrail.png"));
 		smoke.setMaterial(smoke_mat);
-		smoke.setImagesX(1); smoke.setImagesY(3); // 1x3 texture animation
+		smoke.setImagesX(1);
+		smoke.setImagesY(3); // 1x3 texture animation
 		smoke.setEndColor(new ColorRGBA(1f, 1f, 1f, 0.3f));
 		smoke.setStartColor(new ColorRGBA(1f, 1f, 1f, 1f));
-		smoke.getParticleInfluencer().setInitialVelocity(new Vector3f(0f,0.5f,0f));
+		smoke.getParticleInfluencer().setInitialVelocity(new Vector3f(0f, 0.5f, 0f));
 		smoke.setStartSize(1.5f);
 		smoke.setEndSize(0.1f);
-		smoke.setGravity(0,0,0);
+		smoke.setGravity(0, 0, 0);
 		smoke.setLowLife(20);
 		smoke.setHighLife(30);
 		smoke.setParticlesPerSec(20);
 		smoke.getParticleInfluencer().setVelocityVariation(0.5f);
 		mainNode.attachChild(smoke);
-		
+
 		parent.attachChild(mainNode);
 	}
 

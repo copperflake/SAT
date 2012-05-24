@@ -90,20 +90,20 @@ public class AirportPanel extends JPanel {
 	public void paint(Graphics g) {
 		super.paint(g);
 		g.drawImage(imgBack, 0, 0, imgBack.getWidth(), imgBack.getHeight(), null);
-		g.drawImage(imgTower, TOWER_X-imgTower.getWidth()/2, TOWER_Y-imgTower.getHeight()/2, imgTower.getWidth(), imgTower.getHeight(), null);
+		g.drawImage(imgTower, TOWER_X - imgTower.getWidth() / 2, TOWER_Y - imgTower.getHeight() / 2, imgTower.getWidth(), imgTower.getHeight(), null);
 
 		// Draw the circles around the tower
 		Graphics2D g2d = (Graphics2D) g;
 		g2d.setColor(Color.GREEN);
 		g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
 		g2d.setStroke(new BasicStroke(3F));
-		for(int i=0; i < 10; i++) {
-			g2d.drawOval(TOWER_X-i*75,TOWER_Y-i*75,i*150,i*150);
+		for(int i = 0; i < 10; i++) {
+			g2d.drawOval(TOWER_X - i * 75, TOWER_Y - i * 75, i * 150, i * 150);
 		}
 
 		// Draw the animated radar beam
 		long currentTime = System.currentTimeMillis();
-		double radarAngle = 2*Math.PI*currentTime/RADAR_PERIOD;
+		double radarAngle = 2 * Math.PI * currentTime / RADAR_PERIOD;
 		g2d.setTransform(AffineTransform.getRotateInstance(radarAngle, TOWER_X, TOWER_Y));
 		g2d.drawImage(imgRadar, TOWER_X, TOWER_Y, imgRadar.getWidth(), imgRadar.getHeight(), null);
 		g2d.setTransform(AffineTransform.getRotateInstance(0));
@@ -130,4 +130,3 @@ public class AirportPanel extends JPanel {
 		return imgRadar;
 	}
 }
-

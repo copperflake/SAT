@@ -90,7 +90,7 @@ public class GUI extends JFrame implements EventListener {
 		if(!agent.isRemote()) {
 			downloadPanel = new DownloadPanel();
 		}
-		
+
 		final JTabbedPane tabbedPane = new JTabbedPane();
 		tabbedPane.addTab("2D View", airportPanel);
 
@@ -117,7 +117,7 @@ public class GUI extends JFrame implements EventListener {
 				remoteMsg.add(Box.createVerticalStrut(200));
 				remoteMsg.add(label);
 				remoteMsg.add(Box.createVerticalGlue());
-				
+
 				if(screenSize.getWidth() >= width && screenSize.getHeight() >= height) {
 					remoteMsg.setPreferredSize(new Dimension(380, topRowHeight));
 				}
@@ -147,7 +147,7 @@ public class GUI extends JFrame implements EventListener {
 				downloadFrame.setSize(500, 600);
 				downloadFrame.setVisible(true);
 			}
-			
+
 			JFrame tabbedFrame = new JFrame();
 			tabbedFrame.add(tabbedPane);
 			tabbedFrame.setSize(new Dimension(1116, 779));
@@ -188,9 +188,10 @@ public class GUI extends JFrame implements EventListener {
 			});
 		}
 	}
-	
+
 	/**
 	 * Créer un Aircraft quand un avion se connecte.
+	 * 
 	 * @param e
 	 */
 	public void on(RadioEvent.PlaneConnected e) {
@@ -204,6 +205,7 @@ public class GUI extends JFrame implements EventListener {
 
 	/**
 	 * Détruit l'Aircraft quand un avion se déconnecte.
+	 * 
 	 * @param e
 	 */
 	public void on(RadioEvent.PlaneDisconnected e) {
@@ -216,6 +218,7 @@ public class GUI extends JFrame implements EventListener {
 
 	/**
 	 * Synchronise la position de l'avion dès qu'on reçoit sa position.
+	 * 
 	 * @param e
 	 */
 	public void on(TowerEvent.PlaneMoved e) {
@@ -224,6 +227,7 @@ public class GUI extends JFrame implements EventListener {
 
 	/**
 	 * Passe l'Aircraft en mode MayDay
+	 * 
 	 * @param e
 	 */
 	public void on(TowerEvent.PlaneDistress e) {
@@ -233,22 +237,24 @@ public class GUI extends JFrame implements EventListener {
 			aircrafts.get(e.getID()).setDistress3D(true);
 		}
 	}
-	
+
 	/**
 	 * Ajoute un fichier au DownloadPanel dès que l'on en reçoit un.
+	 * 
 	 * @param e
 	 */
 	public void on(TowerEvent.TransferComplete e) {
 		fileList.add(new File(e.getPath()));
 		downloadPanel.addFilesToDownloadBox(fileList);
 	}
-	
+
 	public void on(TowerEvent.PlaneIdentified e) {
-		
+
 	}
-	
+
 	/**
 	 * Ajoute les Messages au JournalPanel.
+	 * 
 	 * @param m
 	 */
 	@SuppressWarnings("unchecked")
@@ -262,9 +268,10 @@ public class GUI extends JFrame implements EventListener {
 		v.add(m.getDate());
 		journalPanel.addEvent(v);
 	}
-	
+
 	/**
 	 * Ajoute les Messages au JournalPanel.
+	 * 
 	 * @param m
 	 */
 	@SuppressWarnings("unchecked")
