@@ -92,6 +92,10 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 			public void debugEvent(DebugEvent ev) {
 				emitDebug(ev);
 			}
+			
+			public void transferComplete(String path) {
+				emit(new TowerEvent.TransferComplete(path));
+			}
 		});
 	}
 
@@ -247,6 +251,14 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	 */
 	public Config getConfig() {
 		return config;
+	}
+	
+	public void choke() {
+		radio.sendChoke();
+	}
+	
+	public void unchoke() {
+		radio.sendUnchoke();
 	}
 
 	/**

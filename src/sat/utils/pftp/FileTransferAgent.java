@@ -154,6 +154,7 @@ public class FileTransferAgent {
 			}
 
 			dispatcher.debugEvent(new DebugEvent("[PFTP] Successfully received from " + m.getID()));
+			dispatcher.transfertComplete(path);
 			exit();
 		}
 	}

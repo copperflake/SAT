@@ -101,4 +101,8 @@ public class FileTransferAgentDispatcher {
 	public void planeIdentified(RadioID id, PlaneType type) {
 		delegate.planeIdentified(id, type);
 	}
+	
+	public void transfertComplete(String path) {
+		delegate.transferComplete(path);
+	}
 }

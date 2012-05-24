@@ -121,6 +121,14 @@ public class RadioServer extends Radio {
 		}
 	}
 
+	public void broadcast(Message m) {
+		synchronized(agents) {
+			for(PlaneAgent plane : agents.values()) {
+				plane.send(m);
+			}
+		}
+	}
+
 	public void sendFile(RadioID id, DataFile file) {
 		PlaneAgent agent = getAgentForId(id);
 		if(agent != null) {
@@ -144,6 +152,14 @@ public class RadioServer extends Radio {
 
 	public void sendRouting(RadioID id, Waypoint waypoint, RoutingType routingType) {
 		send(id, new MessageRouting(id, waypoint, routingType));
+	}
+
+	public void sendChoke() {
+		broadcast(new MessageChoke(id, delegate.getLocation()));
+	}
+
+	public void sendUnchoke() {
+		broadcast(new MessageUnchoke(id, delegate.getLocation()));
 	}
 
 	// - - - Engine Events Delegate - - -

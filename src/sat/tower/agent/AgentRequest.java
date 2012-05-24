@@ -63,4 +63,10 @@ public abstract class AgentRequest extends Event {
 
 	public static class TowerKey extends AgentRequest {
 	}
+
+	public static class Choke extends AgentRequest {
+	}
+
+	public static class Unchoke extends AgentRequest {
+	}
 }

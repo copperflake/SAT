@@ -129,7 +129,7 @@ public class DownloadPanel extends JPanel implements ActionListener /* , Observe
 	public synchronized void addFilesToDownloadBox(ArrayList<File> fileList) {
 		// Whether the current row should have a different background color or
 		// not. Used to color every other row.
-		boolean colorChange = false;
+		boolean colorChange = true;
 		
 		panEmpty.removeAll();
 

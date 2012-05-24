@@ -71,4 +71,19 @@ public abstract class TowerEvent extends Event {
 			return type;
 		}
 	}
+	
+	public static class TransferComplete extends TowerEvent {
+		/**
+		 * Chemin vers le fichier téléchargé.
+		 */
+		private String path;
+		
+		public TransferComplete(String path) {
+			this.path = path;
+		}
+		
+		public String getPath() {
+			return path;
+		}
+	}
 }

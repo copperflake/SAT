@@ -100,6 +100,14 @@ public class TowerAgent extends EventEmitter implements EventListener {
 	public void requestTowerKey(EventListener handler) {
 		execute(new AgentRequest.TowerKey(), handler);
 	}
+	
+	public void requestChoke() {
+		execute(new AgentRequest.Choke(), null);
+	}
+	
+	public void requestUnchoke() {
+		execute(new AgentRequest.Unchoke(), null);
+	}
 
 	// - - - Executor - - -
 
@@ -128,6 +136,14 @@ public class TowerAgent extends EventEmitter implements EventListener {
 
 		public void on(AgentRequest.TowerKey ev) {
 			done(ev, new AgentResult.TowerKeyResult(tower.getKeyPair().getPublicKey()));
+		}
+
+		public void on(AgentRequest.Choke ev) {
+			tower.choke();
+		}
+
+		public void on(AgentRequest.Unchoke ev) {
+			tower.unchoke();
 		}
 
 		public void done(AgentRequest req, AgentResult ev) {

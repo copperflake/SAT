@@ -19,7 +19,9 @@ import sat.radio.RadioID;
 import sat.radio.client.RadioClient;
 import sat.radio.client.RadioClientDelegate;
 import sat.radio.engine.client.RadioClientEngine;
+import sat.radio.message.MessageChoke;
 import sat.radio.message.MessageRouting;
+import sat.radio.message.MessageUnchoke;
 import sat.utils.cli.Config;
 import sat.utils.crypto.RSAException;
 import sat.utils.crypto.RSAKey;
@@ -189,12 +191,20 @@ public class Plane implements EventListener, RadioClientDelegate {
 		simulator.start();
 	}
 
-	public void on(MessageRouting message) throws UnhandledEventException, InvocationTargetException {
-		message.trigger(simulator);
+	public void on(MessageRouting m) throws UnhandledEventException, InvocationTargetException {
+		m.trigger(simulator);
+	}
+	
+	public void on(MessageChoke m) {
+		radio.setChoked(true);
+	}
+	
+	public void on(MessageUnchoke m) {
+		radio.setChoked(false);
 	}
 
 	public void on(Event event) {
-		System.out.println(event);
+		System.out.println("[DEBUG] "+event);
 	}
 
 	// - - - Plane Simulator - - -
@@ -281,6 +291,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 			if(interval >= timeNeeded) {
 				if(instruction.getType() == MoveType.LANDING) {
 					radio.sendBye();
+					System.out.println("Bye sent");
 
 					DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 					dateFormat.format(new Date());

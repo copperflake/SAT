@@ -151,6 +151,14 @@ public class RadioClient extends Radio {
 		send(new MessageBye(id, delegate.getLocation()));
 	}
 
+	/**
+	 * Choke ou Unchoke le client.
+	 * @param choked
+	 */
+	public void setChoked(boolean choked) {
+		manager.setChoked(choked);
+	}
+
 	// - - - Tower Socket Manager - - -
 
 	/**
