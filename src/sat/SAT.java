@@ -220,8 +220,10 @@ public final class SAT {
 	public static void usage() {
 		System.out.println("Usage: ./sat COMMAND");
 		System.out.println("Available commands:");
-		System.out.println("    plane  |  Start a plane");
-		System.out.println("    tower  |  Start a tower");
-		System.out.println("    cli    |  Start a remote CLI");
+		System.out.println("    plane       |  Start a plane");
+		System.out.println("    tower       |  Start a tower");
+		System.out.println("    cli         |  Start a remote CLI");
+		System.out.println("    remote      |  An event dumper [debug]");
+		System.out.println("    legacyplane |  Start a plane with legacy interface");
 	}
 }
