@@ -92,7 +92,7 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 			public void debugEvent(DebugEvent ev) {
 				emitDebug(ev);
 			}
-			
+
 			public void transferComplete(String path) {
 				emit(new TowerEvent.TransferComplete(path));
 			}
@@ -252,11 +252,11 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	public Config getConfig() {
 		return config;
 	}
-	
+
 	public void choke() {
 		radio.sendChoke();
 	}
-	
+
 	public void unchoke() {
 		radio.sendUnchoke();
 	}
@@ -395,7 +395,8 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 				else {
 					try {
 						defineRoute(plane, routes.get(currentRoute), true);
-					} catch(Exception e) {
+					}
+					catch(Exception e) {
 						e.printStackTrace();
 					}
 				}
@@ -420,11 +421,11 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	 */
 	private void defineRoute(TowerPlane plane, Route route, boolean replace) {
 		RadioID id = plane.getID();
-		
+
 		emitDebug("[ROUTING] Redefining route for " + id);
-		
+
 		plane.setLoopPoint(route.getLoopPoint());
-		
+
 		if(route.isLanding()) {
 			plane.setLanding();
 		}
@@ -470,19 +471,20 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 
 	public void on(MessageKeepalive m) {
 		emit(new TowerEvent.PlaneMoved(m.getID(), m.getCoordinates()));
-		
+
 		TowerPlane plane = planes.get(m.getID());
-		
+
 		float d = plane.distanceToLoopPoint(m.getCoordinates());
 		if(!Float.isNaN(d) && d < 10) {
 			if(!plane.isLoopSent()) {
 				defineRoute(plane, routes.get(plane.getCurrentRoute()), false);
 				plane.setLoopSent(true);
 			}
-		} else {
+		}
+		else {
 			plane.setLoopSent(false);
 		}
-		
+
 		emit(m);
 	}
 
@@ -499,12 +501,13 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	public void on(MessageBye m) {
 		radio.kick(m.getID());
 	}
-	
+
 	public synchronized void on(MessageMayDay m) {
 		planes.get(m.getID()).setMayDay(true);
+		emit(new TowerEvent.PlaneDistress(m.getID()));
 		refreshRouting();
 	}
-	
+
 	public void on(Message m) {
 		emitDebug(m.toString());
 	}

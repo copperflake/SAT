@@ -3,6 +3,7 @@ package sat.tower;
 import sat.events.Event;
 import sat.plane.PlaneType;
 import sat.radio.RadioID;
+import sat.radio.RadioEvent.PlaneRadioEvent;
 import sat.utils.geo.Coordinates;
 
 /**
@@ -54,6 +55,17 @@ public abstract class TowerEvent extends Event {
 	}
 
 	/**
+	 * Cet évenement est utilisé lorsque l'avion envoi un MayDay à la tour de
+	 * contrôle ou enlève son MayDay pour signaler que le problème à été résolu
+	 * (si cela est possible).
+	 */
+	public static class PlaneDistress extends PlaneTowerEvent {
+		public PlaneDistress(RadioID id) {
+			super(id);
+		}
+	}
+
+	/**
 	 * L'avion a été identifié.
 	 */
 	public static class PlaneIdentified extends PlaneTowerEvent {
@@ -71,17 +83,17 @@ public abstract class TowerEvent extends Event {
 			return type;
 		}
 	}
-	
+
 	public static class TransferComplete extends TowerEvent {
 		/**
 		 * Chemin vers le fichier téléchargé.
 		 */
 		private String path;
-		
+
 		public TransferComplete(String path) {
 			this.path = path;
 		}
-		
+
 		public String getPath() {
 			return path;
 		}
