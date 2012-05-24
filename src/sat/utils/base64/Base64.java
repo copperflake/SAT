@@ -1,5 +1,7 @@
 package sat.utils.base64;
 
+// Note: pas utilisée dans notre projet, mais toujours utile à avoir sous la main!
+
 /**
  * Encodage / Décodage en Base64.
  */

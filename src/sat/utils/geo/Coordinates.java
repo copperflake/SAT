@@ -2,6 +2,9 @@ package sat.utils.geo;
 
 import java.io.Serializable;
 
+/**
+ * Coordonées
+ */
 @SuppressWarnings("serial")
 public class Coordinates implements Serializable {
 	private float x;

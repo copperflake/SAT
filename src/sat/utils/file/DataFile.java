@@ -70,6 +70,9 @@ public class DataFile extends File implements Iterable<byte[]> {
 		};
 	}
 
+	/**
+	 * Retourne un segment précis du fichier.
+	 */
 	public byte[] getSegment(int offset) throws IOException {
 		byte[] bytes = new byte[SEGMENT_SIZE];
 
@@ -84,11 +87,19 @@ public class DataFile extends File implements Iterable<byte[]> {
 		return bytes;
 	}
 
+	/**
+	 * Ecrit un segment donné à une position précise.
+	 */
 	public void writeSegment(int offset, byte[] data) throws IOException {
 		file.seek(offset * SEGMENT_SIZE);
 		file.write(data);
 	}
 
+	/**
+	 * Calcul le hash du fichier. Si cette méthode est appelée sur un fichier en
+	 * cours de reconstitution, son résultat sera bien entendu erroné (par
+	 * rapport à la version complète du même fichier).
+	 */
 	public byte[] getHash() throws NoSuchAlgorithmException, IOException {
 		MessageDigest digest = MessageDigest.getInstance("SHA1");
 
@@ -108,6 +119,9 @@ public class DataFile extends File implements Iterable<byte[]> {
 		return digest.digest();
 	}
 
+	/**
+	 * Retourne l'extension du fichier.
+	 */
 	public String getFormat() {
 		String name = getName();
 		int dotOffset = -1;
@@ -129,14 +143,24 @@ public class DataFile extends File implements Iterable<byte[]> {
 		}
 	}
 
+	/**
+	 * Retourne la taille déclarée de ce fichier.
+	 */
 	public int getSize() throws IOException {
 		return (int) this.file.length();
 	}
 
+	/**
+	 * Ferme ce fichier.
+	 */
 	public void close() throws IOException {
 		file.close();
 	}
 
+	/**
+	 * Calcul le nombre de segments nécessaires pour un taille de fichier donnée
+	 * (en byte).
+	 */
 	public static int segmentsCountForSize(int size) {
 		return (int) (Math.ceil(((float) size) / ((float) DataFile.SEGMENT_SIZE)));
 	}

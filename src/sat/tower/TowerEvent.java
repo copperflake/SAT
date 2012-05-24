@@ -5,21 +5,42 @@ import sat.plane.PlaneType;
 import sat.radio.RadioID;
 import sat.utils.geo.Coordinates;
 
+/**
+ * Evenements générés par la tour.
+ */
 @SuppressWarnings("serial")
 public abstract class TowerEvent extends Event {
+	/**
+	 * Evenement généré par la tour et lié à un avion.
+	 */
 	public static abstract class PlaneTowerEvent extends TowerEvent {
+		/**
+		 * L'id de l'avion auquel se rapport ce événement.
+		 */
 		RadioID id;
 
+		/**
+		 * Crée un nouvel événement d'avion.
+		 */
 		public PlaneTowerEvent(RadioID id) {
 			this.id = id;
 		}
 
+		/**
+		 * Retourne l'identifiant de l'avion.
+		 */
 		public RadioID getID() {
 			return id;
 		}
 	}
 
+	/**
+	 * L'avion a bougé.
+	 */
 	public static class PlaneMoved extends PlaneTowerEvent {
+		/**
+		 * Les nouvelles coordonnées de cet avion.
+		 */
 		private Coordinates where;
 
 		public PlaneMoved(RadioID id, Coordinates where) {
@@ -32,7 +53,13 @@ public abstract class TowerEvent extends Event {
 		}
 	}
 
+	/**
+	 * L'avion a été identifié.
+	 */
 	public static class PlaneIdentified extends PlaneTowerEvent {
+		/**
+		 * Le type de l'avion nouvellement identifié.
+		 */
 		private PlaneType type;
 
 		public PlaneIdentified(RadioID id, PlaneType type) {

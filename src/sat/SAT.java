@@ -58,6 +58,7 @@ public final class SAT {
 			}
 		}
 		else if(args[0].equals("remote")) {
+			// A simple event-dumper.
 			try {
 				RemoteTowerAgent remote = new RemoteTowerAgent();
 				remote.addListener(new EventListener() {
@@ -112,6 +113,9 @@ public final class SAT {
 		cli.runInNewThread();
 	}
 
+	/**
+	 * Initialise un avion.
+	 */
 	public static void initPlane(String[] args) {
 		System.out.println("I'm a plane !");
 
@@ -137,6 +141,9 @@ public final class SAT {
 		cli.runInNewThread();
 	}
 
+	/**
+	 * Initialise un avion en utilisant les paramètres legacy fournis.
+	 */
 	// TODO
 	public static void initPlaneLegacy(String[] args) {
 		System.out.println("I'm a legacy plane !");
@@ -155,5 +162,6 @@ public final class SAT {
 		System.out.println("Available commands:");
 		System.out.println("    plane  |  Start a plane");
 		System.out.println("    tower  |  Start a tower");
+		System.out.println("    cli    |  Start a remote CLI");
 	}
 }

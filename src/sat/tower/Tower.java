@@ -133,6 +133,9 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	 */
 	private RadioID id;
 
+	/**
+	 * Indique si cet tour a été initialisée.
+	 */
 	private boolean initDone = false;
 
 	/**
@@ -158,7 +161,7 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 	 *            Le fichier contenant la route.
 	 * @param capacity
 	 *            Le nombre d'avion maximum sur la route.
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public void loadRoute(String path, int capacity) throws Exception {
 		StringBuffer fileData = new StringBuffer();
@@ -226,7 +229,7 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 
 			route.add(new Waypoint(type, args));
 		}
-		
+
 		if(route.isLanding()) {
 			for(Route otherRoute : routes) {
 				if(!otherRoute.isLanding()) {
@@ -245,6 +248,10 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		return config;
 	}
 
+	/**
+	 * Initialise la tour de contrôle en fonction de paramètre de configuration
+	 * actifs à ce moment.
+	 */
 	public void init() {
 		if(initDone) {
 			return;
@@ -277,13 +284,16 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		radio.listen(engine);
 	}
 
+	/**
+	 * Actualise les routes des avions et les notifie des éventuels changement.
+	 */
 	public void refreshRouting() {
 		String routingModeRaw = config.getString("tower.routing").toLowerCase();
-		
+
 		emitDebug("[ROUTING] Refreshing routes");
-		
+
 		final RoutingMode routingMode;
-		
+
 		if(routingModeRaw.equals("fuel")) {
 			routingMode = RoutingMode.FUEL;
 		}
@@ -293,9 +303,9 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		else {
 			routingMode = RoutingMode.CHRONOS;
 		}
-		
+
 		emitDebug("[ROUTING] Route mode is " + routingMode);
-		
+
 		TreeSet<TowerPlane> planes = new TreeSet<TowerPlane>(new Comparator<TowerPlane>() {
 			public int compare(TowerPlane p1, TowerPlane p2) {
 				if(p1.isLanding() != p2.isLanding()) {
@@ -306,7 +316,7 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 				}
 				else {
 					RoutingMode localRoutingMode = routingMode;
-					
+
 					if(p1.getType() == null && p2.getType() == null) {
 						localRoutingMode = RoutingMode.CHRONOS;
 					}
@@ -314,23 +324,28 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 						return (p1.getType() == null) ? 1 : -1;
 					}
 					else if(p1.isMayDay()) { // and p2.isMayDay()
-						localRoutingMode = RoutingMode.TIME; // Saving passengers
+						if(p1.getType().passengers == p2.getType().passengers) {
+							localRoutingMode = RoutingMode.CHRONOS; // Saving passengers
+						}
+						else {
+							localRoutingMode = RoutingMode.TIME; // Saving passengers
+						}
 					}
 
 					switch(localRoutingMode) {
 						case FUEL:
 							return (p1.getType().consumption > p2.getType().consumption) ? -1 : 1;
-							
+
 						case TIME:
 							return (p1.getType().passengers > p2.getType().passengers) ? -1 : 1;
-							
+
 						default: // CHRONOS
 							return (p1.getLandingID() < p2.getLandingID()) ? -1 : 1;
 					}
 				}
 			}
 		});
-		
+
 		// Add planes to waiting list
 		for(TowerPlane plane : this.planes.values()) {
 			// We ignore plane without landing requested
@@ -338,22 +353,22 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 				planes.add(plane);
 			}
 		}
-		
+
 		emitDebug("[ROUTING] Step 1/2, done");
-		
+
 		int currentRoute = 0;
 		int planesAssigned = 0;
-		
+
 		// Assign routes
 		for(TowerPlane plane : planes) {
 			if(currentRoute >= routes.size()) {
 				currentRoute = -1;
 			}
-			
+
 			if(plane.getCurrentRoute() != currentRoute) {
 				if(currentRoute < 0) {
 					Route highwayToHell = new Route();
-					
+
 					try {
 						highwayToHell.add(new Waypoint(MoveType.DESTRUCTION, Coordinates.parseCoordinates(config.getProperty("tower.graveyard")).toFloats()));
 					}
@@ -361,7 +376,7 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 						radio.kick(plane.getID());
 						continue;
 					}
-					
+
 					redefineRoute(plane.getID(), highwayToHell);
 				}
 				else {
@@ -370,29 +385,29 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 
 				plane.setCurrentRoute(currentRoute);
 			}
-		
+
 			planesAssigned++;
-			
+
 			if(currentRoute != -1 && planesAssigned >= routes.get(currentRoute).getCapacity()) {
 				currentRoute++;
 				planesAssigned = 0;
 			}
 		}
-		
+
 		emitDebug("[ROUTING] Step 2/2, done");
 	}
-	
+
+	/**
+	 * Redéfini la route d'un avion en lui envoyant les instructions de routage
+	 * appropriées.
+	 */
 	private void redefineRoute(RadioID id, Route route) {
 		emitDebug("[ROUTING] Redefining route for " + id);
-		
+
 		route = (Route) route.clone();
-		
-		for(Waypoint waypoint : route) {
-			System.out.println(waypoint.getCoordiates().getX() + "," +waypoint.getCoordiates().getY() + "," +waypoint.getCoordiates().getZ());
-		}
-		
+
 		radio.sendRouting(id, route.remove(0), RoutingType.REPLACEALL);
-		
+
 		for(Waypoint waypoint : route) {
 			radio.sendRouting(id, waypoint, RoutingType.LAST);
 		}
@@ -407,6 +422,9 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		return new Coordinates(0, 0, 0);
 	}
 
+	/**
+	 * Retourne la clé de la tour.
+	 */
 	public RSAKeyPair getKeyPair() {
 		if(keyPair == null) {
 			try {
@@ -439,15 +457,12 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		refreshRouting();
 		emit(m);
 	}
-	
+
 	public void on(MessageBye m) {
 		radio.kick(m.getID());
 		emit(m);
 	}
-
-	/**
-	 * Réception d'un message (cas général)
-	 */
+	
 	public void on(Message m) {
 		System.out.println(m);
 		emit(m); // reemit
@@ -469,10 +484,16 @@ public class Tower extends AsyncEventEmitter implements EventListener, RadioServ
 		emit(e);
 	}
 
+	/**
+	 * Emet un message de debug contenant le message donné.
+	 */
 	private void emitDebug(String msg) {
 		emitDebug(new DebugEvent(msg));
 	}
 
+	/**
+	 * Emet un message de debug.
+	 */
 	private void emitDebug(DebugEvent event) {
 		if(config.getBoolean("tower.debug")) {
 			emit(event);

@@ -11,18 +11,15 @@ import java.net.InetAddress;
 
 import sat.DebugEvent;
 import sat.GlobalCLI;
-import sat.events.Event;
 import sat.events.EventListener;
 import sat.gui.GUI;
 import sat.radio.RadioEvent;
 import sat.radio.engine.server.RadioServerEngine;
 import sat.radio.engine.server.RadioServerTCPEngine;
 import sat.tower.agent.AgentResult;
-import sat.tower.agent.AgentRequest;
 import sat.tower.agent.AgentServer;
 import sat.tower.agent.TowerAgent;
 import sat.utils.crypto.RSAKey;
-import sat.utils.crypto.RSAKeyPair;
 
 /**
  * Interface CLI de la tour de contrôle.
@@ -143,7 +140,7 @@ public class TowerCLI extends GlobalCLI implements EventListener {
 	 *            Le fichier contenant la route.
 	 * @param capacity
 	 *            Le nombre d'avion maximum sur la route.
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public void loadroute(String path, String capacity) throws Exception {
 		getTower().loadRoute(path, Integer.parseInt(capacity));
@@ -206,22 +203,33 @@ public class TowerCLI extends GlobalCLI implements EventListener {
 		tower.listen(engine);
 	}
 
+	/**
+	 * Affiche la fenêtre du GUI.
+	 */
 	public void gui() {
 		/**
 		 * AirportGUI(HD) Changez HD en "false" si la vue 3D est trop lente.
 		 */
-		// TODO: start GUI with CLI's agent
 		new GUI(true, agent, true);
 	}
-	
-	public void gui2D() {
-		/**
-		 * AirportGUI(HD) Changez HD en "false" si la vue 3D est trop lente.
-		 */
-		// TODO: start GUI with CLI's agent
+
+	/**
+	 * Affiche la fenêtre du GUI, sans la vue 3D.
+	 */
+	public void gui2d() {
 		new GUI(true, agent, false);
 	}
 
+	/**
+	 * Affiche la fenêtre du GUI, avec une vue 3D basse définition.
+	 */
+	public void fastgui() {
+		new GUI(false, agent, false);
+	}
+
+	/**
+	 * Démarre le serveur de TowerAgent qui permet la connexion de CLI distants.
+	 */
 	public void agentserver() {
 		if(agent.isRemote()) {
 			println("You cannot start an AgentServer from a remote CLI");
@@ -237,6 +245,10 @@ public class TowerCLI extends GlobalCLI implements EventListener {
 		}
 	}
 
+	/**
+	 * Ecrit la clé publique de la tour dans un fichier lisible par l'avion ITP.
+	 * Cette méthode est disponible même sur un CLI distant.
+	 */
 	public void writekey(final String path) {
 		agent.requestTowerKey(new EventListener() {
 			@SuppressWarnings("unused")
@@ -259,25 +271,43 @@ public class TowerCLI extends GlobalCLI implements EventListener {
 			}
 		});
 	}
-	
 
+	// - - - Tower Events - - -
+
+	/**
+	 * Un avion s'est connecté.
+	 */
 	public void on(RadioEvent.PlaneConnected ev) {
 		println("Plane " + ev.getID() + " connected");
 	}
-	
+
+	/**
+	 * Un avion a bougé. Cet événement est émis à chaque KeepAlive d'un avion.
+	 * Le CLI ne
+	 */
 	public void on(TowerEvent.PlaneMoved ev) {
 		// too verbose
 	}
-	
+
+	/**
+	 * Un avion s'est déconnecté.
+	 */
 	public void on(RadioEvent.PlaneDisconnected ev) {
 		println("Plane " + ev.getID() + " disconnected");
 	}
 
+	/**
+	 * Un événement de debug envoyé par la tour. Cet événement n'est pas émis si
+	 * la tour de contrôle n'est pas en mode debug.
+	 */
 	public void on(DebugEvent event) {
 		print("[DEBUG] ");
 		println(event.getMessage());
 	}
 
+	/**
+	 * Une exception non attrapée remontée par la tour de contrôle.
+	 */
 	public void on(RadioEvent.UncaughtException event) {
 		print("[EXCEPTION] ");
 		event.getException().printStackTrace(out);
