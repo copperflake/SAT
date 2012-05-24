@@ -16,6 +16,7 @@ import sat.radio.engine.server.RadioServerEngineDelegate;
 import sat.radio.message.*;
 import sat.radio.socket.RadioSocket;
 import sat.radio.socket.RadioSocketState;
+import sat.tower.TowerEvent;
 import sat.utils.crypto.RSAInputStream;
 import sat.utils.crypto.RSAKey;
 import sat.utils.crypto.RSAKeyPair;
@@ -289,6 +290,14 @@ public class RadioServer extends Radio {
 
 		protected void emitEvent(Event event) {
 			RadioServer.this.emit(event);
+		}
+
+		/**
+		 * Renvoi le message envoyé aux listeners de la tour, pour les journaux.
+		 */
+		public void send(Message message) {
+			super.send(message);
+			emit(new TowerEvent.MessageSent(message));
 		}
 
 		/**

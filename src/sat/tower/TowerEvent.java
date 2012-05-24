@@ -3,6 +3,7 @@ package sat.tower;
 import sat.events.Event;
 import sat.plane.PlaneType;
 import sat.radio.RadioID;
+import sat.radio.message.Message;
 import sat.utils.geo.Coordinates;
 
 /**
@@ -10,6 +11,24 @@ import sat.utils.geo.Coordinates;
  */
 @SuppressWarnings("serial")
 public abstract class TowerEvent extends Event {
+	/**
+	 * Message envoyé par la tour.
+	 */
+	public static class MessageSent extends TowerEvent {
+		/**
+		 * Le message envoyé par la tour.
+		 */
+		private Message message;
+		
+		public MessageSent(Message m) {
+			message = m;
+		}
+		
+		public Message getMessage() {
+			return message;
+		}
+	}
+	
 	/**
 	 * Evenement généré par la tour et lié à un avion.
 	 */
