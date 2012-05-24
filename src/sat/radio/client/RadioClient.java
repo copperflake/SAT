@@ -153,6 +153,7 @@ public class RadioClient extends Radio {
 
 	/**
 	 * Choke ou Unchoke le client.
+	 * 
 	 * @param choked
 	 */
 	public void setChoked(boolean choked) {

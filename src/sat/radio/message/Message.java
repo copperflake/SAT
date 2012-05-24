@@ -30,7 +30,7 @@ public abstract class Message extends PriorityEvent<Message> {
 	 * Horodatage de la réception du message.
 	 */
 	private Date date;
-	
+
 	/**
 	 * La longueur du payload du packet. En général non-utilisée sauf pour les
 	 * message MayDay, Routing et Data.
@@ -99,7 +99,7 @@ public abstract class Message extends PriorityEvent<Message> {
 	public MessageType getType() {
 		return type;
 	}
-	
+
 	/**
 	 * Retourne l'horodatage de réception du message.
 	 */

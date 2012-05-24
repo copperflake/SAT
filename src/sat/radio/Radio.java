@@ -62,7 +62,7 @@ public abstract class Radio extends AsyncEventEmitter {
 		this.delegate = delegate;
 		this.id = id;
 	}
-	
+
 	public boolean isCiphered() {
 		return ciphered;
 	}
@@ -175,7 +175,7 @@ public abstract class Radio extends AsyncEventEmitter {
 			Coordinates c = delegate.getLocation();
 			send(new MessageData(id, c, hash, 0, "txt", data.length, data));
 		}
-		
+
 		public void setChoked(boolean choked) {
 			this.choked = choked;
 		}

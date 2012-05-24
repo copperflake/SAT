@@ -149,9 +149,9 @@ public class MessageOutputStream extends FilterOutputStream {
 		else {
 			byte[] legacyFormatByte = new byte[4];
 			byte[] formatByte = m.getFormat().getBytes();
-			
+
 			System.arraycopy(formatByte, 0, legacyFormatByte, 0, ((formatByte.length > 4) ? 4 : formatByte.length));
-			
+
 			dos.write(legacyFormatByte);
 		}
 

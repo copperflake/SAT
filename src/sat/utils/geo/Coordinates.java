@@ -10,7 +10,7 @@ public class Coordinates implements Serializable {
 	private float x;
 	private float y;
 	private float z;
-	
+
 	public Coordinates(float x, float y) {
 		this(x, y, -1f);
 	}
@@ -39,34 +39,26 @@ public class Coordinates implements Serializable {
 
 		return false;
 	}
-	
+
 	public static Coordinates parseCoordinates(String coords) throws InvalidCoordinatesException {
 		String[] parts = coords.split(",");
-		
+
 		if(parts.length == 2) {
-			return new Coordinates(
-				Float.parseFloat(parts[0]),
-				Float.parseFloat(parts[1]),
-				-1f
-			);
+			return new Coordinates(Float.parseFloat(parts[0]), Float.parseFloat(parts[1]), -1f);
 		}
-		
+
 		if(parts.length == 3) {
-			return new Coordinates(
-				Float.parseFloat(parts[0]),
-				Float.parseFloat(parts[1]),
-				Float.parseFloat(parts[2])
-			);
+			return new Coordinates(Float.parseFloat(parts[0]), Float.parseFloat(parts[1]), Float.parseFloat(parts[2]));
 		}
-		
+
 		throw new InvalidCoordinatesException();
 	}
-	
+
 	public String toString() {
-		return x+","+y+","+z;
+		return x + "," + y + "," + z;
 	}
-	
+
 	public float[] toFloats() {
-		return new float[] {x, y, z};
+		return new float[] { x, y, z };
 	}
 }

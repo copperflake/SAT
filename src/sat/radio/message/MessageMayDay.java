@@ -6,7 +6,7 @@ import sat.utils.geo.Coordinates;
 @SuppressWarnings("serial")
 public class MessageMayDay extends Message {
 	private String cause;
-	
+
 	public MessageMayDay(RadioID id, Coordinates c, String cause) {
 		super(id, c);
 

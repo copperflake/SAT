@@ -100,11 +100,11 @@ public class TowerAgent extends EventEmitter implements EventListener {
 	public void requestTowerKey(EventListener handler) {
 		execute(new AgentRequest.TowerKey(), handler);
 	}
-	
+
 	public void requestChoke() {
 		execute(new AgentRequest.Choke(), null);
 	}
-	
+
 	public void requestUnchoke() {
 		execute(new AgentRequest.Unchoke(), null);
 	}

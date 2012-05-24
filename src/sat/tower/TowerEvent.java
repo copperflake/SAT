@@ -3,7 +3,6 @@ package sat.tower;
 import sat.events.Event;
 import sat.plane.PlaneType;
 import sat.radio.RadioID;
-import sat.radio.RadioEvent.PlaneRadioEvent;
 import sat.utils.geo.Coordinates;
 
 /**

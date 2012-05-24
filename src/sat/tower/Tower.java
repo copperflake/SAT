@@ -14,18 +14,13 @@ import sat.events.Event;
 import sat.events.EventListener;
 
 import sat.plane.PlaneType;
+import sat.radio.RadioDelegate;
 import sat.radio.RadioEvent;
 
 import sat.radio.RadioID;
 import sat.radio.engine.server.RadioServerEngine;
-import sat.radio.message.Message;
-import sat.radio.message.MessageBye;
-import sat.radio.message.MessageData;
-import sat.radio.message.MessageKeepalive;
-import sat.radio.message.MessageLanding;
-import sat.radio.message.MessageMayDay;
+import sat.radio.message.*;
 import sat.radio.server.RadioServer;
-import sat.radio.server.RadioServerDelegate;
 import sat.utils.cli.Config;
 import sat.utils.crypto.RSAException;
 import sat.utils.crypto.RSAKeyPair;
@@ -33,15 +28,12 @@ import sat.utils.geo.Coordinates;
 import sat.utils.geo.InvalidCoordinatesException;
 import sat.utils.pftp.FileTransferAgentDispatcher;
 import sat.utils.pftp.FileTransferDelegate;
-import sat.utils.routes.MoveType;
-import sat.utils.routes.Route;
-import sat.utils.routes.RoutingType;
-import sat.utils.routes.Waypoint;
+import sat.utils.routes.*;
 
 /**
  * Une tour de contrôle. Cette classe est un Singleton.
  */
-public class Tower extends AsyncEventEmitter implements EventListener, RadioServerDelegate {
+public class Tower extends AsyncEventEmitter implements EventListener, RadioDelegate {
 	// - - - Singleton Tools - - -
 
 	/**

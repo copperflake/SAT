@@ -90,7 +90,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 		defaults = new Config();
 
 		defaults.setProperty("plane.debug", "no");
-		defaults.setProperty("plane.twitter", "no");
+		defaults.setProperty("plane.twitter", "yes");
 
 		defaults.setProperty("plane.coords", "0,0,-1"); // Initial coords
 		defaults.setProperty("plane.waypoint", "625,445,-1"); // Initial waypoint
@@ -101,7 +101,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 		defaults.setProperty("plane.update", "100");
 		defaults.setProperty("plane.fuel", "200000");
 		defaults.setProperty("plane.datainterval", "100");
-		
+
 		defaults.setProperty("legacy.towerkey", "tower.key");
 
 		defaults.setProperty("radio.ciphered", "yes");
@@ -173,7 +173,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 	public void connect(RadioClientEngine engine) throws IOException {
 		radio.connect(engine);
 	}
-	
+
 	public void crash(String message) {
 		System.out.println(message);
 		crash();
@@ -194,17 +194,17 @@ public class Plane implements EventListener, RadioClientDelegate {
 	public void on(MessageRouting m) throws UnhandledEventException, InvocationTargetException {
 		m.trigger(simulator);
 	}
-	
+
 	public void on(MessageChoke m) {
 		radio.setChoked(true);
 	}
-	
+
 	public void on(MessageUnchoke m) {
 		radio.setChoked(false);
 	}
 
 	public void on(Event event) {
-		System.out.println("[DEBUG] "+event);
+		System.out.println("[DEBUG] " + event);
 	}
 
 	// - - - Plane Simulator - - -
@@ -323,7 +323,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 			//Moves the plane in circle around the given center, with an objective of given angle.
 			double modX = coords.getX() - instruction.getCoordiates().getX();
 			double modY = coords.getY() - instruction.getCoordiates().getY();
-			
+
 			double instructionAngle = Math.toRadians(instruction.getAngle());
 			double instructionAngleSign = Math.signum(instructionAngle);
 			double r = Math.sqrt(modX * modX + modY * modY);

@@ -52,7 +52,7 @@ public class Route extends ArrayList<Waypoint> implements Cloneable {
 	 * Détermine le point de boucle de ce circuit.
 	 */
 	public Coordinates getLoopPoint() {
-		for(int i = size()-2; i >= 0; i--) {
+		for(int i = size() - 2; i >= 0; i--) {
 			if(get(i).getType() == MoveType.STRAIGHT) {
 				return get(i).getCoordiates();
 			}

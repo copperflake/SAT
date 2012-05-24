@@ -29,6 +29,6 @@ public interface FileTransferDelegate {
 	 * Annonce l'émission d'un événement de debuggage.
 	 */
 	public void debugEvent(DebugEvent ev);
-	
+
 	public void transferComplete(String path);
 }
