@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.UnknownHostException;
 
 import sat.events.Event;
 import sat.events.EventListener;
@@ -209,7 +208,7 @@ public final class SAT {
 		cli.eval("set plane.coords " + x + "," + y + ",-1");
 
 		cli.eval("init");
-		
+
 		cli.eval("connect " + host + " " + port);
 
 		cli.runInNewThread();

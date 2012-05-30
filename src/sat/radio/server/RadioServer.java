@@ -8,6 +8,7 @@ import sat.events.Event;
 import sat.events.EventListener;
 import sat.events.UnhandledEventException;
 import sat.radio.Radio;
+import sat.radio.RadioDelegate;
 import sat.radio.RadioEvent;
 import sat.radio.RadioID;
 import sat.radio.RadioProtocolException;
@@ -38,13 +39,6 @@ import sat.utils.routes.Waypoint;
  */
 public class RadioServer extends Radio {
 	/**
-	 * Le délégué de ce serveur radio, il sera responsable de gérer les
-	 * événements emis par la radio au cours de son fonctionnement ainsi que de
-	 * fournir certaines informations comme la position et la configuration.
-	 */
-	private RadioServerDelegate delegate;
-
-	/**
 	 * Le moteur de serveur radio utilisé.
 	 */
 	// TODO: multiple engine
@@ -64,7 +58,7 @@ public class RadioServer extends Radio {
 	 *            Le délégué qui sera chargé de la gestion des événements de la
 	 *            radio.
 	 */
-	public RadioServer(RadioServerDelegate delegate, RadioID id) {
+	public RadioServer(RadioDelegate delegate, RadioID id) {
 		super(delegate, id);
 		this.delegate = delegate; // TODO: useful ?
 		this.agents = new HashMap<RadioID, PlaneAgent>();
@@ -121,6 +115,14 @@ public class RadioServer extends Radio {
 		}
 	}
 
+	public void broadcast(Message m) {
+		synchronized(agents) {
+			for(PlaneAgent plane : agents.values()) {
+				plane.send(m);
+			}
+		}
+	}
+
 	public void sendFile(RadioID id, DataFile file) {
 		PlaneAgent agent = getAgentForId(id);
 		if(agent != null) {
@@ -144,6 +146,14 @@ public class RadioServer extends Radio {
 
 	public void sendRouting(RadioID id, Waypoint waypoint, RoutingType routingType) {
 		send(id, new MessageRouting(id, waypoint, routingType));
+	}
+
+	public void sendChoke() {
+		broadcast(new MessageChoke(id, delegate.getLocation()));
+	}
+
+	public void sendUnchoke() {
+		broadcast(new MessageUnchoke(id, delegate.getLocation()));
 	}
 
 	// - - - Engine Events Delegate - - -
@@ -268,11 +278,20 @@ public class RadioServer extends Radio {
 		}
 
 		protected void handleMessage(Message message) throws UnhandledEventException, InvocationTargetException {
+			emit(new RadioEvent.MessageReceived(message));
 			message.trigger(messageHandler);
 		}
 
 		protected void emitEvent(Event event) {
 			RadioServer.this.emit(event);
+		}
+
+		/**
+		 * Renvoi le message envoyé aux listeners de la tour, pour les journaux.
+		 */
+		public void send(Message message) {
+			super.send(message);
+			emit(new RadioEvent.MessageSent(message));
 		}
 
 		/**

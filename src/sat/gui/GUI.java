@@ -2,6 +2,8 @@ package sat.gui;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Vector;
 
@@ -34,10 +36,10 @@ public class GUI extends JFrame implements EventListener {
 
 	public static HashMap<RadioID, Aircraft> aircrafts;
 	private Radar radar;
-	private TowerAgent agent;
 	private JPanel remoteMsg;
 	private JournalPanel journalPanel;
 	private DownloadPanel downloadPanel;
+	private ArrayList<File> fileList;
 	private boolean enable3D = true;
 
 	/**
@@ -54,9 +56,9 @@ public class GUI extends JFrame implements EventListener {
 		// See http://docs.oracle.com/javase/tutorial/uiswing/components/frame.html
 		super("Airport");
 
+		this.fileList = new ArrayList<File>();
 		this.enable3D = enable3D;
 
-		this.agent = agent;
 		agent.addListener(this);
 
 		aircrafts = new HashMap<RadioID, Aircraft>();
@@ -82,16 +84,11 @@ public class GUI extends JFrame implements EventListener {
 		airportPanel.setPreferredSize(airportPanel.getBackgroundDimension());
 
 		journalPanel = new JournalPanel();
-		ChokerPanel chockerPanel = new ChokerPanel();
+
+		ChokerPanel chockerPanel = new ChokerPanel(agent);
 
 		if(!agent.isRemote()) {
 			downloadPanel = new DownloadPanel();
-		}
-		else {
-			JLabel label = new JLabel("<html>This is a remote interface.<br>If you want to see files, you have to check<br>manually on the server.</html>", SwingConstants.CENTER);
-			remoteMsg.add(Box.createVerticalStrut(200));
-			remoteMsg.add(label);
-			remoteMsg.add(Box.createVerticalGlue());
 		}
 
 		final JTabbedPane tabbedPane = new JTabbedPane();
@@ -116,6 +113,10 @@ public class GUI extends JFrame implements EventListener {
 			else {
 				remoteMsg = new JPanel();
 				remoteMsg.setLayout(new BoxLayout(remoteMsg, BoxLayout.Y_AXIS));
+				JLabel label = new JLabel("<html>This is a remote interface.<br>If you want to see files, you have to check<br>manually on the server.</html>", SwingConstants.CENTER);
+				remoteMsg.add(Box.createVerticalStrut(200));
+				remoteMsg.add(label);
+				remoteMsg.add(Box.createVerticalGlue());
 
 				if(screenSize.getWidth() >= width && screenSize.getHeight() >= height) {
 					remoteMsg.setPreferredSize(new Dimension(380, topRowHeight));
@@ -146,7 +147,7 @@ public class GUI extends JFrame implements EventListener {
 				downloadFrame.setSize(500, 600);
 				downloadFrame.setVisible(true);
 			}
-			
+
 			JFrame tabbedFrame = new JFrame();
 			tabbedFrame.add(tabbedPane);
 			tabbedFrame.setSize(new Dimension(1116, 779));
@@ -188,6 +189,11 @@ public class GUI extends JFrame implements EventListener {
 		}
 	}
 
+	/**
+	 * Créer un Aircraft quand un avion se connecte.
+	 * 
+	 * @param e
+	 */
 	public void on(RadioEvent.PlaneConnected e) {
 		Aircraft aircraft = new Aircraft(e.getID());
 		aircrafts.put(e.getID(), aircraft);
@@ -197,6 +203,11 @@ public class GUI extends JFrame implements EventListener {
 		}
 	}
 
+	/**
+	 * Détruit l'Aircraft quand un avion se déconnecte.
+	 * 
+	 * @param e
+	 */
 	public void on(RadioEvent.PlaneDisconnected e) {
 		if(enable3D && radar != null) {
 			aircrafts.get(e.getID()).destroy();
@@ -205,11 +216,21 @@ public class GUI extends JFrame implements EventListener {
 		aircrafts.remove(e.getID());
 	}
 
+	/**
+	 * Synchronise la position de l'avion dès qu'on reçoit sa position.
+	 * 
+	 * @param e
+	 */
 	public void on(TowerEvent.PlaneMoved e) {
 		aircrafts.get(e.getID()).addDestination(e.getWhere());
 	}
 
-	public void on(RadioEvent.PlaneDistress e) {
+	/**
+	 * Passe l'Aircraft en mode MayDay
+	 * 
+	 * @param e
+	 */
+	public void on(TowerEvent.PlaneDistress e) {
 		aircrafts.get(e.getID()).setDistress2D();
 
 		if(enable3D && radar != null) {
@@ -217,18 +238,50 @@ public class GUI extends JFrame implements EventListener {
 		}
 	}
 
-	public void on() {
-		//downloadPanel.addFilesToDownloadBox(fileList);
+	/**
+	 * Ajoute un fichier au DownloadPanel dès que l'on en reçoit un.
+	 * 
+	 * @param e
+	 */
+	public void on(TowerEvent.TransferComplete e) {
+		fileList.add(new File(e.getPath()));
+		downloadPanel.addFilesToDownloadBox(fileList);
 	}
 
+	public void on(TowerEvent.PlaneIdentified e) {
+
+	}
+
+	/**
+	 * Ajoute les Messages au JournalPanel.
+	 * 
+	 * @param m
+	 */
 	@SuppressWarnings("unchecked")
-	public void on(Message m) {
-		@SuppressWarnings("rawtypes")
+	public void on(RadioEvent.MessageReceived e) {
+		Message m = e.getMessage();
 		Vector v = new Vector();
 		v.add(m.getPriority());
 		v.add(m.getType().toString());
 		v.add(m.getID().toString());
-		v.add("Dest");
+		v.add("Tower");
+		v.add(m.getDate());
+		journalPanel.addEvent(v);
+	}
+
+	/**
+	 * Ajoute les Messages au JournalPanel.
+	 * 
+	 * @param m
+	 */
+	@SuppressWarnings("unchecked")
+	public void on(RadioEvent.MessageSent e) {
+		Message m = e.getMessage();
+		Vector v = new Vector();
+		v.add(m.getPriority());
+		v.add(m.getType().toString());
+		v.add("Tower");
+		v.add(m.getID().toString());
 		v.add(m.getDate());
 		journalPanel.addEvent(v);
 	}

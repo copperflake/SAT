@@ -27,10 +27,14 @@ import javax.swing.filechooser.FileSystemView;
 
 /**
  * Graphical interface to show the files that have been sent by the planes.
+ * 
  * @author Jonathan Cheseaux, Alexis Kessel, Maud Chami
- *
+ * 
  */
-public class DownloadPanel extends JPanel implements ActionListener /* , Observer */ {
+public class DownloadPanel extends JPanel implements ActionListener /*
+																	 * ,
+																	 * Observer
+																	 */{
 
 	private static final long serialVersionUID = -2822355651114549873L;
 	private JPanel titlePanel, panEmpty;
@@ -42,7 +46,7 @@ public class DownloadPanel extends JPanel implements ActionListener /* , Observe
 	public DownloadPanel() {
 		buildComponents();
 		this.setLayout(gbTrace);
-		
+
 		// Ensure the downloads directory exists
 		File downloads = new File("downloads");
 		downloads.mkdir();
@@ -77,18 +81,20 @@ public class DownloadPanel extends JPanel implements ActionListener /* , Observe
 
 	/**
 	 * This is a helper method that adds a component to a GridBagLayout.
-	 * @param container     the container to which we add the component
-	 * @param component     the component to add
-	 * @param weightx       the horizontal weight
-	 * @param weighty       the vertical weight
-	 * @param fill          how the component behaves when the window is resized
+	 * 
+	 * @param container
+	 *            the container to which we add the component
+	 * @param component
+	 *            the component to add
+	 * @param weightx
+	 *            the horizontal weight
+	 * @param weighty
+	 *            the vertical weight
+	 * @param fill
+	 *            how the component behaves when the window is resized
 	 */
-	private void addComponent(
-			Container container,
-			Component component,
-			int weightx, int weighty,
-			int fill) {
-		GridBagConstraints gbConstraints  = new GridBagConstraints();
+	private void addComponent(Container container, Component component, int weightx, int weighty, int fill) {
+		GridBagConstraints gbConstraints = new GridBagConstraints();
 		gbConstraints.weightx = weightx;
 		gbConstraints.weighty = weighty;
 		gbConstraints.fill = fill;
@@ -97,14 +103,16 @@ public class DownloadPanel extends JPanel implements ActionListener /* , Observe
 		gbConstraints.gridwidth = 1;
 		gbConstraints.gridheight = 1;
 		gbConstraints.insets = new Insets(5, 5, 5, 5);
-		
-		gbTrace.setConstraints( component, gbConstraints );
-		container.add( component );
+
+		gbTrace.setConstraints(component, gbConstraints);
+		container.add(component);
 	}
 
 	/**
 	 * Returns the icon associated with the given filename
-	 * @param fileName the name of the file
+	 * 
+	 * @param fileName
+	 *            the name of the file
 	 * @return the icon corresponding to the file type
 	 */
 	private Icon getExtFileIcon(File file) {
@@ -115,25 +123,27 @@ public class DownloadPanel extends JPanel implements ActionListener /* , Observe
 			Icon result = FileSystemView.getFileSystemView().getSystemIcon(file);
 			temp.delete();
 			return result;
-		} catch (IOException e) {
+		}
+		catch(IOException e) {
 			System.err.println("Warning: could not create temporary file.");
 			return null;
 		}
 	}
 
-
 	/**
 	 * This method fills the list of files with the files given in fileList
-	 * @param fileList the list of received files
+	 * 
+	 * @param fileList
+	 *            the list of received files
 	 */
 	public synchronized void addFilesToDownloadBox(ArrayList<File> fileList) {
 		// Whether the current row should have a different background color or
 		// not. Used to color every other row.
-		boolean colorChange = false;
-		
+		boolean colorChange = true;
+
 		panEmpty.removeAll();
 
-		for (int i = 0; i < fileList.size(); i++) {	
+		for(int i = 0; i < fileList.size(); i++) {
 			File bFile = fileList.get(i);
 
 			JPanel panIcon = new JPanel();
@@ -161,7 +171,7 @@ public class DownloadPanel extends JPanel implements ActionListener /* , Observe
 			rowDownload.add(panIcon);
 			rowDownload.add(Box.createHorizontalStrut(5));
 			rowDownload.add(rowFileName);
-			rowDownload.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+			rowDownload.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
 			Color color = (colorChange ? new Color(0xd0d0d0) : Color.WHITE);
 			rowDownload.setBackground(color);
@@ -174,7 +184,7 @@ public class DownloadPanel extends JPanel implements ActionListener /* , Observe
 
 			panEmpty.add(panBorder);
 		}
-		
+
 		// Repaint the window because its components changed
 		validate();
 	}
@@ -193,19 +203,19 @@ public class DownloadPanel extends JPanel implements ActionListener /* , Observe
 		btnQuit.addActionListener(this);
 
 		rowButtons.add(Box.createHorizontalGlue());
-		rowButtons.add(btnOpen);  
+		rowButtons.add(btnOpen);
 
-		addComponent(this, rowButtons , 1, 0,
-				GridBagConstraints.HORIZONTAL);
+		addComponent(this, rowButtons, 1, 0, GridBagConstraints.HORIZONTAL);
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object obj = e.getSource();
-		if (obj == btnOpen) {
+		if(obj == btnOpen) {
 			try {
 				java.awt.Desktop.getDesktop().open(new File("downloads"));
-			} catch (IOException e1) {
+			}
+			catch(IOException e1) {
 				System.err.println("Could not open downloads folder: " + e1.getMessage());
 			}
 		}

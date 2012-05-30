@@ -7,16 +7,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.InetAddress;
+
+import sat.DebugEvent;
 import sat.GlobalCLI;
+import sat.events.EventListener;
+import sat.radio.RadioEvent;
 import sat.radio.engine.client.RadioClientEngine;
 import sat.radio.engine.client.RadioClientTCPEngine;
 
-public class PlaneCLI extends GlobalCLI {
+public class PlaneCLI extends GlobalCLI implements EventListener {
 	private Plane plane;
 
 	public PlaneCLI(Plane plane, InputStream in, PrintStream out) {
 		super(in, out, "Plane> ");
 		this.plane = plane;
+		
+		plane.addListener(this);
 	}
 
 	public void init() {
@@ -103,5 +109,22 @@ public class PlaneCLI extends GlobalCLI {
 		}
 
 		plane.connect(engine);
+	}
+
+	/**
+	 * Un événement de debug envoyé par l'avion. Cet événement n'est pas émis si
+	 * l'avion n'est pas en mode debug.
+	 */
+	public void on(DebugEvent event) {
+		print("[DEBUG] ");
+		println(event.getMessage());
+	}
+
+	/**
+	 * Une exception non attrapée remontée par l'avion.
+	 */
+	public void on(RadioEvent.UncaughtException event) {
+		print("[EXCEPTION] ");
+		event.getException().printStackTrace(out);
 	}
 }

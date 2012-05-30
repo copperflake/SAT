@@ -22,7 +22,7 @@ public class MessageData extends Message {
 		this.format = format;
 		this.fileSize = fileSize;
 		this.payload = payload;
-		
+
 		length = payload.length;
 	}
 

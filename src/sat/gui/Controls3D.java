@@ -23,7 +23,8 @@ public class Controls3D {
 	}
 
 	/**
-	 * Suppression des contrôles par défaut, puis nouveau mapping de contrôle plus adapter.
+	 * Suppression des contrôles par défaut, puis nouveau mapping de contrôle
+	 * plus adapter.
 	 */
 	public void setupControls() {
 		// Removing some shortcut
@@ -39,10 +40,10 @@ public class Controls3D {
 		inputManager.deleteMapping("FLYCAM_Lower");
 		inputManager.deleteMapping("FLYCAM_ZoomIn");
 		inputManager.deleteMapping("FLYCAM_ZoomOut");
-		
+
 		// Keyboard
 		// -- empty
-		
+
 		// Mouse
 		inputManager.addMapping("RotateEnable", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
 		inputManager.addMapping("MoveEnable", new MouseButtonTrigger(MouseInput.BUTTON_RIGHT));

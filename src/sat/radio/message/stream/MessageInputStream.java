@@ -177,8 +177,9 @@ public class MessageInputStream extends FilterInputStream {
 				float args[];
 
 				if(length > 0) {
-					args = new float[]{c.getX(), c.getY(), c.getZ(), circularAngle};
-				} else {
+					args = new float[] { c.getX(), c.getY(), c.getZ(), circularAngle };
+				}
+				else {
 					args = c.toFloats();
 				}
 

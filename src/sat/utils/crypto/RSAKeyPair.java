@@ -158,7 +158,8 @@ public final class RSAKeyPair {
 	/**
 	 * Retourne la clé privée de cette paire de clé.
 	 * 
-	 * @throws RSAException Si la clé privée n'est pas disponible.
+	 * @throws RSAException
+	 *             Si la clé privée n'est pas disponible.
 	 */
 	public RSAKey getPrivateKey() throws RSAException {
 		if(privateKey == null)
@@ -168,7 +169,8 @@ public final class RSAKeyPair {
 	}
 
 	/**
-	 * Retourne la clé publique de cette paire de clé. Contrairement à la clé préviée, celle-ci est toujours disponible.
+	 * Retourne la clé publique de cette paire de clé. Contrairement à la clé
+	 * préviée, celle-ci est toujours disponible.
 	 */
 	public RSAKey getPublicKey() {
 		return publicKey;

@@ -175,6 +175,7 @@ public class Radar extends SimpleApplication {
 
 	/**
 	 * Bouge la caméra vers l'avant en restant à la même altitude.
+	 * 
 	 * @param value
 	 */
 	public void moveCamFront(float value) {
@@ -184,6 +185,7 @@ public class Radar extends SimpleApplication {
 
 	/**
 	 * Bouge la caméra de côté en restant à la même altitude..
+	 * 
 	 * @param value
 	 */
 	public void moveCamSide(float value) {
@@ -193,6 +195,7 @@ public class Radar extends SimpleApplication {
 
 	/**
 	 * Bouge la caméra en hauteur.
+	 * 
 	 * @param value
 	 */
 	public void moveCamY(float value) {
@@ -204,6 +207,7 @@ public class Radar extends SimpleApplication {
 
 	/**
 	 * Bouge la caméra dans la direction où pointe la caméra.
+	 * 
 	 * @param value
 	 */
 	public void zoom(float value) {
@@ -212,9 +216,10 @@ public class Radar extends SimpleApplication {
 		if(loc.getY() > 1)
 			cam.setLocation(loc);
 	}
-	
+
 	/**
 	 * Fait tourner la caméra dans le plan horizontal.
+	 * 
 	 * @param value
 	 */
 	public void rotateCamH(float value) {
@@ -223,6 +228,7 @@ public class Radar extends SimpleApplication {
 
 	/**
 	 * Fait tourner la caméra dans le plan vertical.
+	 * 
 	 * @param value
 	 */
 	public void rotateCamV(float value) {

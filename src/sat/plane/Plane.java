@@ -9,8 +9,10 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import sat.DebugEvent;
 import sat.EndOfWorldException;
 import sat.events.Event;
+import sat.events.EventEmitter;
 import sat.events.EventListener;
 import sat.events.UnhandledEventException;
 import sat.external.twitter.TweetSender;
@@ -19,7 +21,9 @@ import sat.radio.RadioID;
 import sat.radio.client.RadioClient;
 import sat.radio.client.RadioClientDelegate;
 import sat.radio.engine.client.RadioClientEngine;
+import sat.radio.message.MessageChoke;
 import sat.radio.message.MessageRouting;
+import sat.radio.message.MessageUnchoke;
 import sat.utils.cli.Config;
 import sat.utils.crypto.RSAException;
 import sat.utils.crypto.RSAKey;
@@ -30,7 +34,7 @@ import sat.utils.routes.MoveType;
 import sat.utils.routes.Route;
 import sat.utils.routes.Waypoint;
 
-public class Plane implements EventListener, RadioClientDelegate {
+public class Plane extends EventEmitter implements EventListener, RadioClientDelegate {
 	/**
 	 * La configuration par défaut d'un avion. Sert de modèle à la contruction
 	 * de la configuration spécifique aux instances d'avions.
@@ -88,7 +92,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 		defaults = new Config();
 
 		defaults.setProperty("plane.debug", "no");
-		defaults.setProperty("plane.twitter", "no");
+		defaults.setProperty("plane.twitter", "yes");
 
 		defaults.setProperty("plane.coords", "0,0,-1"); // Initial coords
 		defaults.setProperty("plane.waypoint", "625,445,-1"); // Initial waypoint
@@ -99,7 +103,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 		defaults.setProperty("plane.update", "100");
 		defaults.setProperty("plane.fuel", "200000");
 		defaults.setProperty("plane.datainterval", "100");
-		
+
 		defaults.setProperty("legacy.towerkey", "tower.key");
 
 		defaults.setProperty("radio.ciphered", "yes");
@@ -171,17 +175,23 @@ public class Plane implements EventListener, RadioClientDelegate {
 	public void connect(RadioClientEngine engine) throws IOException {
 		radio.connect(engine);
 	}
-	
+
 	public void crash(String message) {
-		System.out.println(message);
+		emitDebug(message);
 		crash();
 	}
 
 	public void crash() {
-		System.exit(1);
+		radio.quit();
 	}
 
 	// - - - Events - - -
+
+	public void on(RadioEvent.TowerDisconnected e) {
+		radio.sendLandingRequest();
+		radio.sendText("PLANE_TYPE=" + type + ";");
+		simulator.quit();
+	}
 
 	public void on(RadioEvent.TowerConnected e) {
 		radio.sendLandingRequest();
@@ -189,21 +199,30 @@ public class Plane implements EventListener, RadioClientDelegate {
 		simulator.start();
 	}
 
-	public void on(MessageRouting message) throws UnhandledEventException, InvocationTargetException {
-		message.trigger(simulator);
+	public void on(MessageRouting m) throws UnhandledEventException, InvocationTargetException {
+		m.trigger(simulator);
+	}
+
+	public void on(MessageChoke m) {
+		radio.setChoked(true);
+	}
+
+	public void on(MessageUnchoke m) {
+		radio.setChoked(false);
 	}
 
 	public void on(Event event) {
-		System.out.println(event);
+		emit(event);
 	}
 
 	// - - - Plane Simulator - - -
 
 	private class PlaneSimulator extends Thread implements EventListener {
+		private boolean running = true;
 		private boolean kerozeneSent = false;
 
 		public void run() {
-			while(true) {
+			while(running) {
 				try {
 					int updateInterval = config.getInt("plane.update");
 
@@ -225,6 +244,11 @@ public class Plane implements EventListener, RadioClientDelegate {
 				catch(InterruptedException e) {
 				}
 			}
+		}
+
+		public void quit() {
+			running = false;
+			this.interrupt();
 		}
 
 		// ROUTING
@@ -281,6 +305,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 			if(interval >= timeNeeded) {
 				if(instruction.getType() == MoveType.LANDING) {
 					radio.sendBye();
+					emitDebug("Bye sent");
 
 					DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 					dateFormat.format(new Date());
@@ -293,10 +318,10 @@ public class Plane implements EventListener, RadioClientDelegate {
 					DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 					dateFormat.format(new Date());
 
-					tweet("Plane #" + id + " has AUTODESTRUCT-ITSELF at " + dateFormat.toString() + ". #ICAirport13 · #ICITP2012");
+					tweet("Plane #" + id + " has AUTODESTRUCT-ITSELF at " + dateFormat.toString() + ". #ICITP13Airport · #ICITP2012");
 				}
 
-				System.out.println("Plane " + id + " arrived at waypoint (" + instruction.getCoordiates().getX() + ", " + instruction.getCoordiates().getY() + ").");
+				emitDebug("Plane " + id + " arrived at waypoint (" + instruction.getCoordiates().getX() + ", " + instruction.getCoordiates().getY() + ").");
 				route.remove(0);
 				move(interval - timeNeeded);
 			}
@@ -312,7 +337,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 			//Moves the plane in circle around the given center, with an objective of given angle.
 			double modX = coords.getX() - instruction.getCoordiates().getX();
 			double modY = coords.getY() - instruction.getCoordiates().getY();
-			
+
 			double instructionAngle = Math.toRadians(instruction.getAngle());
 			double instructionAngleSign = Math.signum(instructionAngle);
 			double r = Math.sqrt(modX * modX + modY * modY);
@@ -339,7 +364,7 @@ public class Plane implements EventListener, RadioClientDelegate {
 				modY = (int) (r * Math.sin(theta) + instruction.getCoordiates().getY());
 				coords = new Coordinates((float) modX, (float) modY, coords.getZ());
 
-				System.out.println("Plane " + id + " arrived at waypoint (" + modX + ", " + modY + ").");
+				emitDebug("Plane " + id + " arrived at waypoint (" + modX + ", " + modY + ").");
 
 				if(deltaTheta > Math.abs(instructionAngle)) {
 					double neededTime = Math.abs(instructionAngle) / rotSpeed;
@@ -397,10 +422,26 @@ public class Plane implements EventListener, RadioClientDelegate {
 			return keyPair;
 		}
 		catch(IOException e) {
-			System.out.println("Error reading legacy tower key");
+			emitDebug("Error reading legacy tower key");
 			e.printStackTrace();
 		}
 
 		return null;
+	}
+
+	/**
+	 * Emet un message de debug contenant le message donné.
+	 */
+	private void emitDebug(String msg) {
+		emitDebug(new DebugEvent(msg));
+	}
+
+	/**
+	 * Emet un message de debug.
+	 */
+	private void emitDebug(DebugEvent event) {
+		if(config.getBoolean("plane.debug")) {
+			emit(event);
+		}
 	}
 }

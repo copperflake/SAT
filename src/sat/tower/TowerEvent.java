@@ -54,6 +54,17 @@ public abstract class TowerEvent extends Event {
 	}
 
 	/**
+	 * Cet évenement est utilisé lorsque l'avion envoi un MayDay à la tour de
+	 * contrôle ou enlève son MayDay pour signaler que le problème à été résolu
+	 * (si cela est possible).
+	 */
+	public static class PlaneDistress extends PlaneTowerEvent {
+		public PlaneDistress(RadioID id) {
+			super(id);
+		}
+	}
+
+	/**
 	 * L'avion a été identifié.
 	 */
 	public static class PlaneIdentified extends PlaneTowerEvent {
@@ -69,6 +80,21 @@ public abstract class TowerEvent extends Event {
 
 		public PlaneType getType() {
 			return type;
+		}
+	}
+
+	public static class TransferComplete extends TowerEvent {
+		/**
+		 * Chemin vers le fichier téléchargé.
+		 */
+		private String path;
+
+		public TransferComplete(String path) {
+			this.path = path;
+		}
+
+		public String getPath() {
+			return path;
 		}
 	}
 }

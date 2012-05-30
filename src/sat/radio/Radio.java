@@ -62,6 +62,7 @@ public abstract class Radio extends AsyncEventEmitter {
 		this.delegate = delegate;
 		this.id = id;
 	}
+
 	public boolean isCiphered() {
 		return ciphered;
 	}
@@ -101,6 +102,8 @@ public abstract class Radio extends AsyncEventEmitter {
 		 */
 		protected RadioSocketState state = RadioSocketState.HANDSHAKE;
 
+		protected boolean choked = false;
+
 		public SocketManager(RadioSocket socket) {
 			this.socket = socket;
 
@@ -114,6 +117,9 @@ public abstract class Radio extends AsyncEventEmitter {
 		}
 
 		public void send(Message message) {
+			if(choked && message.getPriority() > 3) {
+				return;
+			}
 			writer.send(message);
 		}
 
@@ -168,6 +174,10 @@ public abstract class Radio extends AsyncEventEmitter {
 
 			Coordinates c = delegate.getLocation();
 			send(new MessageData(id, c, hash, 0, "txt", data.length, data));
+		}
+
+		public void setChoked(boolean choked) {
+			this.choked = choked;
 		}
 
 		/**

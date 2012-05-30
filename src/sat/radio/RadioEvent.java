@@ -1,6 +1,7 @@
 package sat.radio;
 
 import sat.events.Event;
+import sat.radio.message.Message;
 
 @SuppressWarnings("serial")
 public abstract class RadioEvent extends Event {
@@ -20,6 +21,30 @@ public abstract class RadioEvent extends Event {
 
 		public Throwable getException() {
 			return exception;
+		}
+	}
+
+	public static abstract class MessageEvent extends RadioEvent {
+		private Message message;
+
+		public MessageEvent(Message m) {
+			message = m;
+		}
+
+		public Message getMessage() {
+			return message;
+		}
+	}
+
+	public static class MessageSent extends MessageEvent {
+		public MessageSent(Message m) {
+			super(m);
+		}
+	}
+
+	public static class MessageReceived extends MessageEvent {
+		public MessageReceived(Message m) {
+			super(m);
 		}
 	}
 
@@ -59,16 +84,6 @@ public abstract class RadioEvent extends Event {
 
 	public static class PlaneDisconnected extends PlaneRadioEvent {
 		public PlaneDisconnected(RadioID id) {
-			super(id);
-		}
-	}
-	
-	/**
-	 * Cet évenement est utilisé lorsque l'avion envoi un MayDay à la tour de contrôle
-	 * ou enlève son MayDay pour signaler que le problème à été résolu (si cela est possible).
-	 */
-	public static class PlaneDistress extends PlaneRadioEvent {
-		public PlaneDistress(RadioID id) {
 			super(id);
 		}
 	}

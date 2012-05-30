@@ -3,7 +3,6 @@ package sat.radio.client;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
-import sat.EndOfWorldException;
 import sat.events.Event;
 import sat.events.EventListener;
 import sat.events.UnhandledEventException;
@@ -101,6 +100,13 @@ public class RadioClient extends Radio {
 		Coordinates coords = delegate.getLocation();
 		manager.send(new MessageHello(id, coords, ciphered, !legacy));
 	}
+	
+	/**
+	 * Quitte la radio de manière propre.
+	 */
+	public void quit() {
+		manager.quit();
+	}
 
 	/**
 	 * Envoi un message quelconque à la tour. Méthode interne.
@@ -151,6 +157,15 @@ public class RadioClient extends Radio {
 		send(new MessageBye(id, delegate.getLocation()));
 	}
 
+	/**
+	 * Choke ou Unchoke le client.
+	 * 
+	 * @param choked
+	 */
+	public void setChoked(boolean choked) {
+		manager.setChoked(choked);
+	}
+
 	// - - - Tower Socket Manager - - -
 
 	/**
@@ -175,18 +190,18 @@ public class RadioClient extends Radio {
 		}
 
 		protected void emitEvent(Event event) {
-			RadioClient.this.emit(event);
+			emit(event);
 		}
 
 		protected void ready() {
 			super.ready();
 
-			RadioClient.this.emit(new RadioEvent.TowerConnected());
+			emit(new RadioEvent.TowerConnected());
 		}
 
 		protected void quit() {
-			// No clean-quit with planes
-			throw new EndOfWorldException("Crashing.");
+			super.quit();
+			emit(new RadioEvent.TowerDisconnected());
 		}
 
 		public class MessageHandler implements EventListener {
